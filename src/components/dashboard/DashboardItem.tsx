@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Grip, MoreVertical, Maximize2, Minimize2, X } from 'lucide-react';
+import { Grip, MoreVertical, Maximize2, Minimize2, X, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
   DropdownMenu,
@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { ANIMATIONS } from '@/lib/animations';
+import { Card } from '@/components/ui/card';
 
 interface DashboardItemProps {
   title: string;
@@ -24,16 +25,17 @@ const DashboardItem: React.FC<DashboardItemProps> = ({
   className = ""
 }) => {
   const [expanded, setExpanded] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div 
+    <Card 
       className={`
         kira-dashboard-item
-        ${expanded ? 'col-span-full row-span-2' : ''}
+        h-full w-full
         ${className}
         transition-all duration-300 hover:shadow-md
         ${ANIMATIONS.slideIn}
-        bg-white dark:bg-card rounded-lg border border-border shadow-sm
+        flex flex-col
       `}
     >
       <div className="kira-dashboard-item-header p-3 flex justify-between items-center">
@@ -45,45 +47,70 @@ const DashboardItem: React.FC<DashboardItemProps> = ({
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => setExpanded(!expanded)} 
+            onClick={() => setCollapsed(!collapsed)} 
             className="hover:bg-kira-purple/10 transition-colors"
+            aria-label={collapsed ? "Развернуть" : "Свернуть содержимое"}
+            title={collapsed ? "Развернуть" : "Свернуть содержимое"}
           >
-            {expanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+            {collapsed ? (
+              <Maximize2 size={15} />
+            ) : (
+              <Minimize2 size={15} />
+            )}
           </Button>
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
                 size="icon"
                 className="hover:bg-kira-purple/10 transition-colors"
+                aria-label="Настройки"
               >
-                <MoreVertical size={15} />
+                <Settings size={15} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>Настроить</DropdownMenuItem>
-              <DropdownMenuItem>Обновить</DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive" onClick={onRemove}>
-                Удалить
+              <DropdownMenuItem>
+                <span>Настроить</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <span>Обновить</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="text-destructive" 
+                onClick={onRemove}
+              >
+                <span>Удалить</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          
           {onRemove && (
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={onRemove}
               className="hover:bg-destructive/10 hover:text-destructive transition-colors"
+              aria-label="Удалить"
+              title="Удалить"
             >
               <X size={15} />
             </Button>
           )}
         </div>
       </div>
-      <div className="p-3 flex-1 overflow-auto">
-        {children}
+      
+      <div 
+        className={`
+          p-3 flex-1 overflow-auto
+          transition-all duration-300
+          ${collapsed ? 'h-0 p-0 opacity-0' : 'opacity-100'}
+        `}
+      >
+        {!collapsed && children}
       </div>
-    </div>
+    </Card>
   );
 };
 
