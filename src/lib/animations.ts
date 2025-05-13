@@ -1,50 +1,45 @@
 
-import { keyframes } from "@emotion/react";
+// Animation utility constants for consistent animations across the app
 
-// Пульсирующая анимация
-export const pulse = keyframes`
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-`;
+// Animation durations
+export const DURATIONS = {
+  fast: '0.2s',
+  default: '0.3s',
+  slow: '0.5s',
+  slower: '0.8s'
+};
 
-// Плавное появление
-export const fadeIn = keyframes`
-  from { opacity: 0; }
-  to { opacity: 1; }
-`;
+// Animation timing functions
+export const EASINGS = {
+  default: 'ease',
+  linear: 'linear',
+  in: 'ease-in',
+  out: 'ease-out',
+  inOut: 'ease-in-out',
+  bounce: 'cubic-bezier(0.68, -0.55, 0.27, 1.55)'
+};
 
-// Скользящее появление снизу
-export const slideIn = keyframes`
-  from { 
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to { 
-    transform: translateY(0);
-    opacity: 1;
-  }
-`;
+// Tailwind animation class names
+export const ANIMATIONS = {
+  fadeIn: 'animate-fade-in',
+  slideIn: 'animate-slide-in',
+  pulse: 'animate-pulse-slow',
+  scaleIn: 'animate-scale-in',
+  accordionDown: 'animate-accordion-down',
+  accordionUp: 'animate-accordion-up'
+};
 
-// Увеличение масштаба
-export const scaleIn = keyframes`
-  from { 
-    transform: scale(0.9);
-    opacity: 0;
-  }
-  to { 
-    transform: scale(1);
-    opacity: 1;
-  }
-`;
+// Animation delay classes (to be used with Tailwind)
+export const DELAYS = {
+  none: 'delay-0',
+  tiny: 'delay-75',
+  short: 'delay-150',
+  default: 'delay-300',
+  long: 'delay-500',
+  longer: 'delay-700'
+};
 
-// Волновая анимация для "печатания"
-export const typing = keyframes`
-  0% { width: 0 }
-  100% { width: 100% }
-`;
-
-// Анимация для курсора печатающего текста
-export const blink = keyframes`
-  from, to { border-color: transparent }
-  50% { border-color: currentColor; }
-`;
+// Helper function to compose animation classes
+export const composeAnimations = (...animations: string[]) => {
+  return animations.join(' ');
+};

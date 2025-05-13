@@ -7,6 +7,7 @@ import NotesList from "../notes/NotesList";
 import CalendarView from "../calendar/CalendarView";
 import { PlusCircle, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { ANIMATIONS } from "@/lib/animations";
 
 const Dashboard: React.FC = () => {
   // This is a simple placeholder for drag-and-drop functionality
@@ -27,7 +28,7 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="animate-fade-in">
+    <div className={ANIMATIONS.fadeIn}>
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold mb-1 bg-gradient-to-r from-kira-purple to-kira-blue bg-clip-text text-transparent">
