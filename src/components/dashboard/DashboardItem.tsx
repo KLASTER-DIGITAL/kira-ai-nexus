@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { ANIMATIONS } from '@/lib/animations';
 
 interface DashboardItemProps {
   title: string;
@@ -31,10 +32,11 @@ const DashboardItem: React.FC<DashboardItemProps> = ({
         ${expanded ? 'col-span-full row-span-2' : ''}
         ${className}
         transition-all duration-300 hover:shadow-md
-        animate-slide-in
+        ${ANIMATIONS.slideIn}
+        bg-white dark:bg-card rounded-lg border border-border shadow-sm
       `}
     >
-      <div className="kira-dashboard-item-header">
+      <div className="kira-dashboard-item-header p-3 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Grip size={16} className="text-muted-foreground kira-draggable cursor-move" />
           <h3 className="font-medium">{title}</h3>
@@ -78,7 +80,7 @@ const DashboardItem: React.FC<DashboardItemProps> = ({
           )}
         </div>
       </div>
-      <div className="flex-1 overflow-auto">
+      <div className="p-3 flex-1 overflow-auto">
         {children}
       </div>
     </div>
