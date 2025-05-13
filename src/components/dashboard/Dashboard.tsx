@@ -28,13 +28,18 @@ const Dashboard: React.FC = () => {
     });
   };
 
-  // Function to open AI sidebar (in a real implementation, this would use context or a state manager)
+  // Function to open AI sidebar (using document click to trigger the floating button)
   const openAISidebar = () => {
-    // In a real implementation, this would use context to toggle the AI sidebar
-    toast({
-      title: "AI Ассистент",
-      description: "Нажмите на плавающую кнопку AI в правом нижнем углу экрана.",
-    });
+    // Find the AI button in the DOM and click it programmatically
+    const aiButton = document.querySelector('[data-ai-trigger="true"]') as HTMLButtonElement;
+    if (aiButton) {
+      aiButton.click();
+    } else {
+      toast({
+        title: "AI Ассистент",
+        description: "Нажмите на плавающую кнопку AI в правом нижнем углу экрана.",
+      });
+    }
   };
 
   return (
