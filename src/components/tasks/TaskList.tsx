@@ -71,7 +71,7 @@ const TaskList: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-fade-in">
       <div className="flex gap-2 mb-4">
         <input
           type="text"
@@ -79,9 +79,13 @@ const TaskList: React.FC = () => {
           onChange={(e) => setNewTaskTitle(e.target.value)}
           onKeyPress={(e) => e.key === "Enter" && addTask()}
           placeholder="Добавить новую задачу..."
-          className="kira-input flex-1"
+          className="kira-input flex-1 focus:ring-kira-purple/50 transition-all duration-200"
         />
-        <Button onClick={addTask} disabled={!newTaskTitle.trim()}>
+        <Button 
+          onClick={addTask} 
+          disabled={!newTaskTitle.trim()}
+          className="bg-kira-purple hover:bg-kira-purple-dark text-white transition-colors"
+        >
           <Plus size={16} className="mr-1" /> Добавить
         </Button>
       </div>
@@ -90,17 +94,17 @@ const TaskList: React.FC = () => {
         {tasks.map((task) => (
           <div
             key={task.id}
-            className={`flex items-center gap-3 p-3 border rounded-md ${
+            className={`flex items-center gap-3 p-3 border rounded-md transition-all duration-200 transform hover:translate-y-[-2px] ${
               task.completed
                 ? "bg-muted/50 border-muted"
-                : "bg-card border-border"
+                : "bg-card border-border hover:shadow-sm"
             }`}
           >
             <button
-              className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+              className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
                 task.completed
                   ? "bg-kira-purple border-kira-purple text-white"
-                  : "border-muted-foreground"
+                  : "border-muted-foreground hover:border-kira-purple"
               }`}
               onClick={() => toggleTask(task.id)}
             >
@@ -117,7 +121,7 @@ const TaskList: React.FC = () => {
               <AlertCircle
                 size={14}
                 className={getPriorityColor(task.priority)}
-                title={`Приоритет: ${task.priority}`}
+                aria-label={`Приоритет: ${task.priority}`}
               />
               {task.dueDate && (
                 <div className="flex items-center text-xs text-muted-foreground">

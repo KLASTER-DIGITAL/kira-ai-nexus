@@ -30,20 +30,31 @@ const DashboardItem: React.FC<DashboardItemProps> = ({
         kira-dashboard-item
         ${expanded ? 'col-span-full row-span-2' : ''}
         ${className}
+        transition-all duration-300 hover:shadow-md
+        animate-slide-in
       `}
     >
       <div className="kira-dashboard-item-header">
         <div className="flex items-center gap-2">
-          <Grip size={16} className="text-muted-foreground kira-draggable" />
+          <Grip size={16} className="text-muted-foreground kira-draggable cursor-move" />
           <h3 className="font-medium">{title}</h3>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={() => setExpanded(!expanded)}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setExpanded(!expanded)} 
+            className="hover:bg-kira-purple/10 transition-colors"
+          >
             {expanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="hover:bg-kira-purple/10 transition-colors"
+              >
                 <MoreVertical size={15} />
               </Button>
             </DropdownMenuTrigger>
@@ -56,7 +67,12 @@ const DashboardItem: React.FC<DashboardItemProps> = ({
             </DropdownMenuContent>
           </DropdownMenu>
           {onRemove && (
-            <Button variant="ghost" size="icon" onClick={onRemove}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={onRemove}
+              className="hover:bg-destructive/10 hover:text-destructive transition-colors"
+            >
               <X size={15} />
             </Button>
           )}

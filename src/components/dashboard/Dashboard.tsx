@@ -6,6 +6,7 @@ import TaskList from "../tasks/TaskList";
 import NotesList from "../notes/NotesList";
 import CalendarView from "../calendar/CalendarView";
 import { PlusCircle, AlertCircle } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 const Dashboard: React.FC = () => {
   // This is a simple placeholder for drag-and-drop functionality
@@ -19,19 +20,25 @@ const Dashboard: React.FC = () => {
 
   const removeWidget = (id: string) => {
     setWidgets(widgets.filter((widget) => widget.id !== id));
+    toast({
+      title: "Виджет удален",
+      description: "Вы можете добавить его снова позже",
+    });
   };
 
   return (
-    <div>
+    <div className="animate-fade-in">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold mb-1">Добро пожаловать в KIRA AI</h1>
+          <h1 className="text-2xl font-bold mb-1 bg-gradient-to-r from-kira-purple to-kira-blue bg-clip-text text-transparent">
+            Добро пожаловать в KIRA AI
+          </h1>
           <p className="text-muted-foreground">
             Ваш интеллектуальный помощник для управления задачами и информацией
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm flex items-center">
+          <div className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm flex items-center animate-pulse-slow">
             <AlertCircle size={14} className="mr-1" />
             <span>MVP версия</span>
           </div>
