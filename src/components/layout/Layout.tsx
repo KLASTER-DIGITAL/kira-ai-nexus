@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
+import AISidebar from "../ai/AISidebar";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -28,6 +29,9 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
           {children}
         </main>
       </div>
+      
+      {/* AI Sidebar component */}
+      <AISidebar />
     </div>
   );
 };

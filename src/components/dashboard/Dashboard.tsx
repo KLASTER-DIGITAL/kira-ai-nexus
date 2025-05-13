@@ -5,9 +5,10 @@ import ChatInterface from "../chat/ChatInterface";
 import TaskList from "../tasks/TaskList";
 import NotesList from "../notes/NotesList";
 import CalendarView from "../calendar/CalendarView";
-import { PlusCircle, AlertCircle } from "lucide-react";
+import { PlusCircle, AlertCircle, Bot } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { ANIMATIONS } from "@/lib/animations";
+import { Button } from "@/components/ui/button";
 
 const Dashboard: React.FC = () => {
   // This is a simple placeholder for drag-and-drop functionality
@@ -27,6 +28,15 @@ const Dashboard: React.FC = () => {
     });
   };
 
+  // Function to open AI sidebar (in a real implementation, this would use context or a state manager)
+  const openAISidebar = () => {
+    // In a real implementation, this would use context to toggle the AI sidebar
+    toast({
+      title: "AI Ассистент",
+      description: "Нажмите на плавающую кнопку AI в правом нижнем углу экрана.",
+    });
+  };
+
   return (
     <div className={ANIMATIONS.fadeIn}>
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -39,6 +49,14 @@ const Dashboard: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2 bg-kira-purple/10 text-kira-purple border-kira-purple/30 hover:bg-kira-purple hover:text-white"
+            onClick={openAISidebar}
+          >
+            <Bot size={18} />
+            <span>Спросить AI</span>
+          </Button>
           <div className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm flex items-center animate-pulse-slow">
             <AlertCircle size={14} className="mr-1" />
             <span>MVP версия</span>
