@@ -24,6 +24,7 @@ export const sendFileRequest = async (
     message_type: messageType,
   };
   
+  // Добавляем базовые поля в FormData
   formData.append('message', content);
   formData.append('user_id', userId);
   formData.append('session_id', sessionId);
@@ -54,14 +55,20 @@ export const sendFileRequest = async (
   console.log('File count:', files.length);
   console.log('File names:', files.map(f => f.name).join(', '));
   console.log('Files metadata:', JSON.stringify(filesMetadata));
+  console.log('Full webhook URL:', webhookUrl);
   console.log('Message payload:', JSON.stringify(messagePayload));
   
-  // For FormData we don't set Content-Type, browser will set it with boundary
-  return fetch(webhookUrl, {
-    method: 'POST',
-    body: formData,
-    signal: signal
-  });
+  try {
+    // For FormData we don't set Content-Type, browser will set it with boundary
+    return fetch(webhookUrl, {
+      method: 'POST',
+      body: formData,
+      signal: signal
+    });
+  } catch (error) {
+    console.error('Error sending FormData request:', error);
+    throw error;
+  }
 };
 
 // Send a JSON request
@@ -84,13 +91,19 @@ export const sendJsonRequest = async (
   };
   
   console.log('Sending JSON to webhook:', JSON.stringify(requestBody));
+  console.log('Full webhook URL:', webhookUrl);
   
-  return fetch(webhookUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody),
-    signal: signal
-  });
+  try {
+    return fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+      signal: signal
+    });
+  } catch (error) {
+    console.error('Error sending JSON request:', error);
+    throw error;
+  }
 };

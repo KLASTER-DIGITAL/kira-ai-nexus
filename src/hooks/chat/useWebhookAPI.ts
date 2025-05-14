@@ -14,6 +14,7 @@ export const useWebhookAPI = () => {
     sessionId: string,
     files?: File[]
   ): Promise<N8nResponse> => {
+    // Получаем URL вебхука из настроек
     const webhookUrl = await getWebhookUrl();
     const timestamp = new Date().toISOString();
     

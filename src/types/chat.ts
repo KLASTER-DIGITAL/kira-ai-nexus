@@ -6,7 +6,7 @@ export interface ChatMessage {
   timestamp: Date;
   session_id: string;
   extension?: ChatMessageExtension;
-  type?: 'text' | 'voice' | 'file'; // Added message type
+  type?: 'text' | 'voice' | 'file'; // Добавлен тип сообщения
 }
 
 export interface ChatMessageExtension {
@@ -19,9 +19,9 @@ export interface ChatAttachment {
   type: string;
   url?: string | null;
   size: number;
-  local_id?: string | null; // For tracking uploads
-  content?: string | null;  // Base64 content if needed
-  metadata?: Record<string, any>; // Additional file metadata
+  local_id?: string | null; // Для отслеживания загрузок
+  content?: string | null;  // Base64 содержимое, если необходимо
+  metadata?: Record<string, any>; // Дополнительные метаданные файла
 }
 
 export interface Message {
@@ -32,8 +32,8 @@ export interface Message {
   session_id: string;
   created_at: string;
   extension?: ChatMessageExtension;
-  payload?: any; // For storing additional data
-  type?: 'text' | 'voice' | 'file'; // Added message type
+  payload?: any; // Для хранения дополнительных данных
+  type?: 'text' | 'voice' | 'file'; // Добавлен тип сообщения
 }
 
 export interface GlobalConfig {
@@ -49,7 +49,7 @@ export interface N8nResponse {
   metadata?: Record<string, any>;
   status?: 'success' | 'error';
   error?: string;
-  type?: 'text' | 'voice' | 'file'; // Added message type
+  type?: 'text' | 'voice' | 'file'; // Добавлен тип сообщения
 }
 
 export interface N8nFileMetadata {
@@ -59,7 +59,7 @@ export interface N8nFileMetadata {
   index: number;
 }
 
-// New interface for n8n request payload
+// Новый интерфейс для структуры payload, отправляемого в n8n
 export interface N8nMessagePayload {
   message: string;
   user_id: string;

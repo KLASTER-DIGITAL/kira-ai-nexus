@@ -1,14 +1,26 @@
 
 import { N8nResponse, ChatAttachment } from '@/types/chat';
 
-// Process webhook response
+// Process webhook response with improved error handling
 export const processWebhookResponse = async (response: Response): Promise<N8nResponse> => {
-  // Log response status for debugging
+  // Log response status and headers for debugging
   console.log('Webhook response status:', response.status);
+  console.log('Webhook response headers:', Object.fromEntries(response.headers.entries()));
   
   if (!response.ok) {
     const errorText = await response.text();
     console.error(`Webhook error: ${response.status}`, errorText);
+    
+    // Handle specific n8n errors
+    if (errorText.includes('Workflow could not be started')) {
+      console.error("n8n workflow error: Workflow could not be started. Please check your n8n workflow configuration.");
+      
+      return {
+        reply: "Не удалось запустить рабочий процесс n8n. Пожалуйста, проверьте настройки webhook в n8n и убедитесь, что рабочий процесс активирован.",
+        status: "error",
+        error: "Workflow could not be started. Check n8n configuration."
+      };
+    }
     
     // Handle "No Respond to Webhook node" error specifically
     if (errorText.includes('No Respond to Webhook') || 
