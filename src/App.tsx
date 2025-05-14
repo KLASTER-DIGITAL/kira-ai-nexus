@@ -25,12 +25,15 @@ const queryClient = new QueryClient();
 
 // Role-based redirect component
 const RoleBasedRedirect = () => {
-  const { profile } = useAuth();
+  const { profile, isSuperAdmin } = useAuth();
+  console.log("RoleBasedRedirect check:", { profile, isSuperAdmin: isSuperAdmin() });
   
-  if (profile?.role === 'superadmin') {
+  if (isSuperAdmin()) {
+    console.log("Redirecting to admin dashboard based on isSuperAdmin()");
     return <Navigate to="/dashboard/admin" replace />;
   }
   
+  console.log("Redirecting to user dashboard (default)");
   return <Navigate to="/dashboard/user" replace />;
 };
 

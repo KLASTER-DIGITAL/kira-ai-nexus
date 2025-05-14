@@ -20,25 +20,40 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   requiredRole,
 }) => {
-  const { isAuthenticated, isLoading, profile } = useAuth();
+  const { isAuthenticated, isLoading, profile, isSuperAdmin } = useAuth();
   const location = useLocation();
+  const userRole = profile?.role || 'user';
+  
+  console.log('Protected Route Check:', { 
+    isAuthenticated, 
+    isLoading, 
+    userRole,
+    requiredRole,
+    isSuperAdmin: isSuperAdmin(),
+    path: location.pathname
+  });
 
   // If still loading auth state, show loading indicator
   if (isLoading) {
     return <LoadingScreen />;
   }
 
-  // Check for redirects based on authentication status and role
-  const redirectPath = getRedirectPath(profile, location, isAuthenticated);
-  
-  if (redirectPath) {
-    return <Navigate to={redirectPath} state={{ from: location }} replace />;
+  // Not authenticated - redirect to login
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
   
   // For role-specific routes, check if user has required role
-  if (requiredRole && profile?.role !== requiredRole) {
-    const fallbackPath = profile?.role === 'superadmin' ? '/dashboard/admin' : '/dashboard/user';
+  if (requiredRole && userRole !== requiredRole) {
+    console.log(`Access denied: User role ${userRole} does not match required role ${requiredRole}`);
+    const fallbackPath = isSuperAdmin() ? '/dashboard/admin' : '/dashboard/user';
     return <Navigate to={fallbackPath} replace />;
+  }
+
+  // Auto-redirect superadmins to admin dashboard if they try to access user dashboard
+  if (isSuperAdmin() && location.pathname === '/dashboard/user') {
+    console.log('Superadmin redirected from user dashboard to admin dashboard');
+    return <Navigate to="/dashboard/admin" replace />;
   }
 
   // User is authenticated and has proper role, render children

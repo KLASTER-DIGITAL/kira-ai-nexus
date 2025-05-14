@@ -48,6 +48,7 @@ export const cleanupAuthState = () => {
  */
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
   try {
+    console.log("Fetching profile for userId:", userId);
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -59,6 +60,7 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       return null;
     }
     
+    console.log("Profile data received:", data);
     return data as UserProfile;
   } catch (error) {
     console.error('Exception when fetching user profile:', error);
@@ -79,7 +81,9 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
  * }
  */
 export const isSuperAdminRole = (profile: UserProfile | null): boolean => {
-  return profile?.role === 'superadmin';
+  const isAdmin = profile?.role === 'superadmin';
+  console.log("isSuperAdminRole check:", { role: profile?.role, isAdmin });
+  return isAdmin;
 };
 
 /**
@@ -93,9 +97,7 @@ export const isSuperAdminRole = (profile: UserProfile | null): boolean => {
  * navigate(path);
  */
 export const getRedirectPath = (profile: UserProfile | null): string => {
-  if (profile?.role === 'superadmin') {
-    return '/dashboard/admin';
-  } else {
-    return '/dashboard/user';
-  }
+  const path = profile?.role === 'superadmin' ? '/dashboard/admin' : '/dashboard/user';
+  console.log("getRedirectPath determined:", { role: profile?.role, path });
+  return path;
 };

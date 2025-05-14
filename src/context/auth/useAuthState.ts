@@ -28,6 +28,8 @@ export const useAuthState = () => {
         // Set up auth state listener first
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
+            console.log("Auth state changed:", event, session?.user?.email);
+            
             if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
               setState(prev => ({ ...prev, session, user: session?.user || null }));
 
@@ -35,6 +37,7 @@ export const useAuthState = () => {
               if (session?.user) {
                 setTimeout(async () => {
                   const profile = await fetchUserProfile(session.user.id);
+                  console.log("Fetched profile:", profile);
                   
                   setState(prev => ({ 
                     ...prev, 
@@ -44,11 +47,15 @@ export const useAuthState = () => {
                   }));
 
                   // Redirect based on role after login
-                  const redirectPath = getRedirectPath(profile);
-                  navigate(redirectPath);
+                  if (profile) {
+                    const redirectPath = getRedirectPath(profile);
+                    console.log("Redirecting to:", redirectPath, "based on role:", profile.role);
+                    navigate(redirectPath);
+                  }
                 }, 0);
               }
             } else if (event === 'SIGNED_OUT') {
+              console.log("User signed out");
               setState({ 
                 session: null,
                 user: null,
@@ -64,9 +71,11 @@ export const useAuthState = () => {
 
         // Then check for existing session
         const { data: { session } } = await supabase.auth.getSession();
+        console.log("Existing session check:", session?.user?.email);
         
         if (session?.user) {
           const profile = await fetchUserProfile(session.user.id);
+          console.log("Initial profile load:", profile);
           
           setState({
             session,
