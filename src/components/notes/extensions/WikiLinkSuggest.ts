@@ -3,8 +3,13 @@ import { Extension } from '@tiptap/core';
 import { SuggestionOptions } from '@tiptap/suggestion';
 import tippy from 'tippy.js';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { EditorView } from '@tiptap/pm/view';
 
-export const WikiLinkSuggest = Extension.create({
+export interface WikiLinkSuggestOptions {
+  suggestion: SuggestionOptions;
+}
+
+export const WikiLinkSuggest = Extension.create<WikiLinkSuggestOptions>({
   name: 'wikiLinkSuggest',
   
   addOptions() {
@@ -26,7 +31,7 @@ export const WikiLinkSuggest = Extension.create({
           }).run();
         },
         items: ({ query }: { query: string }) => {
-          return this.options.suggestion.items?.({ query }) || [];
+          return this.options.suggestion?.items?.({ query }) || [];
         }
       }
     };
@@ -40,10 +45,8 @@ export const WikiLinkSuggest = Extension.create({
         key: pluginKey,
         view: () => {
           return {
-            update: (view) => {
-              const { editor } = view;
-
-              if (!editor.isFocused) {
+            update: (view: EditorView) => {
+              if (!view.hasFocus()) {
                 return;
               }
             },
