@@ -8,10 +8,11 @@ import Underline from "@tiptap/extension-underline";
 import Image from "@tiptap/extension-image";
 import { MenuBar } from "./TipTapMenuBar";
 import { WikiLink } from "./extensions/WikiLink";
-import { WikiLinkSuggest } from "./extensions/WikiLinkSuggest";
+import { wikiLinkPluginKey, WikiLinkSuggest } from "./extensions/WikiLinkSuggest";
 import { useNoteLinks } from "@/hooks/notes/useNoteLinks";
 import { useNotesMutations } from "@/hooks/notes/useNotesMutations";
 import { toast } from "@/hooks/use-toast";
+import Suggestion from "@tiptap/suggestion";
 
 interface TipTapEditorProps {
   content: string;
@@ -34,7 +35,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
   onLinkClick,
   onNoteCreated,
 }) => {
-  const { allNotes, createLink, updateLinks } = useNoteLinks(noteId);
+  const { links, allNotes, createLink, updateLinks } = useNoteLinks(noteId);
   const { createNote } = useNotesMutations();
 
   // Create a new note from a wiki link
@@ -48,7 +49,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       });
       
       // If we have a source note ID, create a link between them
-      if (noteId) {
+      if (noteId && newNote.id) {
         createLink({
           sourceId: noteId,
           targetId: newNote.id
@@ -56,7 +57,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       }
       
       // Notify parent component
-      if (onNoteCreated) {
+      if (onNoteCreated && newNote.id) {
         onNoteCreated(newNote.id);
       }
       
@@ -66,8 +67,8 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       });
       
       return {
-        id: newNote.id,
-        title: newNote.title,
+        id: newNote.id || '',
+        title: newNote.title || '',
         type: 'note'
       };
     } catch (error) {
@@ -104,6 +105,25 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     }
   }, [allNotes, onLinkClick, noteId, createLink]);
 
+  // Configure wiki link suggestion extension
+  const wikiLinkSuggestConfig = {
+    fetchNotes: async (query: string) => {
+      if (!query) return [];
+      
+      const lowercaseQuery = query.toLowerCase();
+      return allNotes
+        .filter(note => note.title.toLowerCase().includes(lowercaseQuery))
+        .slice(0, 10)
+        .map((note, index) => ({
+          index,
+          id: note.id,
+          title: note.title,
+          type: 'note'
+        }));
+    },
+    onCreateNote: handleCreateNote
+  };
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -119,23 +139,9 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       WikiLink.configure({
         validateLink: validateWikiLink
       }),
-      WikiLinkSuggest({
-        fetchNotes: async (query) => {
-          if (!query) return [];
-          
-          const lowercaseQuery = query.toLowerCase();
-          return allNotes
-            .filter(note => note.title.toLowerCase().includes(lowercaseQuery))
-            .slice(0, 10)
-            .map((note, index) => ({
-              index,
-              id: note.id,
-              title: note.title,
-              type: 'note'
-            }));
-        },
-        editor,
-        onCreateNote: handleCreateNote
+      Suggestion.configure({
+        ...WikiLinkSuggest(wikiLinkSuggestConfig.fetchNotes, handleCreateNote),
+        editor: null, // This will be set after editor initialization
       }),
     ],
     content,
@@ -269,7 +275,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
 
   return (
     <div className="tiptap-editor border rounded-md bg-background">
-      {editor && editable && <MenuBar editor={editor} />}
+      {editor && editable && <MenuBar editor={editor} noteId={noteId} />}
       <EditorContent
         editor={editor}
         className="prose prose-sm dark:prose-invert max-w-none p-4"
