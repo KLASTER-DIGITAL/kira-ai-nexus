@@ -36,7 +36,8 @@ export const useEditorConfig = ({
     handleCreateNote,
     validateWikiLink,
     processWikiLinks,
-    fetchNotesForSuggestion
+    fetchNotesForSuggestion,
+    validateLinks
   } = useWikiLinks(noteId, onNoteCreated);
 
   const getEditorConfig = useCallback(() => {
@@ -88,5 +89,5 @@ export const useEditorConfig = ({
     handleCreateNote
   ]);
 
-  return { getEditorConfig };
+  return { getEditorConfig, validateLinks };
 };

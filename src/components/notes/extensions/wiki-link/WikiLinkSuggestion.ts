@@ -2,8 +2,7 @@
 import React from 'react';
 import { ReactRenderer } from '@tiptap/react';
 import tippy from 'tippy.js';
-import { Editor } from '@tiptap/core';
-import Suggestion, { SuggestionOptions } from '@tiptap/suggestion';
+import Suggestion from '@tiptap/suggestion';
 import WikiLinkSuggestList from './WikiLinkSuggestList';
 
 export interface WikiLinkItem {
@@ -20,8 +19,7 @@ export const createWikiLinkSuggestion = (
   fetchSuggestions: FetchWikiLinkSuggestions,
   createNoteCallback: CreateWikiLink
 ) => {
-  return Suggestion({
-    editor: ({ editor }) => editor, // Add required editor property
+  return Suggestion.configure({
     char: '[[',
     allowSpaces: true,
     allowedPrefixes: [' ', '\n', null],

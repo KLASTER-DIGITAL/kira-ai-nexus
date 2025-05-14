@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Note } from "@/types/notes";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { NoteInput } from "./types";
 
 export interface CreateNoteInput {
   title: string;
@@ -26,6 +25,13 @@ export const useNotesMutations = () => {
   // Create a new note
   const createNoteMutation = useMutation({
     mutationFn: async (noteData: CreateNoteInput): Promise<Note> => {
+      // Fetch current user_id
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      
       // For the nodes table, we need to store the metadata (tags, color) in the content field as JSON
       const contentData = {
         text: noteData.content || '',
@@ -40,7 +46,7 @@ export const useNotesMutations = () => {
           title: noteData.title,
           content: contentData,
           type: 'note',
-          user_id: supabase.auth.getUser().then(res => res.data.user?.id) // Add user_id field
+          user_id: user.id
         })
         .select()
         .single();
@@ -58,7 +64,9 @@ export const useNotesMutations = () => {
         id: data.id,
         title: data.title,
         content: contentObj && 'text' in contentObj ? String(contentObj.text || '') : '',
-        tags: contentObj && 'tags' in contentObj ? (Array.isArray(contentObj.tags) ? contentObj.tags : []) : [],
+        tags: contentObj && 'tags' in contentObj ? 
+          (Array.isArray(contentObj.tags) ? 
+            contentObj.tags.map(tag => String(tag)) : []) : [],
         color: contentObj && 'color' in contentObj ? String(contentObj.color || '') : undefined,
         type: data.type,
         user_id: data.user_id
@@ -104,7 +112,8 @@ export const useNotesMutations = () => {
           text: noteData.content !== undefined ? noteData.content : 
             (currentContentObj && 'text' in currentContentObj ? currentContentObj.text : ''),
           tags: noteData.tags !== undefined ? noteData.tags : 
-            (currentContentObj && 'tags' in currentContentObj ? currentContentObj.tags : []),
+            (currentContentObj && 'tags' in currentContentObj ? 
+              currentContentObj.tags.map((tag: any) => String(tag)) : []),
           color: noteData.color !== undefined ? noteData.color : 
             (currentContentObj && 'color' in currentContentObj ? currentContentObj.color : '')
         };
@@ -129,7 +138,9 @@ export const useNotesMutations = () => {
           id: data.id,
           title: data.title,
           content: contentObj && 'text' in contentObj ? String(contentObj.text || '') : '',
-          tags: contentObj && 'tags' in contentObj ? (Array.isArray(contentObj.tags) ? contentObj.tags : []) : [],
+          tags: contentObj && 'tags' in contentObj ? 
+            (Array.isArray(contentObj.tags) ? 
+              contentObj.tags.map(tag => String(tag)) : []) : [],
           color: contentObj && 'color' in contentObj ? String(contentObj.color || '') : undefined,
           type: data.type,
           user_id: data.user_id
