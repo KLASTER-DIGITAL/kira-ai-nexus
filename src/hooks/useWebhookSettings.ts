@@ -3,13 +3,7 @@ import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from './use-toast';
 import { supabase } from '@/integrations/supabase/client';
-
-export interface WebhookSettings {
-  id: number;
-  n8n_webhook_test: string;
-  n8n_webhook_production: string | null;
-  n8n_mode: 'test' | 'production';
-}
+import { WebhookSettings } from '@/types';
 
 export const useWebhookSettings = () => {
   const [isSaving, setIsSaving] = useState<boolean>(false);
