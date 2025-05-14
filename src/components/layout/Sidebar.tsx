@@ -10,7 +10,8 @@ import {
   Settings,
   User,
   Shield,
-  Bot
+  Bot,
+  HelpCircle
 } from "lucide-react";
 import { useAuth } from '@/context/auth';
 import { cn } from "@/lib/utils";
@@ -30,6 +31,7 @@ const menuItems: MenuItem[] = [
   { icon: CheckSquare, label: "Задачи", path: "/tasks", role: 'any' },
   { icon: FileText, label: "Заметки", path: "/notes", role: 'any' },
   { icon: Calendar, label: "Календарь", path: "/calendar", role: 'any' },
+  { icon: HelpCircle, label: "Помощь", path: "/help", role: 'any' },
 ];
 
 interface SidebarProps {

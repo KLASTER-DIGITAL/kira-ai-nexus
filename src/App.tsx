@@ -19,6 +19,9 @@ import AuthPage from './pages/AuthPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import HomePage from './pages/HomePage'
+import HelpPage from './pages/HelpPage'
+import UserHelpPage from './pages/UserHelpPage'
+import AdminHelpPage from './pages/AdminHelpPage'
 
 function App() {
   // Установка favicon программно
@@ -49,6 +52,11 @@ function App() {
         <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
         <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
         <Route path="/ai-settings" element={<ProtectedRoute><AISettingsPage /></ProtectedRoute>} />
+        
+        {/* Help pages */}
+        <Route path="/help" element={<ProtectedRoute><HelpPage /></ProtectedRoute>} />
+        <Route path="/help/user" element={<ProtectedRoute><UserHelpPage /></ProtectedRoute>} />
+        <Route path="/help/admin" element={<ProtectedRoute requiredRole="superadmin"><AdminHelpPage /></ProtectedRoute>} />
         
         {/* Catch-all route for 404 */}
         <Route path="*" element={<NotFound />} />
