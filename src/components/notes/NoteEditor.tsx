@@ -4,27 +4,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Note } from "@/types/notes";
-import { X, Save, Tags } from "lucide-react";
+import { X, Save, Tags, ArrowLeft } from "lucide-react";
 import TipTapEditor from "./TipTapEditor";
 import { Badge } from "@/components/ui/badge";
+import { useNoteLinks } from "@/hooks/notes/useNoteLinks";
+import BacklinksList from "./BacklinksList";
 
 interface NoteEditorProps {
   note?: Note;
   onSave: (note: { title: string; content: string; tags: string[] }) => void;
   onCancel: () => void;
   isNew?: boolean;
+  onNoteSelect?: (noteId: string) => void;
 }
 
 const NoteEditor: React.FC<NoteEditorProps> = ({
   note,
   onSave,
   onCancel,
-  isNew = false
+  isNew = false,
+  onNoteSelect
 }) => {
   const [title, setTitle] = useState(note?.title || "");
   const [content, setContent] = useState(note?.content || "");
   const [tags, setTags] = useState<string[]>(note?.tags || []);
   const [tagInput, setTagInput] = useState("");
+
+  const { links } = useNoteLinks(note?.id);
+  const hasBacklinks = links?.incomingLinks && links.incomingLinks.length > 0;
 
   useEffect(() => {
     if (note) {
@@ -63,6 +70,12 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
     }
   };
 
+  const handleWikiLinkClick = (noteId: string) => {
+    if (onNoteSelect) {
+      onNoteSelect(noteId);
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
@@ -80,7 +93,15 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
           onChange={setContent} 
           placeholder="Содержание заметки..."
           autoFocus={false}
+          noteId={note?.id}
+          onLinkClick={handleWikiLinkClick}
         />
+        
+        {hasBacklinks && (
+          <div className="mt-4">
+            <BacklinksList links={links?.incomingLinks || []} onLinkClick={handleWikiLinkClick} />
+          </div>
+        )}
         
         <div className="mt-4">
           <div className="flex items-center gap-2 mb-2">

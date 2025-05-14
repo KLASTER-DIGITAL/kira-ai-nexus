@@ -73,6 +73,14 @@ const NotesList: React.FC = () => {
     setIsDeleteDialogOpen(false);
   };
 
+  // Handle note selection via wiki links
+  const handleNoteSelect = (noteId: string) => {
+    const selectedNote = notes?.find((note) => note.id === noteId);
+    if (selectedNote) {
+      handleEditNote(selectedNote);
+    }
+  };
+
   // Extract all unique tags from notes
   const allTags = useMemo(() => {
     if (!notes) return [];
@@ -162,6 +170,7 @@ const NotesList: React.FC = () => {
         onOpenChange={setIsEditorOpen}
         activeNote={activeNote}
         onSaveNote={handleSaveNote}
+        onNoteSelect={handleNoteSelect}
       />
 
       {/* Delete Confirmation Dialog */}

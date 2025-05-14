@@ -14,6 +14,7 @@ interface NoteEditDialogProps {
   onOpenChange: (open: boolean) => void;
   activeNote?: Note;
   onSaveNote: (noteData: { title: string; content: string; tags: string[] }) => void;
+  onNoteSelect?: (noteId: string) => void;
 }
 
 const NoteEditDialog: React.FC<NoteEditDialogProps> = ({
@@ -21,6 +22,7 @@ const NoteEditDialog: React.FC<NoteEditDialogProps> = ({
   onOpenChange,
   activeNote,
   onSaveNote,
+  onNoteSelect,
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -35,6 +37,7 @@ const NoteEditDialog: React.FC<NoteEditDialogProps> = ({
           onSave={onSaveNote}
           onCancel={() => onOpenChange(false)}
           isNew={!activeNote}
+          onNoteSelect={onNoteSelect}
         />
       </DialogContent>
     </Dialog>

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Editor } from "@tiptap/react";
 import {
   Bold,
@@ -8,7 +8,7 @@ import {
   Strikethrough,
   Link,
   ListOrdered,
-  List, // Заменили ListUnordered на List
+  List,
   Heading1,
   Heading2,
   Heading3,
@@ -17,14 +17,31 @@ import {
   Image,
   Undo,
   Redo,
+  Hash,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNoteLinks } from "@/hooks/notes/useNoteLinks";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { 
+  Command, 
+  CommandInput, 
+  CommandEmpty, 
+  CommandGroup, 
+  CommandItem, 
+  CommandList 
+} from "@/components/ui/command";
 
 interface MenuBarProps {
   editor: Editor;
+  noteId?: string;
 }
 
-export const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
+export const MenuBar: React.FC<MenuBarProps> = ({ editor, noteId }) => {
+  const [wikiLinkPopoverOpen, setWikiLinkPopoverOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { allNotes } = useNoteLinks(noteId);
+  
   if (!editor) {
     return null;
   }
@@ -44,6 +61,22 @@ export const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
       editor.chain().focus().setImage({ src: url }).run();
     }
   };
+  
+  const insertWikiLink = (title: string) => {
+    editor
+      .chain()
+      .focus()
+      .insertContent(`[[${title}]]`)
+      .run();
+    
+    setWikiLinkPopoverOpen(false);
+  };
+
+  const filteredNotes = searchQuery
+    ? allNotes.filter(note => 
+        note.title.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : allNotes;
 
   return (
     <div className="border-b flex flex-wrap gap-1 p-2 bg-muted/20">
@@ -98,6 +131,43 @@ export const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
       >
         <Link className="h-4 w-4" />
       </Button>
+      
+      <Popover open={wikiLinkPopoverOpen} onOpenChange={setWikiLinkPopoverOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            size="sm"
+            variant="ghost"
+            className={editor.isActive("wikiLink") ? "bg-muted" : ""}
+            title="Wiki-ссылка [[название]]"
+          >
+            <Hash className="h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="p-0" align="start" side="bottom">
+          <Command>
+            <CommandInput 
+              placeholder="Найти заметку..." 
+              value={searchQuery}
+              onValueChange={setSearchQuery}
+            />
+            <CommandList>
+              <CommandEmpty>Заметки не найдены</CommandEmpty>
+              <CommandGroup heading="Заметки">
+                {filteredNotes.map((note) => (
+                  <CommandItem
+                    key={note.id}
+                    value={note.title}
+                    onSelect={() => insertWikiLink(note.title)}
+                  >
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    {note.title}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
       
       <span className="h-6 w-px bg-muted mx-1"></span>
       
