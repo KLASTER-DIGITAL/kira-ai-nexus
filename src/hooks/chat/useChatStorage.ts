@@ -13,10 +13,35 @@ export const useChatStorage = (userId?: string) => {
 
     try {
       // Convert the extension to a format Supabase can handle (JSON)
-      const extensionJson = message.extension ? {
-        files: message.extension.files,
-        metadata: message.extension.metadata
-      } : null;
+      let extensionJson = null;
+      let payloadJson = null;
+      
+      if (message.extension) {
+        // We need to serialize the extension to match Supabase's Json type
+        extensionJson = {};
+        
+        if (message.extension.files) {
+          // Convert files to plain objects that can be serialized
+          extensionJson.files = message.extension.files.map(file => ({
+            name: file.name,
+            type: file.type,
+            url: file.url || null,
+            size: file.size,
+            local_id: file.local_id || null
+          }));
+        }
+        
+        if (message.extension.metadata) {
+          extensionJson.metadata = message.extension.metadata;
+        }
+        
+        // Create a simple payload for additional queries
+        if (message.extension.files) {
+          payloadJson = { 
+            file_count: message.extension.files.length 
+          };
+        }
+      }
 
       const { error } = await supabase.from('messages').insert({
         id: message.id,
@@ -26,9 +51,7 @@ export const useChatStorage = (userId?: string) => {
         session_id: message.session_id,
         created_at: message.timestamp.toISOString(),
         extension: extensionJson,
-        payload: message.extension?.files ? { 
-          file_count: message.extension.files.length 
-        } : null
+        payload: payloadJson
       });
 
       if (error) throw error;
@@ -72,15 +95,22 @@ export const useChatStorage = (userId?: string) => {
           if (msg.extension) {
             const extension: ChatMessageExtension = {};
             
-            if (msg.extension.files) {
-              extension.files = msg.extension.files;
+            // Type guard to check if extension is an object with the expected properties
+            if (typeof msg.extension === 'object' && msg.extension !== null) {
+              // Handle files if they exist in the extension
+              if (msg.extension.files && Array.isArray(msg.extension.files)) {
+                extension.files = msg.extension.files;
+              }
+              
+              // Handle metadata if it exists in the extension
+              if (msg.extension.metadata) {
+                extension.metadata = msg.extension.metadata;
+              }
             }
             
-            if (msg.extension.metadata) {
-              extension.metadata = msg.extension.metadata;
+            if (Object.keys(extension).length > 0) {
+              message.extension = extension;
             }
-            
-            message.extension = extension;
           }
           
           return message;

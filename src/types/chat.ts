@@ -16,9 +16,9 @@ export interface ChatMessageExtension {
 export interface ChatAttachment {
   name: string;
   type: string;
-  url?: string;
+  url?: string | null;
   size: number;
-  local_id?: string; // For tracking uploads
+  local_id?: string | null; // For tracking uploads
 }
 
 export interface Message {

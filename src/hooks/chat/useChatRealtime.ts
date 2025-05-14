@@ -1,7 +1,7 @@
 
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ChatMessage } from '@/types/chat';
+import { ChatMessage, ChatMessageExtension } from '@/types/chat';
 
 export const useChatRealtime = (
   sessionId?: string, 
@@ -33,9 +33,27 @@ export const useChatRealtime = (
             role: newMsg.role as 'user' | 'assistant',
             content: newMsg.content,
             timestamp: new Date(newMsg.created_at),
-            session_id: newMsg.session_id,
-            ...(newMsg.extension && { extension: newMsg.extension })
+            session_id: newMsg.session_id
           };
+
+          // Process extension data if it exists
+          if (newMsg.extension) {
+            const extension: ChatMessageExtension = {};
+            
+            if (typeof newMsg.extension === 'object' && newMsg.extension !== null) {
+              if (newMsg.extension.files && Array.isArray(newMsg.extension.files)) {
+                extension.files = newMsg.extension.files;
+              }
+              
+              if (newMsg.extension.metadata) {
+                extension.metadata = newMsg.extension.metadata;
+              }
+            }
+            
+            if (Object.keys(extension).length > 0) {
+              chatMessage.extension = extension;
+            }
+          }
           
           onNewMessage(chatMessage);
         }
