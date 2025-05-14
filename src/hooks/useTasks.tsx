@@ -48,18 +48,21 @@ export const useTasks = (filter?: TaskFilter) => {
       }
       
       // Преобразуем данные из Supabase в формат Task
-      return data.map(item => ({
-        id: item.id,
-        title: item.title,
-        description: item.content?.description,
-        completed: item.content?.completed === true || item.content?.completed === 'true',
-        priority: (item.content?.priority || 'medium') as TaskPriority,
-        dueDate: item.content?.dueDate,
-        user_id: item.user_id,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-        type: 'task' as const
-      }));
+      return data.map(item => {
+        const content = item.content as Record<string, any> || {};
+        return {
+          id: item.id,
+          title: item.title,
+          description: content.description,
+          completed: content.completed === true || content.completed === 'true',
+          priority: (content.priority || 'medium') as TaskPriority,
+          dueDate: content.dueDate,
+          user_id: item.user_id,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+          type: 'task' as const
+        };
+      });
     },
     enabled: !!user
   });
@@ -132,15 +135,17 @@ export const useTasks = (filter?: TaskFilter) => {
       // Merge current content with updates
       const { priority, completed, dueDate, description, title } = updatedTask;
       
+      const currentContent = currentTask.content as Record<string, any> || {};
+      
       const taskContent = {
-        ...(currentTask.content || {}),
+        ...currentContent,
         ...(priority !== undefined && { priority }),
         ...(completed !== undefined && { completed }),
         ...(dueDate !== undefined && { dueDate }),
         ...(description !== undefined && { description })
       };
       
-      const updateData: any = {
+      const updateData: Record<string, any> = {
         content: taskContent
       };
       
