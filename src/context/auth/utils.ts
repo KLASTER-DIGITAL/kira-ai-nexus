@@ -60,6 +60,13 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
 };
 
 /**
+ * Determines if the current user has superadmin permissions
+ */
+export const isSuperAdmin = (profile: UserProfile | null): boolean => {
+  return profile?.role === 'superadmin';
+};
+
+/**
  * Determines the appropriate redirect path based on user role
  */
 export const getRedirectPath = (profile: UserProfile | null): string => {

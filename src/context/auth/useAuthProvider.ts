@@ -8,6 +8,7 @@ import {
   requestPasswordReset,
   resetPassword,
 } from './authActions';
+import { isSuperAdmin as checkIsSuperAdmin } from './utils';
 
 export const useAuthProvider = () => {
   const authState = useAuthState();
@@ -15,7 +16,7 @@ export const useAuthProvider = () => {
 
   // Helper function to check if user is superadmin
   const isSuperAdmin = () => {
-    const isSuperAdminUser = authState.profile?.role === 'superadmin';
+    const isSuperAdminUser = checkIsSuperAdmin(authState.profile);
     console.log("isSuperAdmin check:", { 
       role: authState.profile?.role, 
       isSuperAdmin: isSuperAdminUser,
