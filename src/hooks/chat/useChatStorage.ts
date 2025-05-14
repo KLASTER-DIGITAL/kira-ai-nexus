@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ChatMessage, ChatMessageExtension } from '@/types/chat';
+import { ChatMessage, ChatMessageExtension, ChatAttachment } from '@/types/chat';
 import { useToast } from '@/hooks/use-toast';
 
 // Define a type that matches Supabase's Json type constraints
@@ -107,13 +107,32 @@ export const useChatStorage = (userId?: string) => {
             // Type guard to check if extension is an object with the expected properties
             if (typeof msg.extension === 'object' && msg.extension !== null) {
               // Handle files if they exist in the extension
-              if (msg.extension && 'files' in msg.extension && Array.isArray(msg.extension.files)) {
-                extension.files = msg.extension.files;
+              if ('files' in msg.extension && Array.isArray(msg.extension.files)) {
+                // Explicit type casting with validation
+                const fileAttachments: ChatAttachment[] = msg.extension.files.map((file: any) => ({
+                  name: String(file.name || ''),
+                  type: String(file.type || ''),
+                  url: file.url ? String(file.url) : null,
+                  size: Number(file.size || 0),
+                  local_id: file.local_id ? String(file.local_id) : null
+                }));
+                
+                extension.files = fileAttachments;
               }
               
               // Handle metadata if it exists in the extension
-              if (msg.extension && 'metadata' in msg.extension) {
-                extension.metadata = msg.extension.metadata;
+              if ('metadata' in msg.extension && msg.extension.metadata) {
+                // Safely convert to Record<string, any>
+                const metadata: Record<string, any> = {};
+                
+                if (typeof msg.extension.metadata === 'object' && msg.extension.metadata !== null) {
+                  // Copy properties from the original metadata
+                  Object.entries(msg.extension.metadata).forEach(([key, value]) => {
+                    metadata[key] = value;
+                  });
+                }
+                
+                extension.metadata = metadata;
               }
             }
             
