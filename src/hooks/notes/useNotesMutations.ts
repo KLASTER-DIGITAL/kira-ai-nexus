@@ -40,6 +40,7 @@ export const useNotesMutations = () => {
           title: noteData.title,
           content: contentData,
           type: 'note',
+          user_id: supabase.auth.getUser().then(res => res.data.user?.id) // Add user_id field
         })
         .select()
         .single();
@@ -48,14 +49,17 @@ export const useNotesMutations = () => {
         console.error("Error creating note:", error);
         throw error;
       }
+
+      // Safely access potentially nested properties
+      const contentObj = typeof data.content === 'object' ? data.content : {};
       
       // Format the note with proper types before returning
       return {
         id: data.id,
         title: data.title,
-        content: data.content?.text || '',
-        tags: data.content?.tags || [],
-        color: data.content?.color,
+        content: contentObj && 'text' in contentObj ? String(contentObj.text || '') : '',
+        tags: contentObj && 'tags' in contentObj ? (Array.isArray(contentObj.tags) ? contentObj.tags : []) : [],
+        color: contentObj && 'color' in contentObj ? String(contentObj.color || '') : undefined,
         type: data.type,
         user_id: data.user_id
       };
@@ -90,14 +94,19 @@ export const useNotesMutations = () => {
           throw fetchError;
         }
         
-        // If we have content, tags or color updates, update the content field
-        const currentContent = currentNote.content || { text: '', tags: [], color: '' };
+        // Safely handle the content field which could be a string or object
+        const currentContentObj = typeof currentNote.content === 'object' ? 
+          currentNote.content : 
+          { text: '', tags: [], color: '' };
         
+        // If we have content, tags or color updates, update the content field
         updateData.content = {
-          ...currentContent,
-          text: noteData.content !== undefined ? noteData.content : currentContent.text,
-          tags: noteData.tags !== undefined ? noteData.tags : currentContent.tags,
-          color: noteData.color !== undefined ? noteData.color : currentContent.color
+          text: noteData.content !== undefined ? noteData.content : 
+            (currentContentObj && 'text' in currentContentObj ? currentContentObj.text : ''),
+          tags: noteData.tags !== undefined ? noteData.tags : 
+            (currentContentObj && 'tags' in currentContentObj ? currentContentObj.tags : []),
+          color: noteData.color !== undefined ? noteData.color : 
+            (currentContentObj && 'color' in currentContentObj ? currentContentObj.color : '')
         };
         
         // Perform the update
@@ -111,14 +120,17 @@ export const useNotesMutations = () => {
         if (error) {
           throw error;
         }
+
+        // Safely access potentially nested properties
+        const contentObj = typeof data.content === 'object' ? data.content : {};
         
         // Format the note with proper types before returning
         return {
           id: data.id,
           title: data.title,
-          content: data.content?.text || '',
-          tags: data.content?.tags || [],
-          color: data.content?.color,
+          content: contentObj && 'text' in contentObj ? String(contentObj.text || '') : '',
+          tags: contentObj && 'tags' in contentObj ? (Array.isArray(contentObj.tags) ? contentObj.tags : []) : [],
+          color: contentObj && 'color' in contentObj ? String(contentObj.color || '') : undefined,
           type: data.type,
           user_id: data.user_id
         };

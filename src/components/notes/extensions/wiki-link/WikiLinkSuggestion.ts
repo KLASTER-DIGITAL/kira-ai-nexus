@@ -2,7 +2,8 @@
 import React from 'react';
 import { ReactRenderer } from '@tiptap/react';
 import tippy from 'tippy.js';
-import Suggestion from '@tiptap/suggestion';
+import { Editor } from '@tiptap/core';
+import Suggestion, { SuggestionOptions } from '@tiptap/suggestion';
 import WikiLinkSuggestList from './WikiLinkSuggestList';
 
 export interface WikiLinkItem {
@@ -20,12 +21,13 @@ export const createWikiLinkSuggestion = (
   createNoteCallback: CreateWikiLink
 ) => {
   return Suggestion({
+    editor: ({ editor }) => editor, // Add required editor property
     char: '[[',
     allowSpaces: true,
     allowedPrefixes: [' ', '\n', null],
     startOfLine: false,
     
-    async items({ query, editor }) {
+    async items({ query }) {
       if (query.length === 0) return [];
       
       try {
@@ -79,22 +81,20 @@ export const createWikiLinkSuggestion = (
             return true;
           }
           
-          if (component && component.ref) {
-            // Type check the ref object to see if it has onKeyDown
-            if (typeof (component.ref as any).onKeyDown === 'function') {
-              return (component.ref as any).onKeyDown(props);
-            }
+          // Type-safe reference access
+          const ref = component.ref as any;
+          if (ref && typeof ref.onKeyDown === 'function') {
+            return ref.onKeyDown(props);
           }
           
           return false;
         },
         
         onKeyUp(props) {
-          if (component && component.ref) {
-            // Type check the ref object to see if it has onKeyUp
-            if (typeof (component.ref as any).onKeyUp === 'function') {
-              return (component.ref as any).onKeyUp(props);
-            }
+          // Type-safe reference access
+          const ref = component.ref as any;
+          if (ref && typeof ref.onKeyUp === 'function') {
+            return ref.onKeyUp(props);
           }
           
           return false;

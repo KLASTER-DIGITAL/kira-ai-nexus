@@ -65,14 +65,19 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
    */
   const validateLinks = useCallback((editor: Editor) => {
     // Find all wiki links in the document and validate them
-    const wikiLinks = editor.state.doc.descendants((node, pos) => {
+    editor.state.doc.descendants((node, pos) => {
       if (node.type.name === 'wikiLink') {
         const href = node.attrs.href;
         const isValid = validateWikiLink(href);
         
         // Update link validity if needed
         if (node.attrs.isValid !== isValid) {
-          editor.chain().setNodeAttribute('wikiLink', { isValid }).run();
+          // Use a different approach since setNodeAttribute doesn't exist
+          editor.chain().focus().run();
+          const { tr } = editor.view.state;
+          const newAttrs = { ...node.attrs, isValid };
+          tr.setNodeMarkup(pos, undefined, newAttrs);
+          editor.view.dispatch(tr);
         }
         return true;
       }

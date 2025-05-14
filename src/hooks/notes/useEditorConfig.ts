@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { Editor } from '@tiptap/react';
+import { Editor, Extensions } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
@@ -43,23 +43,26 @@ export const useEditorConfig = ({
     // Create suggestion configuration for wiki links
     const suggestionConfig = createWikiLinkSuggestion(fetchNotesForSuggestion, handleCreateNote);
     
+    // Create an array of extensions that conforms to the required type
+    const extensions: Extensions = [
+      StarterKit,
+      Placeholder.configure({
+        placeholder,
+      }),
+      Link.configure({
+        openOnClick: true,
+        linkOnPaste: true,
+      }),
+      Underline,
+      Image,
+      WikiLink.configure({
+        validateLink: validateWikiLink
+      }),
+      suggestionConfig,
+    ];
+    
     return {
-      extensions: [
-        StarterKit,
-        Placeholder.configure({
-          placeholder,
-        }),
-        Link.configure({
-          openOnClick: true,
-          linkOnPaste: true,
-        }),
-        Underline,
-        Image,
-        WikiLink.configure({
-          validateLink: validateWikiLink
-        }),
-        suggestionConfig,
-      ],
+      extensions,
       content,
       editable,
       onUpdate: ({ editor }: { editor: Editor }) => {
