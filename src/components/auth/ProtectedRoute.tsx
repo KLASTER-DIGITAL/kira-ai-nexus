@@ -11,9 +11,6 @@ interface ProtectedRouteProps {
 
 /**
  * ProtectedRoute component that handles authentication and role-based access
- * 
- * @param children - Child components to render when access is granted
- * @param requiredRole - Optional role requirement for accessing this route
  */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
@@ -28,7 +25,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     profile,
     userRole: profile?.role,
     requiredRole,
-    isSuperAdmin: isSuperAdmin(),
+    isSuperAdmin: isSuperAdmin?.(),
     path: location.pathname
   });
 
@@ -43,15 +40,21 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
   
   // For superadmin trying to access user dashboard, redirect to admin dashboard
-  if (isSuperAdmin() && location.pathname === '/dashboard/user') {
+  if (isSuperAdmin?.() && location.pathname === '/dashboard/user') {
     console.log('Superadmin redirected from user dashboard to admin dashboard');
     return <Navigate to="/dashboard/admin" replace />;
+  }
+  
+  // For regular user trying to access admin dashboard, redirect to user dashboard
+  if (!isSuperAdmin?.() && location.pathname === '/dashboard/admin') {
+    console.log('Regular user redirected from admin dashboard to user dashboard');
+    return <Navigate to="/dashboard/user" replace />;
   }
   
   // For role-specific routes, check if user has required role
   if (requiredRole && profile?.role !== requiredRole) {
     console.log(`Access denied: User role ${profile?.role} does not match required role ${requiredRole}`);
-    const fallbackPath = isSuperAdmin() ? '/dashboard/admin' : '/dashboard/user';
+    const fallbackPath = isSuperAdmin?.() ? '/dashboard/admin' : '/dashboard/user';
     return <Navigate to={fallbackPath} replace />;
   }
 

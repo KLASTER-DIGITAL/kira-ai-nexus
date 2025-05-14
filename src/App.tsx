@@ -1,10 +1,11 @@
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-// Auth Provider
+// Auth Provider and Protected Route
 import { useAuth } from "@/context/auth";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
@@ -27,11 +28,11 @@ const RoleBasedRedirect = () => {
   const { profile, isSuperAdmin } = useAuth();
   console.log("RoleBasedRedirect check:", { 
     profile, 
-    isSuperAdmin: isSuperAdmin(), 
+    isSuperAdmin: isSuperAdmin?.(), 
     role: profile?.role 
   });
   
-  if (isSuperAdmin()) {
+  if (isSuperAdmin?.()) {
     console.log("Redirecting to admin dashboard based on isSuperAdmin()");
     return <Navigate to="/dashboard/admin" replace />;
   }

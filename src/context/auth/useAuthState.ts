@@ -86,9 +86,17 @@ export const useAuthState = () => {
           });
           
           // Check if we need to redirect based on current URL and role
-          if (profile && window.location.pathname === '/dashboard/user' && profile.role === 'superadmin') {
-            console.log("Initial redirect: Superadmin on user dashboard, redirecting to admin dashboard");
-            navigate('/dashboard/admin', { replace: true });
+          if (profile) {
+            const currentPath = window.location.pathname;
+            console.log("Current path check:", currentPath);
+            
+            if ((currentPath === '/dashboard/user' && profile.role === 'superadmin') ||
+                (currentPath === '/dashboard/admin' && profile.role !== 'superadmin') ||
+                (currentPath === '/dashboard' || currentPath === '/')) {
+              const redirectPath = getRedirectPath(profile);
+              console.log("Initial redirect to:", redirectPath);
+              navigate(redirectPath, { replace: true });
+            }
           }
         } else {
           setState(prev => ({ ...prev, isLoading: false }));
