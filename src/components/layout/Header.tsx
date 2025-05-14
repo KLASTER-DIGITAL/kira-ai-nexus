@@ -3,34 +3,37 @@ import React from "react";
 import { 
   Bell, 
   Search, 
+  Menu, 
+  X,
   PlusCircle,
   HelpCircle,
-  User,
+  LogOut
 } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface HeaderProps {
+  sidebarCollapsed: boolean;
+  toggleSidebar: () => void;
   pageTitle?: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ pageTitle = "Дашборд" }) => {
+const Header: React.FC<HeaderProps> = ({ 
+  sidebarCollapsed, 
+  toggleSidebar, 
+  pageTitle = "Дашборд"
+}) => {
   return (
-    <header className="h-16 border-b border-border flex items-center justify-between px-4 bg-background sticky top-0 z-10">
+    <header className="h-16 border-b border-border flex items-center justify-between px-4 bg-background">
       <div className="flex items-center gap-3">
-        <SidebarTrigger className="h-9 w-9" />
-        <h1 className="text-xl font-semibold hidden md:block">{pageTitle}</h1>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="text-foreground"
+          onClick={toggleSidebar}
+        >
+          {sidebarCollapsed ? <Menu size={20} /> : <X size={20} />}
+        </Button>
+        <h1 className="text-xl font-semibold">{pageTitle}</h1>
       </div>
       
       <div className="flex-1 max-w-xl mx-4">
@@ -39,15 +42,16 @@ const Header: React.FC<HeaderProps> = ({ pageTitle = "Дашборд" }) => {
             className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" 
             size={18} 
           />
-          <Input
+          <input
+            type="text"
             placeholder="Поиск по всему..."
-            className="w-full pl-10 pr-4 bg-background border-muted"
+            className="kira-input w-full pl-10"
           />
         </div>
       </div>
       
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative">
           <Bell size={20} />
           <span className="absolute top-1 right-1 w-2 h-2 bg-kira-purple rounded-full"></span>
         </Button>
@@ -63,30 +67,11 @@ const Header: React.FC<HeaderProps> = ({ pageTitle = "Дашборд" }) => {
         
         <div className="w-px h-6 bg-border mx-1"></div>
         
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Avatar className="h-9 w-9">
-                <AvatarFallback className="bg-kira-purple text-white">
-                  К
-                </AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Мой аккаунт</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              <span>Профиль</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>Настройки</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
-              Выйти
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-2">
+          <div className="w-9 h-9 rounded-full bg-kira-purple text-white flex items-center justify-center font-medium">
+            К
+          </div>
+        </div>
       </div>
     </header>
   );

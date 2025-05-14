@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { GripHorizontal, Maximize2, Minimize2, X, Settings } from 'lucide-react';
+import { Grip, MoreVertical, Maximize2, Minimize2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
   DropdownMenu,
@@ -9,8 +9,6 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { ANIMATIONS } from '@/lib/animations';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 
 interface DashboardItemProps {
   title: string;
@@ -25,91 +23,67 @@ const DashboardItem: React.FC<DashboardItemProps> = ({
   children,
   className = ""
 }) => {
-  const [collapsed, setCollapsed] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   return (
-    <Card 
-      className={cn(
-        "h-full w-full",
-        "transition-all duration-300 group hover:shadow-md",
-        className,
-        ANIMATIONS.fadeIn,
-        "flex flex-col"
-      )}
+    <div 
+      className={`
+        kira-dashboard-item
+        ${expanded ? 'col-span-full row-span-2' : ''}
+        ${className}
+        transition-all duration-300 hover:shadow-md
+        ${ANIMATIONS.slideIn}
+        bg-white dark:bg-card rounded-lg border border-border shadow-sm
+      `}
     >
-      <CardHeader className="p-3 flex-row justify-between items-center space-y-0 border-b select-none">
+      <div className="kira-dashboard-item-header p-3 flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <GripHorizontal size={16} className="text-muted-foreground cursor-move" />
-          <h3 className="font-medium text-base">{title}</h3>
+          <Grip size={16} className="text-muted-foreground kira-draggable cursor-move" />
+          <h3 className="font-medium">{title}</h3>
         </div>
         <div className="flex items-center gap-1">
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => setCollapsed(!collapsed)} 
-            className="h-7 w-7 rounded-full hover:bg-accent"
-            aria-label={collapsed ? "Развернуть" : "Свернуть содержимое"}
-            title={collapsed ? "Развернуть" : "Свернуть содержимое"}
+            onClick={() => setExpanded(!expanded)} 
+            className="hover:bg-kira-purple/10 transition-colors"
           >
-            {collapsed ? (
-              <Maximize2 size={14} />
-            ) : (
-              <Minimize2 size={14} />
-            )}
+            {expanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
           </Button>
-          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
                 size="icon"
-                className="h-7 w-7 rounded-full hover:bg-accent"
-                aria-label="Настройки"
+                className="hover:bg-kira-purple/10 transition-colors"
               >
-                <Settings size={14} />
+                <MoreVertical size={15} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem>
-                <span>Настроить виджет</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <span>Обновить данные</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                className="text-destructive focus:text-destructive" 
-                onClick={onRemove}
-              >
-                <span>Удалить виджет</span>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>Настроить</DropdownMenuItem>
+              <DropdownMenuItem>Обновить</DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive" onClick={onRemove}>
+                Удалить
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          
           {onRemove && (
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={onRemove}
-              className="h-7 w-7 rounded-full hover:bg-destructive/10 hover:text-destructive"
-              aria-label="Удалить"
-              title="Удалить"
+              className="hover:bg-destructive/10 hover:text-destructive transition-colors"
             >
-              <X size={14} />
+              <X size={15} />
             </Button>
           )}
         </div>
-      </CardHeader>
-      
-      <CardContent
-        className={cn(
-          "p-3 flex-1 overflow-auto",
-          "transition-all duration-300",
-          collapsed ? 'h-0 p-0 opacity-0' : 'opacity-100'
-        )}
-      >
-        {!collapsed && children}
-      </CardContent>
-    </Card>
+      </div>
+      <div className="p-3 flex-1 overflow-auto">
+        {children}
+      </div>
+    </div>
   );
 };
 

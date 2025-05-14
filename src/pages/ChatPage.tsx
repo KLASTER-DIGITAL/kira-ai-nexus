@@ -6,7 +6,7 @@ import ChatInterface from "@/components/chat/ChatInterface";
 const ChatPage: React.FC = () => {
   return (
     <Layout title="Чат">
-      <div className="h-[calc(100vh-80px)] flex flex-col">
+      <div className="max-w-4xl mx-auto h-[calc(100vh-180px)]">
         <ChatInterface />
       </div>
     </Layout>
