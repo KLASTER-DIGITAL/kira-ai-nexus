@@ -12,8 +12,11 @@ const {
   updateMintConfig, 
   previewDocs 
 } = require('./docs/utils');
+const { generateAPIDocumentation } = require('./docs/api');
 
-// Главная функция
+/**
+ * Главная функция
+ */
 async function main() {
   const args = process.argv.slice(2);
   ensureDirectories();
@@ -30,9 +33,16 @@ async function main() {
     updateMintConfig();
   }
   
+  if (args.includes('--api')) {
+    generateAPIDocumentation();
+  }
+  
   if (args.includes('--preview')) {
     syncHelpContent();
     updateMintConfig();
+    if (args.includes('--api')) {
+      generateAPIDocumentation();
+    }
     previewDocs();
   }
   
@@ -40,6 +50,7 @@ async function main() {
     generateChangelog();
     syncHelpContent();
     updateMintConfig();
+    generateAPIDocumentation();
     previewDocs();
   }
 }

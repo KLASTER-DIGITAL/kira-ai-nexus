@@ -3,13 +3,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { syncUserHelpContent, syncAdminHelpContent } = require('./content');
-
-// Папка документации
-const DOCS_DIR = path.resolve(__dirname, '../../docs');
-const HELP_FILES = {
-  'user': path.resolve(__dirname, '../../src/pages/UserHelpPage.tsx'),
-  'admin': path.resolve(__dirname, '../../src/pages/AdminHelpPage.tsx')
-};
+const { DOCS_DIR } = require('./constants');
 
 /**
  * Генерация чейнджлога на основе коммитов
@@ -39,6 +33,13 @@ function ensureDirectories() {
   if (!fs.existsSync(helpDocsDir)) {
     fs.mkdirSync(helpDocsDir, { recursive: true });
     console.log('Создана директория docs/help/');
+  }
+  
+  // Создаем директорию для API документации, если она отсутствует
+  const apiDocsDir = path.join(DOCS_DIR, 'api');
+  if (!fs.existsSync(apiDocsDir)) {
+    fs.mkdirSync(apiDocsDir, { recursive: true });
+    console.log('Создана директория docs/api/');
   }
 }
 

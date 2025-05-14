@@ -10,7 +10,7 @@
   "navigation": [
     { "group": "Обзор", "pages": ["introduction", "getting-started"] },
     { "group": "Права доступа", "pages": ["user", "superadmin"] },
-    { "group": "API", "pages": ["auth", "endpoints"] },
+    { "group": "API", "pages": ["api/index", "api/taskService"] },
     { "group": "Справка", "pages": ["help/user-guide", "help/admin-guide"] },
     { "group": "Changelog", "pages": ["changelog"] },
     { "group": "Помощь", "pages": ["faq", "support"] }

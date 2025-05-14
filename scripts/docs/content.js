@@ -1,13 +1,120 @@
 
 const fs = require('fs');
 const path = require('path');
-const { DOCS_DIR } = require('./constants');
+const { DOCS_DIR, HELP_FILES } = require('./constants');
+
+/**
+ * Извлекает контент справки из React компонента
+ * @param {string} componentPath - путь к файлу компонента
+ * @returns {Object} - объект с извлеченными данными
+ */
+function extractHelpContentFromComponent(componentPath) {
+  try {
+    const content = fs.readFileSync(componentPath, 'utf8');
+    const result = {
+      title: '',
+      description: '',
+      sections: []
+    };
+    
+    // Извлекаем заголовок страницы
+    const titleMatch = content.match(/<CardTitle>(.*?)<\/CardTitle>/);
+    if (titleMatch && titleMatch[1]) {
+      result.title = titleMatch[1].trim();
+    } else {
+      // Запасной вариант - ищем через h1
+      const h1Match = content.match(/<h1[^>]*>(.*?)<\/h1>/);
+      if (h1Match && h1Match[1]) {
+        result.title = h1Match[1].trim();
+      }
+    }
+    
+    // Извлекаем описание
+    const descriptionMatch = content.match(/<p[^>]*class="text-sm[^"]*"[^>]*>(.*?)<\/p>/);
+    if (descriptionMatch && descriptionMatch[1]) {
+      result.description = descriptionMatch[1].trim();
+    }
+    
+    // Извлекаем секции - ищем заголовки TabsTrigger
+    const tabsPattern = /<TabsTrigger value="([^"]+)">(.*?)<\/TabsTrigger>/g;
+    let tabsMatch;
+    
+    while ((tabsMatch = tabsPattern.exec(content)) !== null) {
+      const sectionId = tabsMatch[1];
+      const sectionTitle = tabsMatch[2].trim();
+      
+      // Ищем контент для этой вкладки
+      const contentPattern = new RegExp(`<TabsContent value="${sectionId}"[^>]*>([\\s\\S]*?)<\/TabsContent>`);
+      const contentMatch = contentPattern.exec(content);
+      
+      if (contentMatch) {
+        const sectionContent = contentMatch[1];
+        
+        // Извлекаем подзаголовки и параграфы
+        const section = {
+          id: sectionId,
+          title: sectionTitle,
+          content: [],
+          subsections: []
+        };
+        
+        // Ищем заголовки второго уровня
+        const h3Pattern = /<h3[^>]*class="text-lg[^"]*"[^>]*>(.*?)<\/h3>/g;
+        let lastIndex = 0;
+        let h3Match;
+        
+        while ((h3Match = h3Pattern.exec(sectionContent)) !== null) {
+          const subsectionTitle = h3Match[1].trim();
+          const startIndex = h3Match.index;
+          
+          // Ищем следующий h3 или конец секции
+          const nextH3 = h3Pattern.exec(sectionContent);
+          const endIndex = nextH3 ? nextH3.index : sectionContent.length;
+          
+          // Извлекаем текст между заголовками
+          const subsectionContent = sectionContent.substring(startIndex, endIndex);
+          
+          // Извлекаем параграфы
+          const paragraphs = [];
+          const pPattern = /<p[^>]*>(.*?)<\/p>/g;
+          let pMatch;
+          
+          while ((pMatch = pPattern.exec(subsectionContent)) !== null) {
+            paragraphs.push(pMatch[1].trim());
+          }
+          
+          section.subsections.push({
+            title: subsectionTitle,
+            paragraphs
+          });
+          
+          if (nextH3) {
+            // Возвращаем указатель назад, чтобы не пропустить следующий заголовок
+            h3Pattern.lastIndex = nextH3.index;
+          } else {
+            break;
+          }
+        }
+        
+        result.sections.push(section);
+      }
+    }
+    
+    return result;
+  } catch (error) {
+    console.error(`Ошибка при извлечении контента из компонента ${componentPath}:`, error);
+    return null;
+  }
+}
 
 /**
  * Синхронизация контента из UserHelpPage
  */
 function syncUserHelpContent() {
   const userHelpFile = path.join(DOCS_DIR, 'help', 'user-guide.mdx');
+  
+  // В будущем можно использовать extractHelpContentFromComponent(HELP_FILES['user'])
+  // для автоматического извлечения контента
   
   fs.writeFileSync(userHelpFile, `---
 title: 'Руководство пользователя'
@@ -77,6 +184,9 @@ KIRA AI может:
 function syncAdminHelpContent() {
   const adminHelpFile = path.join(DOCS_DIR, 'help', 'admin-guide.mdx');
   
+  // В будущем можно использовать extractHelpContentFromComponent(HELP_FILES['admin'])
+  // для автоматического извлечения контента
+  
   fs.writeFileSync(adminHelpFile, `---
 title: 'Руководство администратора'
 description: 'Руководство по администрированию платформы KIRA AI'
@@ -134,5 +244,6 @@ description: 'Руководство по администрированию п�
 
 module.exports = {
   syncUserHelpContent,
-  syncAdminHelpContent
+  syncAdminHelpContent,
+  extractHelpContentFromComponent
 };

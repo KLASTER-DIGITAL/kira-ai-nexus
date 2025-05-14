@@ -1,0 +1,132 @@
+
+---
+title: 'taskService API'
+description: 'Документация по API модуля taskService'
+---
+
+# taskService API
+
+## Функции
+
+### `fetchTasks(userId, filter)`
+
+Получает список задач пользователя с возможностью фильтрации.
+
+#### Параметры
+
+| Название | Тип | Описание |
+|----------|-----|----------|
+| `userId` | `string` | Идентификатор пользователя |
+| `filter` | `TaskFilter` | Опциональные параметры фильтрации |
+
+#### Возвращаемое значение
+
+`Promise<Task[]>`
+
+#### Пример использования
+
+```typescript
+import { fetchTasks } from '@/services/taskService';
+
+const tasks = await fetchTasks('user-id', { completed: false, priority: 'high' });
+```
+
+---
+
+### `createTask(userId, taskData)`
+
+Создает новую задачу в базе данных.
+
+#### Параметры
+
+| Название | Тип | Описание |
+|----------|-----|----------|
+| `userId` | `string` | Идентификатор пользователя |
+| `taskData` | `CreateTaskInput` | Данные для создания задачи |
+
+#### Возвращаемое значение
+
+`Promise<Record<string, any>>`
+
+#### Пример использования
+
+```typescript
+import { createTask } from '@/services/taskService';
+
+const newTask = await createTask('user-id', {
+  title: 'Новая задача',
+  description: 'Описание задачи',
+  priority: 'medium',
+  completed: false,
+  dueDate: '2023-05-30'
+});
+```
+
+---
+
+### `updateTask(userId, taskData)`
+
+Обновляет существующую задачу в базе данных.
+
+#### Параметры
+
+| Название | Тип | Описание |
+|----------|-----|----------|
+| `userId` | `string` | Идентификатор пользователя |
+| `taskData` | `UpdateTaskInput` | Данные для обновления задачи |
+
+#### Возвращаемое значение
+
+`Promise<Record<string, any>>`
+
+#### Пример использования
+
+```typescript
+import { updateTask } from '@/services/taskService';
+
+const updatedTask = await updateTask('user-id', {
+  id: 'task-123',
+  title: 'Обновленная задача',
+  completed: true
+});
+```
+
+---
+
+### `deleteTask(userId, taskId)`
+
+Удаляет задачу из базы данных.
+
+#### Параметры
+
+| Название | Тип | Описание |
+|----------|-----|----------|
+| `userId` | `string` | Идентификатор пользователя |
+| `taskId` | `string` | Идентификатор задачи |
+
+#### Возвращаемое значение
+
+`Promise<string>`
+
+#### Пример использования
+
+```typescript
+import { deleteTask } from '@/services/taskService';
+
+const deletedTaskId = await deleteTask('user-id', 'task-123');
+```
+
+## Типы данных
+
+### `CreateTaskInput`
+
+```typescript
+type CreateTaskInput = Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'type'>;
+```
+
+### `UpdateTaskInput`
+
+```typescript
+type UpdateTaskInput = Partial<Task> & { id: string };
+```
+
