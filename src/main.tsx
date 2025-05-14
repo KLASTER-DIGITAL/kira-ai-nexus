@@ -1,27 +1,16 @@
 
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
-import { QueryClientProvider } from "@tanstack/react-query";
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+import './index.css'
+// Импортируем глобальные стили для TipTap и Wiki-ссылок
+import './styles/tiptap.css'
+import './styles/wiki-links.css'
+// Import для global.css если файл существует
+import './styles/global.css'
 
-// Styles
-import "./index.css";
-import "./styles/tiptap.css";
-import "./styles/wiki-links.css";
-
-// Import providers and utils
-import { AuthProvider } from "./context/auth";
-import { queryClient } from "./lib/utils";
-import App from "./App";
-
-ReactDOM.createRoot(document.getElementById("root")!).render(
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
-  </React.StrictMode>
-);
+    <App />
+  </React.StrictMode>,
+)

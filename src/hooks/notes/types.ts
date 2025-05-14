@@ -11,3 +11,10 @@ export interface NoteInput {
   content: string;
   tags?: string[];
 }
+
+export interface PaginatedNotes {
+  notes: Note[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+}

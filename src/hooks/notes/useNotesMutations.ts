@@ -28,6 +28,30 @@ export const useNotesMutations = () => {
         }
       };
 
+      // Optimistically add the note to the query cache
+      const optimisticNote: Note = {
+        id: `temp-${Date.now()}`,
+        user_id: user.id,
+        title: newNote.title,
+        content: newNote.content,
+        tags: newNote.tags || [],
+        type: 'note',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      // Add optimistic update
+      queryClient.setQueryData(['notes'], (oldData: any) => {
+        if (!oldData) return { notes: [optimisticNote], totalCount: 1, totalPages: 1, currentPage: 1 };
+        
+        const updatedNotes = [optimisticNote, ...oldData.notes];
+        return {
+          ...oldData,
+          notes: updatedNotes,
+          totalCount: oldData.totalCount + 1
+        };
+      });
+
       const { data, error } = await supabase
         .from('nodes')
         .insert(noteToInsert)
@@ -53,6 +77,10 @@ export const useNotesMutations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
+    },
+    onError: () => {
+      // Revert optimistic update on error
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
     }
   });
 
@@ -71,6 +99,28 @@ export const useNotesMutations = () => {
       };
       
       if (updatedNote.title !== undefined) updateData.title = updatedNote.title;
+      
+      // Optimistic update in cache
+      queryClient.setQueryData(['notes'], (oldData: any) => {
+        if (!oldData) return oldData;
+        
+        const updatedNotes = oldData.notes.map((note: Note) => 
+          note.id === updatedNote.id 
+            ? { 
+                ...note, 
+                title: updatedNote.title ?? note.title,
+                content: updatedNote.content ?? note.content,
+                tags: updatedNote.tags ?? note.tags,
+                updated_at: new Date().toISOString()
+              }
+            : note
+        );
+        
+        return {
+          ...oldData,
+          notes: updatedNotes
+        };
+      });
       
       const { data, error } = await supabase
         .from('nodes')
@@ -98,12 +148,29 @@ export const useNotesMutations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
+    },
+    onError: () => {
+      // Revert optimistic update on error
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
     }
   });
 
   // Delete a note
   const deleteNoteMutation = useMutation({
     mutationFn: async (noteId: string): Promise<void> => {
+      // Optimistically remove from cache
+      queryClient.setQueryData(['notes'], (oldData: any) => {
+        if (!oldData) return oldData;
+        
+        const filteredNotes = oldData.notes.filter((note: Note) => note.id !== noteId);
+        
+        return {
+          ...oldData,
+          notes: filteredNotes,
+          totalCount: Math.max(0, oldData.totalCount - 1)
+        };
+      });
+      
       const { error } = await supabase
         .from('nodes')
         .delete()
@@ -124,6 +191,10 @@ export const useNotesMutations = () => {
       });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+    },
+    onError: () => {
+      // Revert optimistic update on error
       queryClient.invalidateQueries({ queryKey: ['notes'] });
     }
   });

@@ -31,7 +31,7 @@ export const WikiLinkSuggest = Extension.create<WikiLinkSuggestOptions>({
             label: props.title
           }).run();
         },
-        items: ({ query }: { query: string }) => {
+        items: ({ query, editor }: { query: string; editor: Editor }) => {
           return [] as any[];
         }
       }
