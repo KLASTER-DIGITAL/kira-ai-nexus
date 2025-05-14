@@ -1,0 +1,63 @@
+
+---
+title: 'API Endpoints'
+description: 'Описание основных API-эндпоинтов'
+---
+
+# API Endpoints
+
+## Заметки
+
+### Получение списка заметок
+```typescript
+GET /api/notes
+```
+
+### Создание заметки
+```typescript
+POST /api/notes
+```
+
+### Обновление заметки
+```typescript
+PUT /api/notes/:id
+```
+
+### Удаление заметки
+```typescript
+DELETE /api/notes/:id
+```
+
+## Задачи
+
+### Получение списка задач
+```typescript
+GET /api/tasks
+```
+
+### Создание задачи
+```typescript
+POST /api/tasks
+```
+
+### Обновление задачи
+```typescript
+PUT /api/tasks/:id
+```
+
+### Удаление задачи
+```typescript
+DELETE /api/tasks/:id
+```
+
+## Calendar
+
+### Синхронизация с Google Calendar
+```typescript
+POST /api/calendar/sync
+```
+
+### Получение событий календаря
+```typescript
+GET /api/calendar/events
+```

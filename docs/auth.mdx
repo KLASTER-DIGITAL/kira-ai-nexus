@@ -1,0 +1,42 @@
+
+---
+title: 'Аутентификация'
+description: 'API аутентификации и авторизации'
+---
+
+# Аутентификация в KIRA AI
+
+## Модель авторизации
+
+KIRA AI использует Supabase для аутентификации с JWT-токенами и Row Level Security (RLS).
+
+## API Endpoints
+
+### Регистрация
+```typescript
+signUp(email: string, password: string): Promise<{ error: any | null }>
+```
+
+### Вход
+```typescript
+signIn(email: string, password: string): Promise<{ error: any | null }>
+```
+
+### Выход
+```typescript
+signOut(): Promise<void>
+```
+
+### Сброс пароля (запрос)
+```typescript
+requestPasswordReset(email: string): Promise<{ error: any | null }>
+```
+
+### Сброс пароля (подтверждение)
+```typescript
+resetPassword(newPassword: string): Promise<{ error: any | null }>
+```
+
+## Row Level Security
+
+Все данные пользователя хранятся с привязкой к workspace и защищены через RLS политики.

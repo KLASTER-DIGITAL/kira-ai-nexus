@@ -1,0 +1,43 @@
+
+name: Mintlify Documentation & Changelog
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'mint.json'
+      - '.github/workflows/mintlify-deploy.yml'
+      
+  # Позволяет запускать workflow вручную из GitHub Actions
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install Mintlify CLI
+        run: npm install -g mintlify
+        
+      - name: Generate Changelog
+        run: |
+          npm install -g conventional-changelog-cli
+          conventional-changelog -p angular -i docs/changelog.md -s -r 0
+        
+      - name: Deploy Documentation
+        run: |
+          mintlify deploy
+        env:
+          MINTLIFY_API_KEY: ${{ secrets.MINTLIFY_API_KEY }}
