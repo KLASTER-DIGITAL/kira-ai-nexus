@@ -1,14 +1,12 @@
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 // Auth Provider
-import { AuthProvider } from "@/context/auth";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/context/auth";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
@@ -47,83 +45,79 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-            {/* Smart Dashboard Redirect - detects role and redirects appropriately */}
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <RoleBasedRedirect />
-                </ProtectedRoute>
-              } 
-            />
-            
-            {/* User dashboard */}
-            <Route 
-              path="/dashboard/user" 
-              element={
-                <ProtectedRoute>
-                  <UserDashboardPage />
-                </ProtectedRoute>
-              } 
-            />
-            
-            {/* Admin dashboard */}
-            <Route 
-              path="/dashboard/admin" 
-              element={
-                <ProtectedRoute requiredRole="superadmin">
-                  <AdminDashboardPage />
-                </ProtectedRoute>
-              } 
-            />
+        {/* Smart Dashboard Redirect - detects role and redirects appropriately */}
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <RoleBasedRedirect />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* User dashboard */}
+        <Route 
+          path="/dashboard/user" 
+          element={
+            <ProtectedRoute>
+              <UserDashboardPage />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Admin dashboard */}
+        <Route 
+          path="/dashboard/admin" 
+          element={
+            <ProtectedRoute requiredRole="superadmin">
+              <AdminDashboardPage />
+            </ProtectedRoute>
+          } 
+        />
 
-            {/* Other protected routes */}
-            <Route 
-              path="/chat" 
-              element={
-                <ProtectedRoute>
-                  <ChatPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/tasks" 
-              element={
-                <ProtectedRoute>
-                  <TasksPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/notes" 
-              element={
-                <ProtectedRoute>
-                  <NotesPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/calendar" 
-              element={
-                <ProtectedRoute>
-                  <CalendarPage />
-                </ProtectedRoute>
-              } 
-            />
-            
-            {/* 404 page */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
+        {/* Other protected routes */}
+        <Route 
+          path="/chat" 
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/tasks" 
+          element={
+            <ProtectedRoute>
+              <TasksPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/notes" 
+          element={
+            <ProtectedRoute>
+              <NotesPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/calendar" 
+          element={
+            <ProtectedRoute>
+              <CalendarPage />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* 404 page */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
     </TooltipProvider>
   </QueryClientProvider>
 );
