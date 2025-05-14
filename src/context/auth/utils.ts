@@ -3,18 +3,30 @@ import { UserProfile } from '@/types/auth';
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Clean up auth state in localStorage and sessionStorage
+ * Cleans up all authentication-related data from browser storage
+ * 
+ * This function should be called:
+ * - Before initiating a new sign-in to prevent auth conflicts
+ * - As part of the logout process to ensure complete session removal
+ * - When switching between accounts
+ * 
+ * @example
+ * // When signing out a user
+ * cleanupAuthState();
+ * await supabase.auth.signOut();
  */
 export const cleanupAuthState = () => {
   // Remove standard auth tokens
   localStorage.removeItem('supabase.auth.token');
-  // Remove all Supabase auth keys from localStorage
+  
+  // Clean localStorage items
   Object.keys(localStorage).forEach((key) => {
     if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
       localStorage.removeItem(key);
     }
   });
-  // Remove from sessionStorage if in use
+  
+  // Clean sessionStorage items if available
   Object.keys(sessionStorage || {}).forEach((key) => {
     if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
       sessionStorage.removeItem(key);
@@ -23,7 +35,16 @@ export const cleanupAuthState = () => {
 };
 
 /**
- * Fetch user profile from Supabase
+ * Fetches a user's profile data from Supabase
+ * 
+ * @param userId - The UUID of the user to fetch profile data for
+ * @returns A UserProfile object if successful, null if not found or error
+ * 
+ * @example
+ * const profile = await fetchUserProfile(session.user.id);
+ * if (profile) {
+ *   console.log('User role:', profile.role);
+ * }
  */
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
   try {
@@ -33,23 +54,43 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       .eq('id', userId)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching user profile:', error.message);
+      return null;
+    }
+    
     return data as UserProfile;
   } catch (error) {
-    console.error('Error fetching user profile:', error);
+    console.error('Exception when fetching user profile:', error);
     return null;
   }
 };
 
 /**
- * Check if user has superadmin role
+ * Checks if a user has superadmin role
+ * 
+ * @param profile - The user profile to check
+ * @returns True if the user is a superadmin, false otherwise
+ * 
+ * @example
+ * const isAdmin = isSuperAdminRole(userProfile);
+ * if (isAdmin) {
+ *   // Show admin controls
+ * }
  */
 export const isSuperAdminRole = (profile: UserProfile | null): boolean => {
   return profile?.role === 'superadmin';
 };
 
 /**
- * Handle redirect based on user role
+ * Determines the appropriate redirect path based on user role
+ * 
+ * @param profile - The user profile containing role information
+ * @returns The path where the user should be redirected
+ * 
+ * @example
+ * const path = getRedirectPath(userProfile);
+ * navigate(path);
  */
 export const getRedirectPath = (profile: UserProfile | null): string => {
   if (profile?.role === 'superadmin') {
