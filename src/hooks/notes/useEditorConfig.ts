@@ -7,9 +7,8 @@ import Link from '@tiptap/extension-link';
 import Underline from '@tiptap/extension-underline';
 import Image from '@tiptap/extension-image';
 import { WikiLink } from '@/components/notes/extensions/WikiLink';
-import Suggestion from '@tiptap/suggestion';
 import { useWikiLinks } from './useWikiLinks';
-import { createWikiLinkSuggestion } from '@/components/notes/extensions/wikiLinkUtils';
+import { createWikiLinkSuggestion } from '@/components/notes/extensions/wiki-link/WikiLinkSuggestion';
 
 interface UseEditorConfigProps {
   content: string;
@@ -41,6 +40,7 @@ export const useEditorConfig = ({
   } = useWikiLinks(noteId, onNoteCreated);
 
   const getEditorConfig = useCallback(() => {
+    // Create suggestion configuration for wiki links
     const suggestionConfig = createWikiLinkSuggestion(fetchNotesForSuggestion, handleCreateNote);
     
     return {
@@ -58,7 +58,7 @@ export const useEditorConfig = ({
         WikiLink.configure({
           validateLink: validateWikiLink
         }),
-        Suggestion.configure(suggestionConfig),
+        suggestionConfig,
       ],
       content,
       editable,

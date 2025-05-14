@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Note } from "@/types/notes";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,7 +32,7 @@ export const useNotesMutations = () => {
           title: noteData.title,
           content: noteData.content || '',
           type: 'note',
-          // Convert array to JSON compatible format
+          // Store metadata as jsonb
           meta: {
             tags: noteData.tags || [],
             color: noteData.color || ''
@@ -47,7 +48,6 @@ export const useNotesMutations = () => {
       
       // Format the note with proper types before returning
       return {
-        ...data,
         id: data.id,
         title: data.title,
         content: data.content,
@@ -85,14 +85,17 @@ export const useNotesMutations = () => {
         .eq('id', noteData.id)
         .single();
       
-      const currentMeta = currentNote?.meta || { tags: [], color: '' };
-      
-      // Update metadata preserving existing fields
-      updateData.meta = {
-        ...currentMeta,
-        tags: noteData.tags !== undefined ? noteData.tags : currentMeta.tags,
-        color: noteData.color !== undefined ? noteData.color : currentMeta.color
-      };
+      // If the note has meta field, update it
+      if (currentNote) {
+        const currentMeta = currentNote.meta || { tags: [], color: '' };
+        
+        // Update metadata preserving existing fields
+        updateData.meta = {
+          ...currentMeta,
+          tags: noteData.tags !== undefined ? noteData.tags : currentMeta.tags,
+          color: noteData.color !== undefined ? noteData.color : currentMeta.color
+        };
+      }
       
       // Perform the update
       const { data, error } = await supabase
@@ -109,7 +112,6 @@ export const useNotesMutations = () => {
       
       // Format the note with proper types before returning
       return {
-        ...data,
         id: data.id,
         title: data.title,
         content: data.content,
@@ -152,8 +154,8 @@ export const useNotesMutations = () => {
   });
 
   return {
-    createNote: (noteData: CreateNoteInput) => createNoteMutation.mutate(noteData),
-    updateNote: (noteData: UpdateNoteInput) => updateNoteMutation.mutate(noteData),
+    createNote: createNoteMutation.mutateAsync,
+    updateNote: updateNoteMutation.mutateAsync,
     deleteNote: deleteNoteMutation.mutateAsync,
     isCreating: createNoteMutation.isPending,
     isUpdating: updateNoteMutation.isPending,

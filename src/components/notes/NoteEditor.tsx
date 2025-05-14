@@ -19,6 +19,7 @@ interface NoteEditorProps {
   onCancel: () => void;
   isNew?: boolean;
   onNoteSelect?: (noteId: string) => void;
+  autoSaveDelay?: number;
 }
 
 const NoteEditor: React.FC<NoteEditorProps> = ({
@@ -26,7 +27,8 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
   onSave,
   onCancel,
   isNew = false,
-  onNoteSelect
+  onNoteSelect,
+  autoSaveDelay = 1500
 }) => {
   const [title, setTitle] = useState(note?.title || "");
   const [content, setContent] = useState(note?.content || "");
@@ -41,10 +43,10 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
   const hasBacklinks = links?.incomingLinks && links.incomingLinks.length > 0;
 
   // Debounce changes for autosave
-  const debouncedTitle = useDebounce(title, 1500);
-  const debouncedContent = useDebounce(content, 1500);
-  const debouncedTags = useDebounce(tags, 1500);
-  const debouncedColor = useDebounce(color, 1500);
+  const debouncedTitle = useDebounce(title, autoSaveDelay);
+  const debouncedContent = useDebounce(content, autoSaveDelay);
+  const debouncedTags = useDebounce(tags, autoSaveDelay);
+  const debouncedColor = useDebounce(color, autoSaveDelay);
 
   useEffect(() => {
     if (note) {
