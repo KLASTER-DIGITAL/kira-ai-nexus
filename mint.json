@@ -5,14 +5,15 @@
   "name": "KIRA AI",
   "description": "AI-ассистент с задачами, заметками, календарем и MiniApps",
   "docsPath": "docs",
+  "favicon": "/favicon.ico",
   "changelog": true,
   "navigation": [
-    { "section": "Обзор", "pages": ["introduction", "getting-started"] },
-    { "section": "Права доступа", "pages": ["user", "superadmin"] },
-    { "section": "API", "pages": ["auth", "endpoints"] },
-    { "section": "Справка", "pages": ["help/user-guide", "help/admin-guide"] },
-    { "section": "Changelog", "pages": ["changelog"] },
-    { "section": "Помощь", "pages": ["faq", "support"] }
+    { "group": "Обзор", "pages": ["introduction", "getting-started"] },
+    { "group": "Права доступа", "pages": ["user", "superadmin"] },
+    { "group": "API", "pages": ["auth", "endpoints"] },
+    { "group": "Справка", "pages": ["help/user-guide", "help/admin-guide"] },
+    { "group": "Changelog", "pages": ["changelog"] },
+    { "group": "Помощь", "pages": ["faq", "support"] }
   ],
   "logo": {
     "light": "/logo/light.svg",

@@ -1,209 +1,180 @@
 
 import React, { useState, useEffect } from 'react';
-import Layout from '@/components/layout/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ExternalLink, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
-import { HelpCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 const UserHelpPage: React.FC = () => {
-  const { toast } = useToast();
-  const [docsLastSync, setDocsLastSync] = useState<string | null>(null);
-  
+  const [lastUpdateTime, setLastUpdateTime] = useState<string | null>(null);
+
   useEffect(() => {
-    // Check last docs sync time from localStorage
+    // Проверяем время последней синхронизации документации
     const lastSync = localStorage.getItem('docsLastSync');
     if (lastSync) {
       const syncDate = new Date(parseInt(lastSync));
-      setDocsLastSync(syncDate.toLocaleString());
+      setLastUpdateTime(syncDate.toLocaleString());
+    } else {
+      // Устанавливаем текущее время как время первого посещения
+      const currentTime = Date.now().toString();
+      localStorage.setItem('docsLastSync', currentTime);
+      setLastUpdateTime(new Date(parseInt(currentTime)).toLocaleString());
     }
   }, []);
-  
-  const handleViewDocs = () => {
-    // Open documentation in a new tab
-    window.open("/docs/help/user-guide", "_blank");
-    
-    toast({
-      title: "Документация открыта",
-      description: "Полная документация открыта в новом окне.",
-    });
-  };
-  
-  const handleSyncDocs = () => {
-    toast({
-      title: "Синхронизация...",
-      description: "Выполняется синхронизация документации с Mintlify.",
-    });
-    
-    // In a real implementation, this would call an API endpoint
-    // For now, we'll simulate the sync with a timeout
-    setTimeout(() => {
-      // Store the sync time in localStorage
-      localStorage.setItem('docsLastSync', Date.now().toString());
-      setDocsLastSync(new Date().toLocaleString());
-      
-      toast({
-        title: "Синхронизация завершена",
-        description: "Документация успешно обновлена и отправлена в Mintlify.",
-        variant: "success",
-      });
-    }, 2000);
-  };
-  
+
   return (
-    <Layout>
-      <div className="container mx-auto py-6">
-        <div className="flex items-center gap-3 mb-6">
-          <HelpCircle className="h-8 w-8 text-kira-purple" />
-          <h1 className="text-3xl font-bold">Помощь пользователю</h1>
-        </div>
+    <div className="container py-6">
+      <h1 className="text-3xl font-bold mb-6">Руководство пользователя</h1>
+      
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Добро пожаловать в KIRA AI</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm mb-4">
+            KIRA AI — это персональный AI-ассистент с встроенным управлением задачами, заметками и календарем.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Последнее обновление документации: {lastUpdateTime || "Нет данных"}
+          </p>
+        </CardContent>
+      </Card>
+
+      <Tabs defaultValue="overview" className="mt-6">
+        <TabsList>
+          <TabsTrigger value="overview">Общая информация</TabsTrigger>
+          <TabsTrigger value="tasks">Задачи</TabsTrigger>
+          <TabsTrigger value="notes">Заметки</TabsTrigger>
+          <TabsTrigger value="ai-assistant">AI-ассистент</TabsTrigger>
+        </TabsList>
         
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="text-sm text-muted-foreground">
-                <p>Эта документация синхронизирована с Mintlify.</p>
-                {docsLastSync && (
-                  <p className="mt-1">
-                    Последняя синхронизация: <span className="font-medium">{docsLastSync}</span>
+        <TabsContent value="overview" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Общая информация</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[500px] pr-4">
+                <div className="space-y-4">
+                  <p>
+                    KIRA AI — это персональный AI-ассистент с встроенным управлением задачами, заметками и календарем.
                   </p>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" onClick={handleSyncDocs}>
-                  <RefreshCw size={16} className="mr-2" />
-                  Обновить
-                </Button>
-                <Button variant="outline" onClick={handleViewDocs}>
-                  <ExternalLink size={16} className="mr-2" />
-                  Документация
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+
+                  <h3 className="text-lg font-semibold mt-6">Навигация</h3>
+                  <p>Используйте боковую панель для перехода между разделами приложения:</p>
+                  <ul className="list-disc pl-6 space-y-2 mt-2">
+                    <li><strong>Дашборд</strong> — сводка ваших текущих задач и событий</li>
+                    <li><strong>Чат</strong> — общение с AI-ассистентом</li>
+                    <li><strong>Задачи</strong> — управление вашими задачами</li>
+                    <li><strong>Заметки</strong> — создание и редактирование заметок</li>
+                    <li><strong>Календарь</strong> — просмотр и планирование событий</li>
+                  </ul>
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
         
-        <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="general">Общая информация</TabsTrigger>
-            <TabsTrigger value="tasks">Задачи</TabsTrigger>
-            <TabsTrigger value="notes">Заметки</TabsTrigger>
-            <TabsTrigger value="chat">Чат с AI</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="general">
-            <Card>
-              <CardHeader>
-                <CardTitle>Общая информация</CardTitle>
-              </CardHeader>
-              <CardContent>
+        <TabsContent value="tasks" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Работа с задачами</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[500px] pr-4">
                 <div className="space-y-4">
-                  <section>
-                    <h3 className="text-lg font-medium">Добро пожаловать в KIRA AI</h3>
-                    <p>KIRA AI — это персональный AI-ассистент с встроенным управлением задачами, заметками и календарем.</p>
-                  </section>
+                  <h3 className="text-lg font-semibold">Создание задач</h3>
+                  <p>
+                    Чтобы создать новую задачу, нажмите кнопку "Создать задачу" в разделе Задачи.
+                  </p>
                   
-                  <section>
-                    <h3 className="text-lg font-medium">Навигация</h3>
-                    <p>Используйте боковую панель для перехода между разделами приложения:</p>
-                    <ul className="list-disc pl-5 mt-2">
-                      <li>Дашборд — сводка ваших текущих задач и событий</li>
-                      <li>Чат — общение с AI-ассистентом</li>
-                      <li>Задачи — управление вашими задачами</li>
-                      <li>Заметки — создание и редактирование заметок</li>
-                      <li>Календарь — просмотр и планирование событий</li>
-                    </ul>
-                  </section>
+                  <h3 className="text-lg font-semibold mt-6">Управление задачами</h3>
+                  <p>Вы можете:</p>
+                  <ul className="list-disc pl-6 space-y-2 mt-2">
+                    <li>Отмечать задачи как выполненные</li>
+                    <li>Устанавливать приоритеты</li>
+                    <li>Добавлять сроки выполнения</li>
+                    <li>Группировать задачи по проектам</li>
+                  </ul>
+                  
+                  <Separator className="my-6" />
+                  
+                  <div className="bg-muted p-4 rounded-md">
+                    <h4 className="font-medium mb-2">Совет</h4>
+                    <p className="text-sm">
+                      Для быстрого создания задач вы также можете использовать команду "/task" в чате с AI-ассистентом.
+                    </p>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="tasks">
-            <Card>
-              <CardHeader>
-                <CardTitle>Работа с задачами</CardTitle>
-              </CardHeader>
-              <CardContent>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="notes" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Работа с заметками</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[500px] pr-4">
                 <div className="space-y-4">
-                  <section>
-                    <h3 className="text-lg font-medium">Создание задач</h3>
-                    <p>Чтобы создать новую задачу, нажмите кнопку "Создать задачу" в разделе Задачи.</p>
-                  </section>
+                  <h3 className="text-lg font-semibold">Создание заметок</h3>
+                  <p>
+                    Создавайте заметки с помощью встроенного редактора. Поддерживается Markdown форматирование.
+                  </p>
                   
-                  <section>
-                    <h3 className="text-lg font-medium">Управление задачами</h3>
-                    <p>Вы можете:</p>
-                    <ul className="list-disc pl-5 mt-2">
-                      <li>Отмечать задачи как выполненные</li>
-                      <li>Устанавливать приоритеты</li>
-                      <li>Добавлять сроки выполнения</li>
-                      <li>Группировать задачи по проектам</li>
-                    </ul>
-                  </section>
+                  <h3 className="text-lg font-semibold mt-6">Связи между заметками</h3>
+                  <p>
+                    Вы можете связывать заметки между собой, создавая Wiki-ссылки. Для просмотра связей используйте Graph View.
+                  </p>
+                  
+                  <Separator className="my-6" />
+                  
+                  <div className="bg-muted p-4 rounded-md">
+                    <h4 className="font-medium mb-2">Совет</h4>
+                    <p className="text-sm">
+                      Используйте двойные квадратные скобки [[название заметки]] для создания ссылок между заметками.
+                    </p>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="notes">
-            <Card>
-              <CardHeader>
-                <CardTitle>Работа с заметками</CardTitle>
-              </CardHeader>
-              <CardContent>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="ai-assistant" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Использование AI-ассистента</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[500px] pr-4">
                 <div className="space-y-4">
-                  <section>
-                    <h3 className="text-lg font-medium">Создание заметок</h3>
-                    <p>Создавайте заметки с помощью встроенного редактора. Поддерживается Markdown форматирование.</p>
-                  </section>
+                  <h3 className="text-lg font-semibold">Возможности AI-ассистента</h3>
+                  <p>KIRA AI может:</p>
+                  <ul className="list-disc pl-6 space-y-2 mt-2">
+                    <li>Отвечать на вопросы</li>
+                    <li>Помогать с планированием задач</li>
+                    <li>Создавать заметки по вашим запросам</li>
+                    <li>Искать информацию в ваших данных</li>
+                  </ul>
                   
-                  <section>
-                    <h3 className="text-lg font-medium">Связи между заметками</h3>
-                    <p>Вы можете связывать заметки между собой, создавая Wiki-ссылки. Для просмотра связей используйте Graph View.</p>
-                  </section>
+                  <h3 className="text-lg font-semibold mt-6">Команды</h3>
+                  <p>Используйте специальные команды для управления приложением через чат:</p>
+                  <ul className="list-disc pl-6 space-y-2 mt-2">
+                    <li><code>/task</code> — создать задачу</li>
+                    <li><code>/note</code> — создать заметку</li>
+                    <li><code>/event</code> — создать событие в календаре</li>
+                    <li><code>/help</code> — показать список команд</li>
+                  </ul>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="chat">
-            <Card>
-              <CardHeader>
-                <CardTitle>Использование AI-ассистента</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <section>
-                    <h3 className="text-lg font-medium">Возможности AI-ассистента</h3>
-                    <p>KIRA AI может:</p>
-                    <ul className="list-disc pl-5 mt-2">
-                      <li>Отвечать на вопросы</li>
-                      <li>Помогать с планированием задач</li>
-                      <li>Создавать заметки по вашим запросам</li>
-                      <li>Искать информацию в ваших данных</li>
-                    </ul>
-                  </section>
-                  
-                  <section>
-                    <h3 className="text-lg font-medium">Команды</h3>
-                    <p>Используйте специальные команды для управления приложением через чат:</p>
-                    <ul className="list-disc pl-5 mt-2">
-                      <li><code>/task</code> — создать задачу</li>
-                      <li><code>/note</code> — создать заметку</li>
-                      <li><code>/event</code> — создать событие в календаре</li>
-                      <li><code>/help</code> — показать список команд</li>
-                    </ul>
-                  </section>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </Layout>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 
