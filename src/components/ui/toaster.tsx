@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast"
 import {
   Toast,
@@ -9,6 +10,7 @@ import {
 } from "@/components/ui/toast"
 
 export function Toaster() {
+  // Используем правильный импорт и обращаемся к sonner напрямую
   const { toasts } = useToast()
 
   return (

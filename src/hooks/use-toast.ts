@@ -1,5 +1,7 @@
 
-import { toast as sonnerToast } from "sonner";
+// В зависимости от вашей настройки, вы можете использовать sonner напрямую
+// или нашу обертку на основе shadcn/ui
+import { toast as sonnerToast, Toaster as SonnerToaster } from "sonner";
 
 type ToastProps = {
   title: string;
@@ -24,6 +26,10 @@ export const toast = ({ title, description, variant = "default" }: ToastProps) =
   }
 };
 
+// Добавляем фиктивный массив toasts для совместимости с toaster.tsx
 export const useToast = () => {
-  return { toast };
+  return { 
+    toast,
+    toasts: [] // Это поле нужно для совместимости с toaster.tsx
+  };
 };

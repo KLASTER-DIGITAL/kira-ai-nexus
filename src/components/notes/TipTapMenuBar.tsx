@@ -8,7 +8,7 @@ import {
   Strikethrough,
   Link,
   ListOrdered,
-  ListUnordered,
+  List, // Заменили ListUnordered на List
   Heading1,
   Heading2,
   Heading3,
@@ -108,7 +108,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
         className={editor.isActive("bulletList") ? "bg-muted" : ""}
         title="Маркированный список"
       >
-        <ListUnordered className="h-4 w-4" />
+        <List className="h-4 w-4" />
       </Button>
 
       <Button
