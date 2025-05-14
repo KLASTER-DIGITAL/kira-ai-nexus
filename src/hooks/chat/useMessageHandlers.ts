@@ -28,6 +28,14 @@ export const useMessageHandlers = (
     try {
       console.log('Starting message send process with attachments:', attachments.length);
       
+      // Determine message type based on content and attachments
+      let messageType: 'text' | 'voice' | 'file' = 'text';
+      if (attachments.length > 0) {
+        messageType = 'file';
+      } else if (content.startsWith('data:audio') || content.includes('speech') || content.includes('voice')) {
+        messageType = 'voice';
+      }
+      
       // Create file attachments metadata if files are present
       const fileAttachments: ChatAttachment[] = attachments.map(file => ({
         name: file.name,
@@ -46,6 +54,7 @@ export const useMessageHandlers = (
         content: content.trim(),
         timestamp: new Date(),
         session_id: sessionId,
+        type: messageType,
         ...(attachments.length > 0 && {
           extension: {
             files: fileAttachments
@@ -70,6 +79,7 @@ export const useMessageHandlers = (
         content: data.reply || "",
         timestamp: new Date(),
         session_id: sessionId,
+        type: data.type || 'text',
         ...(data.files && data.files.length > 0 && {
           extension: {
             files: data.files,
@@ -134,7 +144,8 @@ export const useMessageHandlers = (
         role: 'assistant',
         content: "Произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте еще раз позже.",
         timestamp: new Date(),
-        session_id: sessionId
+        session_id: sessionId,
+        type: 'text'
       };
       
       await saveMessage(errorMessage);

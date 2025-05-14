@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { N8nResponse, ChatAttachment, N8nFileMetadata } from '@/types/chat';
+import { N8nResponse, ChatAttachment, N8nFileMetadata, N8nMessagePayload } from '@/types/chat';
 
 export const useChatAPI = () => {
   // Get webhook URL from config
@@ -19,11 +19,13 @@ export const useChatAPI = () => {
       if (data.n8n_mode === 'production' && data.n8n_webhook_production) {
         return data.n8n_webhook_production;
       }
-      return data.n8n_webhook_test;
+      
+      // Use test webhook as default or fallback
+      return data.n8n_webhook_test || 'https://n8n.klaster.digital/webhook-test/f2b7cc2d-eefe-4f53-ac05-5050d702e27a';
     } catch (error) {
       console.error("Error fetching webhook URL:", error);
       // Fallback to default webhook
-      return 'https://n8n.klaster.digital/webhook/f2b7cc2d-eefe-4f53-ac05-5050d702e27a';
+      return 'https://n8n.klaster.digital/webhook-test/f2b7cc2d-eefe-4f53-ac05-5050d702e27a';
     }
   };
 
@@ -35,12 +37,15 @@ export const useChatAPI = () => {
     files?: File[]
   ): Promise<N8nResponse> => {
     const webhookUrl = await getWebhookUrl();
+    const timestamp = new Date().toISOString();
+    
     console.log(`Sending to webhook: ${webhookUrl}`, { 
       content, 
       userId, 
       sessionId, 
       hasFiles: !!files?.length,
-      fileNames: files?.map(f => f.name)
+      fileNames: files?.map(f => f.name),
+      timestamp
     });
     
     // Create controller for request timeout
@@ -50,13 +55,34 @@ export const useChatAPI = () => {
     try {
       let response;
       
+      // Determine message type based on content and files
+      let messageType: 'text' | 'voice' | 'file' = 'text';
+      if (files && files.length > 0) {
+        messageType = 'file';
+      } else if (content.startsWith('data:audio') || content.includes('speech') || content.includes('voice')) {
+        // Simple heuristic to detect voice messages - can be improved based on your requirements
+        messageType = 'voice';
+      }
+      
       // Check if we have files to upload
       if (files && files.length > 0) {
         // Use FormData for file uploads with array format for n8n compatibility
         const formData = new FormData();
+        
+        // Create the message payload with type information
+        const messagePayload: N8nMessagePayload = {
+          message: content,
+          user_id: userId,
+          session_id: sessionId,
+          timestamp: timestamp,
+          message_type: messageType,
+        };
+        
         formData.append('message', content);
         formData.append('user_id', userId);
         formData.append('session_id', sessionId);
+        formData.append('timestamp', timestamp);
+        formData.append('message_type', messageType);
         
         // Generate file metadata for n8n processing
         const filesMetadata: N8nFileMetadata[] = files.map((file, index) => ({
@@ -67,7 +93,11 @@ export const useChatAPI = () => {
         }));
         
         // Add files metadata as a JSON string
-        formData.append('filesMetadata', JSON.stringify(filesMetadata));
+        formData.append('files_metadata', JSON.stringify(filesMetadata));
+        messagePayload.files_metadata = filesMetadata;
+        
+        // Also add the payload as JSON for n8n to easily parse
+        formData.append('payload', JSON.stringify(messagePayload));
         
         // Add files as array using the 'files[]' format that n8n expects
         files.forEach((file) => {
@@ -78,6 +108,7 @@ export const useChatAPI = () => {
         console.log('File count:', files.length);
         console.log('File names:', files.map(f => f.name).join(', '));
         console.log('Files metadata:', JSON.stringify(filesMetadata));
+        console.log('Message payload:', JSON.stringify(messagePayload));
         
         // For FormData we don't set Content-Type, browser will set it with boundary
         response = await fetch(webhookUrl, {
@@ -87,10 +118,12 @@ export const useChatAPI = () => {
         });
       } else {
         // If no files, use JSON for better structure and debugging
-        const requestBody = {
+        const requestBody: N8nMessagePayload = {
           message: content,
           user_id: userId,
-          session_id: sessionId
+          session_id: sessionId,
+          timestamp: timestamp,
+          message_type: messageType
         };
         
         console.log('Sending JSON to webhook:', JSON.stringify(requestBody));
@@ -145,14 +178,16 @@ export const useChatAPI = () => {
         // If parsing fails, create a minimal valid response with the text
         data = {
           reply: responseText || "Получен ответ, но в неправильном формате.",
-          status: "success"
+          status: "success",
+          type: "text"  // Default to text if not specified
         };
       }
       
       // Make sure the response structure is valid
       const validatedResponse: N8nResponse = {
         reply: data.reply || "",
-        status: data.status || "success"
+        status: data.status || "success",
+        type: data.type || "text"  // Default to text if not specified
       };
       
       if (data.files && Array.isArray(data.files)) {
@@ -166,6 +201,11 @@ export const useChatAPI = () => {
           metadata: file.metadata || null,
           content: file.content || null
         }));
+        
+        // If there are files, update the response type to 'file' if not already set
+        if (validatedResponse.files.length > 0 && !data.type) {
+          validatedResponse.type = 'file';
+        }
         
         // Log detailed information about files
         console.log('Processed files from response:', 
@@ -191,14 +231,16 @@ export const useChatAPI = () => {
         return {
           reply: "Запрос к n8n превысил время ожидания (30 секунд). Пожалуйста, попробуйте позже или проверьте работоспособность сервера n8n.",
           status: "error",
-          error: "Webhook request timed out after 30 seconds"
+          error: "Webhook request timed out after 30 seconds",
+          type: "text"
         };
       }
       
       return {
         reply: "Произошла ошибка при обработке вашего запроса. " + (error.message || "Пожалуйста, попробуйте позже."),
         status: "error",
-        error: error.message || "Unknown error"
+        error: error.message || "Unknown error",
+        type: "text"
       };
     }
   }, []);

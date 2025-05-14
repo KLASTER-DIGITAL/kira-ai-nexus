@@ -6,6 +6,7 @@ export interface ChatMessage {
   timestamp: Date;
   session_id: string;
   extension?: ChatMessageExtension;
+  type?: 'text' | 'voice' | 'file'; // Added message type
 }
 
 export interface ChatMessageExtension {
@@ -32,6 +33,7 @@ export interface Message {
   created_at: string;
   extension?: ChatMessageExtension;
   payload?: any; // For storing additional data
+  type?: 'text' | 'voice' | 'file'; // Added message type
 }
 
 export interface GlobalConfig {
@@ -47,6 +49,7 @@ export interface N8nResponse {
   metadata?: Record<string, any>;
   status?: 'success' | 'error';
   error?: string;
+  type?: 'text' | 'voice' | 'file'; // Added message type
 }
 
 export interface N8nFileMetadata {
@@ -56,3 +59,12 @@ export interface N8nFileMetadata {
   index: number;
 }
 
+// New interface for n8n request payload
+export interface N8nMessagePayload {
+  message: string;
+  user_id: string;
+  session_id: string;
+  timestamp: string;
+  message_type: 'text' | 'voice' | 'file';
+  files_metadata?: N8nFileMetadata[];
+}
