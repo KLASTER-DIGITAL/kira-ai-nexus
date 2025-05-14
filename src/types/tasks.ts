@@ -10,13 +10,10 @@ export interface Task {
   completed: boolean;
   priority: TaskPriority;
   dueDate?: string;
-  user_id?: string;
-  created_at?: string;
-  updated_at?: string;
-  user?: UserProfile;
-  tags?: string[];
-  parent_id?: string;
-  subtasks?: Task[];
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  type: 'task';
 }
 
 export interface TaskFilter {
