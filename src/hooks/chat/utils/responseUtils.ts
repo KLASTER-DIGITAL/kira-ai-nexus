@@ -48,6 +48,17 @@ export const processWebhookResponse = async (response: Response): Promise<N8nRes
     // Parse the JSON response
     data = JSON.parse(responseText);
     console.log('Webhook response parsed:', data);
+    
+    // Handle array responses with output property (common in n8n)
+    if (Array.isArray(data) && data.length > 0 && data[0].output) {
+      console.log('Detected n8n array response format with output property:', data[0].output);
+      data = {
+        reply: data[0].output,
+        status: "success",
+        type: "text"
+      };
+      console.log('Converted array response to standard format:', data);
+    }
   } catch (e) {
     console.error('Failed to parse webhook response as JSON:', e);
     // If parsing fails, create a minimal valid response with the text
