@@ -1,37 +1,53 @@
 
 import React from "react";
-import Layout from "@/components/layout/Layout";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/auth";
 
 const HomePage: React.FC = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated, profile } = useAuth();
+
+  // Redirect authenticated users to appropriate dashboard
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      const dashboardPath = profile?.role === 'superadmin' ? '/dashboard/admin' : '/dashboard/user';
+      navigate(dashboardPath, { replace: true });
+    }
+  }, [isAuthenticated, profile, navigate]);
+
   return (
-    <Layout title="Главная">
-      <div className="container mx-auto">
-        <h1 className="text-2xl font-semibold mb-4">Добро пожаловать в KIRA AI</h1>
-        <p className="mb-4">
-          AI-ассистент с задачами, заметками, календарем и интеграциями.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
-          <div className="border rounded-lg p-4 shadow-sm">
-            <h2 className="text-lg font-medium mb-2">Заметки</h2>
-            <p className="text-muted-foreground">
-              Создавайте заметки с поддержкой Markdown и связывайте их между собой.
-            </p>
-          </div>
-          <div className="border rounded-lg p-4 shadow-sm">
-            <h2 className="text-lg font-medium mb-2">Задачи</h2>
-            <p className="text-muted-foreground">
-              Управляйте задачами, устанавливайте сроки и отслеживайте прогресс.
-            </p>
-          </div>
-          <div className="border rounded-lg p-4 shadow-sm">
-            <h2 className="text-lg font-medium mb-2">Календарь</h2>
-            <p className="text-muted-foreground">
-              Синхронизируйте события из Google Calendar и планируйте день.
-            </p>
-          </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 p-4">
+      <div className="mb-8 text-center">
+        <div className="mx-auto mb-4 bg-kira-purple w-20 h-20 rounded-xl flex items-center justify-center">
+          <span className="text-4xl font-bold text-white">K</span>
         </div>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-kira-purple to-kira-blue bg-clip-text text-transparent">
+          KIRA AI
+        </h1>
+        <p className="text-slate-400 mt-2">
+          AI-ассистент с задачами, заметками, календарем и MiniApps
+        </p>
       </div>
-    </Layout>
+      
+      <div className="flex flex-col sm:flex-row gap-4">
+        <Button 
+          size="lg" 
+          className="bg-kira-purple hover:bg-kira-purple/90"
+          onClick={() => navigate('/auth')}
+        >
+          Начать работу
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="lg"
+          onClick={() => navigate('/auth')}
+        >
+          Войти в систему
+        </Button>
+      </div>
+    </div>
   );
 };
 
