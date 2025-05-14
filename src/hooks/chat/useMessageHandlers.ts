@@ -75,6 +75,22 @@ export const useMessageHandlers = (
         })
       };
 
+      // If there was an error, show a toast notification
+      if (data.status === 'error') {
+        console.error("Error from webhook:", data.error);
+        toast({
+          title: "Ошибка в n8n",
+          description: data.error || "Ошибка при обработке запроса в n8n",
+          variant: "destructive",
+        });
+        
+        // If it's specifically a missing Respond node error, show admin-focused message
+        if (data.error?.includes('Respond to Webhook')) {
+          assistantMessage.content += "\n\n*Для администраторов: Необходимо добавить узел 'Respond to Webhook' " +
+                                      "в рабочий процесс n8n для корректной обработки запросов.*";
+        }
+      }
+
       console.log('Processing assistant message:', assistantMessage);
       
       // Log detailed information about files in the response

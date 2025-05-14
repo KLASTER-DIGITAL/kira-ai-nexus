@@ -59,7 +59,6 @@ export const useChatAPI = () => {
         formData.append('session_id', sessionId);
         
         // Add files as array using the 'files[]' format that n8n expects
-        // IMPORTANT: This is the key change - using files[] instead of fileX
         files.forEach((file) => {
           formData.append('files[]', file);
         });
@@ -102,6 +101,21 @@ export const useChatAPI = () => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`Webhook error: ${response.status}`, errorText);
+        
+        // Handle "No Respond to Webhook node" error specifically
+        if (errorText.includes('No Respond to Webhook') || 
+            errorText.includes('node found in the workflow')) {
+          console.warn("The n8n workflow is missing a 'Respond to Webhook' node");
+          
+          // Return a user-friendly fallback response
+          return {
+            reply: "Мне не удалось обработать ваш запрос из-за проблем с конфигурацией n8n. " +
+                   "Пожалуйста, добавьте узел 'Respond to Webhook' в рабочий процесс n8n.",
+            status: "error",
+            error: "Missing 'Respond to Webhook' node in n8n workflow"
+          };
+        }
+        
         throw new Error(`Error: ${response.status} - ${errorText}`);
       }
 
@@ -118,7 +132,7 @@ export const useChatAPI = () => {
         console.error('Failed to parse webhook response as JSON:', e);
         // If parsing fails, create a minimal valid response with the text
         data = {
-          reply: responseText,
+          reply: responseText || "Получен ответ, но в неправильном формате.",
           status: "success"
         };
       }
@@ -150,15 +164,23 @@ export const useChatAPI = () => {
       }
       
       return validatedResponse;
-    } catch (error) {
+    } catch (error: any) {
       clearTimeout(timeoutId);
       console.error("Webhook request failed:", error);
       
       if (error.name === 'AbortError') {
-        throw new Error('Webhook request timed out after 30 seconds');
+        return {
+          reply: "Запрос к n8n превысил время ожидания (30 секунд). Пожалуйста, попробуйте позже или проверьте работоспособность сервера n8n.",
+          status: "error",
+          error: "Webhook request timed out after 30 seconds"
+        };
       }
       
-      throw error;
+      return {
+        reply: "Произошла ошибка при обработке вашего запроса. " + (error.message || "Пожалуйста, попробуйте позже."),
+        status: "error",
+        error: error.message || "Unknown error"
+      };
     }
   }, []);
 
