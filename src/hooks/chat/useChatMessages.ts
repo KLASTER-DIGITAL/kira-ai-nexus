@@ -1,89 +1,96 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/auth';
+import { useToast } from '@/hooks/use-toast';
 import { ChatMessage } from '@/types/chat';
 import { useChatSession } from './useChatSession';
 import { useChatStorage } from './useChatStorage';
-import { useChatRealtime } from './useChatRealtime';
 import { useChatAttachments } from './useChatAttachments';
 import { useMessageHandlers } from './useMessageHandlers';
 import { useInitialMessage } from './useInitialMessage';
+import { useChatRealtime } from './useChatRealtime';
 
 export const useChatMessages = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { toast } = useToast();
   const { user } = useAuth();
-  const { sessionId, resetSession: resetSessionId } = useChatSession();
+  const { sessionId, resetSession } = useChatSession();
   const { saveMessage, fetchMessages } = useChatStorage(user?.id);
   const { attachments, addAttachment, removeAttachment, clearAttachments } = useChatAttachments();
   const { createInitialMessage } = useInitialMessage();
   
-  // Handle new messages from realtime subscription
-  const handleNewRealtimeMessage = useCallback((newMessage: ChatMessage) => {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Handle new messages received via real-time subscription
+  const handleNewMessage = useCallback((message: ChatMessage) => {
     setMessages(prev => {
-      // Avoid duplicating messages
-      const exists = prev.some(msg => msg.id === newMessage.id);
+      // Check if the message is already in the list
+      const exists = prev.some(m => m.id === message.id);
       if (exists) return prev;
-      return [...prev, newMessage];
+      return [...prev, message];
     });
   }, []);
 
-  // Set up realtime subscription
-  useChatRealtime(sessionId, handleNewRealtimeMessage);
+  // Set up real-time subscription
+  useChatRealtime(sessionId, handleNewMessage);
 
-  // Fetch messages for current session
+  // Initialize message handlers with current context
+  const { sendMessage } = useMessageHandlers(
+    user?.id,
+    sessionId,
+    saveMessage,
+    setMessages,
+    setIsLoading,
+    clearAttachments
+  );
+
+  // Load messages when session changes
   useEffect(() => {
     const loadMessages = async () => {
-      if (!sessionId || !user) return;
-
-      const existingMessages = await fetchMessages(sessionId);
+      if (!sessionId || !user?.id) return;
       
-      if (existingMessages.length > 0) {
-        setMessages(existingMessages);
-      } else {
-        // Add initial message if no messages exist
-        const initialMessage = createInitialMessage(sessionId);
-
-        // Save initial message to database
-        await saveMessage(initialMessage);
-        setMessages([initialMessage]);
+      setIsLoading(true);
+      try {
+        // Fetch existing messages from storage
+        const chatHistory = await fetchMessages(sessionId);
+        
+        if (chatHistory.length === 0) {
+          // If no messages, create welcome message
+          const initialMessage = createInitialMessage(sessionId);
+          await saveMessage(initialMessage);
+          setMessages([initialMessage]);
+        } else {
+          setMessages(chatHistory);
+        }
+      } catch (error) {
+        console.error("Error loading messages:", error);
+        toast({
+          title: "Ошибка",
+          description: "Не удалось загрузить историю сообщений",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
 
     loadMessages();
-  }, [sessionId, user, fetchMessages, saveMessage, createInitialMessage]);
+  }, [sessionId, user?.id, fetchMessages, saveMessage, createInitialMessage, toast]);
 
-  // Set up message handlers
-  const { sendMessage } = useMessageHandlers(
-    user?.id, 
-    sessionId, 
-    saveMessage, 
-    setMessages, 
-    setIsLoading, 
-    clearAttachments
-  );
-
-  // Combined send message function that includes attachments
-  const handleSendMessage = useCallback(async (content: string) => {
-    await sendMessage(content, attachments);
-  }, [sendMessage, attachments]);
-
-  // Reset chat session
-  const resetSession = useCallback(() => {
-    const newSessionId = resetSessionId();
+  // Reset session - clear messages and create a new session
+  const handleResetSession = useCallback(() => {
+    const newSessionId = resetSession();
     setMessages([]);
-    clearAttachments();
-  }, [resetSessionId, clearAttachments]);
+    return newSessionId;
+  }, [resetSession]);
 
   return {
     messages,
     isLoading,
-    sessionId,
-    sendMessage: handleSendMessage,
-    resetSession,
+    sendMessage,
+    resetSession: handleResetSession,
     attachments,
     addAttachment,
-    removeAttachment,
-    clearAttachments
+    removeAttachment
   };
 };
