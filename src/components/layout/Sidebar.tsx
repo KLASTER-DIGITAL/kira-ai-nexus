@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard,
   MessageCircle, 
@@ -12,7 +12,7 @@ import {
   Shield,
   Bot
 } from "lucide-react";
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
 import { cn } from "@/lib/utils";
 
 interface MenuItem {
@@ -57,14 +57,14 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
       `}
     >
       <div className="p-4 border-b border-sidebar-border flex items-center justify-center">
-        <Link to="/" className="flex items-center gap-2">
+        <NavLink to="/" className="flex items-center gap-2">
           <div className="bg-kira-purple w-10 h-10 rounded-md flex items-center justify-center text-white font-bold text-xl">
             K
           </div>
           {!collapsed && (
             <span className="text-xl font-bold text-sidebar-foreground">KIRA AI</span>
           )}
-        </Link>
+        </NavLink>
       </div>
 
       <div className="mt-6 px-2 flex-1">
@@ -73,44 +73,49 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
                           (item.path !== '/' && location.pathname.startsWith(item.path));
           
           return (
-            <Link
+            <NavLink
               key={index}
               to={item.path}
-              className={cn(
+              className={({ isActive }) => cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-md mb-1 transition-colors",
                 isActive 
                   ? "bg-sidebar-accent text-sidebar-foreground" 
                   : "text-sidebar-foreground hover:bg-sidebar-accent/50"
               )}
+              end
             >
               <item.icon size={20} />
               {!collapsed && <span>{item.label}</span>}
-            </Link>
+            </NavLink>
           );
         })}
       </div>
 
       <div className="mt-auto px-2 mb-4">
-        <Link
+        <NavLink
           to="/settings"
-          className={`
-            flex items-center gap-3 px-3 py-2.5 rounded-md mb-1
-            text-sidebar-foreground hover:bg-sidebar-accent transition-colors
-          `}
+          className={({ isActive }) => cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-md mb-1 transition-colors",
+            isActive 
+              ? "bg-sidebar-accent text-sidebar-foreground" 
+              : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+          )}
         >
           <Settings size={20} />
           {!collapsed && <span>Настройки</span>}
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           to="/profile"
-          className={`
-            flex items-center gap-3 px-3 py-2.5 rounded-md
-            text-sidebar-foreground hover:bg-sidebar-accent transition-colors
-          `}
+          className={({ isActive }) => cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors",
+            isActive 
+              ? "bg-sidebar-accent text-sidebar-foreground" 
+              : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+          )}
         >
           <User size={20} />
           {!collapsed && <span>Профиль</span>}
-        </Link>
+        </NavLink>
       </div>
     </div>
   );
