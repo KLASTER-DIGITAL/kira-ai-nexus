@@ -13,6 +13,7 @@ import { useNoteLinks } from "@/hooks/notes/useNoteLinks";
 import { useNotesMutations } from "@/hooks/notes/useNotesMutations";
 import { toast } from "@/hooks/use-toast";
 import Suggestion from "@tiptap/suggestion";
+import { WikiLinkItem } from "@/hooks/notes/types";
 
 interface TipTapEditorProps {
   content: string;
@@ -39,7 +40,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
   const { createNote } = useNotesMutations();
 
   // Create a new note from a wiki link
-  const handleCreateNote = useCallback(async (title: string) => {
+  const handleCreateNote = useCallback(async (title: string): Promise<WikiLinkItem> => {
     try {
       // Create a new note with the link text as the title
       const newNote = await createNote({
@@ -47,6 +48,10 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
         content: '',
         tags: []
       });
+      
+      if (!newNote || !newNote.id) {
+        throw new Error("Failed to create note");
+      }
       
       // If we have a source note ID, create a link between them
       if (noteId && newNote.id) {
@@ -67,9 +72,10 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       });
       
       return {
-        id: newNote.id || '',
-        title: newNote.title || '',
-        type: 'note'
+        id: newNote.id,
+        title: newNote.title || title,
+        type: 'note',
+        index: 0 // Required by WikiLinkItem interface
       };
     } catch (error) {
       console.error("Error creating note from link:", error);
@@ -106,23 +112,20 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
   }, [allNotes, onLinkClick, noteId, createLink]);
 
   // Configure wiki link suggestion extension
-  const wikiLinkSuggestConfig = {
-    fetchNotes: async (query: string) => {
-      if (!query) return [];
-      
-      const lowercaseQuery = query.toLowerCase();
-      return allNotes
-        .filter(note => note.title.toLowerCase().includes(lowercaseQuery))
-        .slice(0, 10)
-        .map((note, index) => ({
-          index,
-          id: note.id,
-          title: note.title,
-          type: 'note'
-        }));
-    },
-    onCreateNote: handleCreateNote
-  };
+  const fetchNotesForSuggestion = useCallback(async (query: string): Promise<WikiLinkItem[]> => {
+    if (!query) return [];
+    
+    const lowercaseQuery = query.toLowerCase();
+    return allNotes
+      .filter(note => note.title.toLowerCase().includes(lowercaseQuery))
+      .slice(0, 10)
+      .map((note, index) => ({
+        index,
+        id: note.id,
+        title: note.title,
+        type: 'note'
+      }));
+  }, [allNotes]);
 
   const editor = useEditor({
     extensions: [
@@ -140,8 +143,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
         validateLink: validateWikiLink
       }),
       Suggestion.configure({
-        ...WikiLinkSuggest(wikiLinkSuggestConfig.fetchNotes, handleCreateNote),
-        editor: null, // This will be set after editor initialization
+        ...WikiLinkSuggest(fetchNotesForSuggestion, handleCreateNote),
       }),
     ],
     content,

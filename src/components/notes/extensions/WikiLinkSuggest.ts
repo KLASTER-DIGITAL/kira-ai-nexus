@@ -1,14 +1,6 @@
-
 import { PluginKey } from '@tiptap/pm/state';
 import tippy from 'tippy.js';
-
-interface WikiLinkItem {
-  id: string;
-  title: string;
-  index: number;
-  type: string;
-  isNew?: boolean;
-}
+import { WikiLinkItem } from '@/hooks/notes/types';
 
 interface WikiLinkSuggestionListProps {
   items: WikiLinkItem[];

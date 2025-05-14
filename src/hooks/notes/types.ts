@@ -44,3 +44,11 @@ export interface NotesQueryOptions {
   pageSize?: number;
   sort?: SortOption;
 }
+
+export interface WikiLinkItem {
+  id: string;
+  title: string;
+  index: number;
+  type: string;
+  isNew?: boolean;
+}

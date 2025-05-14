@@ -1,211 +1,112 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Note } from "@/types/notes";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/auth";
-import { Note } from "@/types/notes";
 import { NoteInput } from "./types";
-import { transformNoteData } from "./utils";
 
 export const useNotesMutations = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
 
   // Create a new note
   const createNoteMutation = useMutation({
-    mutationFn: async (newNote: NoteInput): Promise<Note> => {
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      const noteToInsert = {
-        user_id: user.id,
-        type: 'note',
-        title: newNote.title,
-        color: newNote.color,
-        content: {
-          text: newNote.content,
-          tags: newNote.tags || []
-        }
-      };
-
-      // Optimistically add the note to the query cache
-      const optimisticNote: Note = {
-        id: `temp-${Date.now()}`,
-        user_id: user.id,
-        title: newNote.title,
-        content: newNote.content,
-        tags: newNote.tags || [],
-        color: newNote.color,
-        type: 'note',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      // Add optimistic update
-      queryClient.setQueryData(['notes'], (oldData: any) => {
-        if (!oldData) return { notes: [optimisticNote], totalCount: 1, totalPages: 1, currentPage: 1 };
-        
-        const updatedNotes = [optimisticNote, ...oldData.notes];
-        return {
-          ...oldData,
-          notes: updatedNotes,
-          totalCount: oldData.totalCount + 1
-        };
-      });
-
+    mutationFn: async (noteData: NoteInput): Promise<Note> => {
       const { data, error } = await supabase
         .from('nodes')
-        .insert(noteToInsert)
-        .select()
+        .insert({
+          title: noteData.title,
+          content: noteData.content,
+          tags: noteData.tags || [],
+          color: noteData.color || null,
+          type: 'note',
+          user_id: (await supabase.auth.getUser()).data.user?.id
+        })
+        .select('*')
         .single();
 
       if (error) {
+        console.error("Error creating note:", error);
         toast({
-          title: "Ошибка при создании заметки",
+          title: "Ошибка создания заметки",
           description: error.message,
-          variant: "destructive"
+          variant: "destructive",
         });
         throw error;
       }
 
-      toast({
-        title: "Заметка создана",
-        description: `"${newNote.title}" успешно сохранена`
-      });
-
-      // Transform the returned data to match Note type
-      return transformNoteData(data);
+      return data as Note;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
-    },
-    onError: () => {
-      // Revert optimistic update on error
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      queryClient.invalidateQueries({ queryKey: ['allNotes'] });
     }
   });
 
   // Update an existing note
   const updateNoteMutation = useMutation({
-    mutationFn: async (updatedNote: Partial<Note> & { id: string }): Promise<Note> => {
-      // Prepare the content object
-      const contentUpdate = {
-        text: updatedNote.content,
-        tags: updatedNote.tags || []
-      };
-      
-      const updateData: any = {
-        updated_at: new Date().toISOString(),
-        content: contentUpdate
-      };
-      
-      if (updatedNote.title !== undefined) updateData.title = updatedNote.title;
-      if (updatedNote.color !== undefined) updateData.color = updatedNote.color;
-      
-      // Optimistic update in cache
-      queryClient.setQueryData(['notes'], (oldData: any) => {
-        if (!oldData) return oldData;
-        
-        const updatedNotes = oldData.notes.map((note: Note) => 
-          note.id === updatedNote.id 
-            ? { 
-                ...note, 
-                title: updatedNote.title ?? note.title,
-                content: updatedNote.content ?? note.content,
-                tags: updatedNote.tags ?? note.tags,
-                color: updatedNote.color ?? note.color,
-                updated_at: new Date().toISOString()
-              }
-            : note
-        );
-        
-        return {
-          ...oldData,
-          notes: updatedNotes
-        };
-      });
-      
+    mutationFn: async ({ id, ...noteData }: NoteInput & { id: string }): Promise<Note> => {
       const { data, error } = await supabase
         .from('nodes')
-        .update(updateData)
-        .eq('id', updatedNote.id)
-        .select()
+        .update({
+          title: noteData.title,
+          content: noteData.content,
+          tags: noteData.tags,
+          color: noteData.color,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select('*')
         .single();
 
       if (error) {
+        console.error("Error updating note:", error);
         toast({
-          title: "Ошибка при обновлении заметки",
+          title: "Ошибка обновления заметки",
           description: error.message,
-          variant: "destructive"
+          variant: "destructive",
         });
         throw error;
       }
 
-      toast({
-        title: "Заметка обновлена",
-        description: `"${updatedNote.title || 'Заметка'}" успешно сохранена`
-      });
-
-      // Transform the returned data to match Note type
-      return transformNoteData(data);
+      return data as Note;
     },
-    onSuccess: () => {
+    onSuccess: (updatedNote) => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
-    },
-    onError: () => {
-      // Revert optimistic update on error
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      queryClient.invalidateQueries({ queryKey: ['note', updatedNote.id] });
+      queryClient.invalidateQueries({ queryKey: ['allNotes'] });
     }
   });
 
   // Delete a note
   const deleteNoteMutation = useMutation({
     mutationFn: async (noteId: string): Promise<void> => {
-      // Optimistically remove from cache
-      queryClient.setQueryData(['notes'], (oldData: any) => {
-        if (!oldData) return oldData;
-        
-        const filteredNotes = oldData.notes.filter((note: Note) => note.id !== noteId);
-        
-        return {
-          ...oldData,
-          notes: filteredNotes,
-          totalCount: Math.max(0, oldData.totalCount - 1)
-        };
-      });
-      
       const { error } = await supabase
         .from('nodes')
         .delete()
         .eq('id', noteId);
 
       if (error) {
+        console.error("Error deleting note:", error);
         toast({
-          title: "Ошибка при удалении заметки",
+          title: "Ошибка удаления заметки",
           description: error.message,
-          variant: "destructive"
+          variant: "destructive",
         });
         throw error;
       }
-
-      toast({
-        title: "Заметка удалена",
-        description: "Заметка успешно удалена"
-      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
-    },
-    onError: () => {
-      // Revert optimistic update on error
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      queryClient.invalidateQueries({ queryKey: ['allNotes'] });
     }
   });
 
   return {
-    createNote: createNoteMutation.mutate,
-    updateNote: updateNoteMutation.mutate,
-    deleteNote: deleteNoteMutation.mutate
+    createNote: createNoteMutation.mutateAsync,
+    updateNote: updateNoteMutation.mutateAsync,
+    deleteNote: deleteNoteMutation.mutateAsync,
+    isCreating: createNoteMutation.isPending,
+    isUpdating: updateNoteMutation.isPending,
+    isDeleting: deleteNoteMutation.isPending
   };
 };
