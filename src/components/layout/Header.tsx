@@ -1,5 +1,6 @@
 
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { 
   Bell, 
   Search, 
@@ -7,9 +8,24 @@ import {
   X,
   PlusCircle,
   HelpCircle,
-  LogOut
+  LogOut,
+  Settings,
+  User,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from '@/context/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "@/hooks/use-toast";
 
 interface HeaderProps {
   sidebarCollapsed: boolean;
@@ -22,6 +38,47 @@ const Header: React.FC<HeaderProps> = ({
   toggleSidebar, 
   pageTitle = "Дашборд"
 }) => {
+  const navigate = useNavigate();
+  const { user, profile, isSuperAdmin, signOut } = useAuth();
+
+  const getProfileInitials = (): string => {
+    if (profile?.display_name) {
+      return profile.display_name
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+    }
+    
+    if (profile?.email) {
+      return profile.email[0].toUpperCase();
+    }
+    
+    return "K";
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Выход выполнен",
+        description: "Вы успешно вышли из системы",
+      });
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  // Navigate to appropriate dashboard based on role
+  const navigateToDashboard = () => {
+    if (isSuperAdmin()) {
+      navigate('/dashboard/admin');
+    } else {
+      navigate('/dashboard/user');
+    }
+  };
+
   return (
     <header className="h-16 border-b border-border flex items-center justify-between px-4 bg-background">
       <div className="flex items-center gap-3">
@@ -34,6 +91,12 @@ const Header: React.FC<HeaderProps> = ({
           {sidebarCollapsed ? <Menu size={20} /> : <X size={20} />}
         </Button>
         <h1 className="text-xl font-semibold">{pageTitle}</h1>
+        {isSuperAdmin() && (
+          <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full dark:bg-blue-900/30 dark:text-blue-300 flex items-center">
+            <Shield size={12} className="mr-1" />
+            Админ
+          </span>
+        )}
       </div>
       
       <div className="flex-1 max-w-xl mx-4">
@@ -67,11 +130,40 @@ const Header: React.FC<HeaderProps> = ({
         
         <div className="w-px h-6 bg-border mx-1"></div>
         
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-full bg-kira-purple text-white flex items-center justify-center font-medium">
-            К
-          </div>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <Avatar>
+                <AvatarImage src={profile?.avatar_url || ""} />
+                <AvatarFallback className="bg-kira-purple text-white">
+                  {getProfileInitials()}
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" align="end">
+            <DropdownMenuLabel>Мой аккаунт</DropdownMenuLabel>
+            <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">
+              {profile?.email}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={navigateToDashboard}>
+                <User className="mr-2 h-4 w-4" />
+                <span>Дашборд</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/profile')}>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Настройки профиля</span>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleSignOut}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Выйти</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

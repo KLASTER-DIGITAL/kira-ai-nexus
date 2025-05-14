@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard,
   MessageCircle, 
@@ -8,15 +8,26 @@ import {
   FileText, 
   Calendar,
   Settings,
-  User
+  User,
+  Shield
 } from "lucide-react";
+import { useAuth } from '@/context/AuthContext';
+import { cn } from "@/lib/utils";
 
-const menuItems = [
-  { icon: LayoutDashboard, label: "Дашборд", path: "/dashboard" },
-  { icon: MessageCircle, label: "Чат", path: "/chat" },
-  { icon: CheckSquare, label: "Задачи", path: "/tasks" },
-  { icon: FileText, label: "Заметки", path: "/notes" },
-  { icon: Calendar, label: "Календарь", path: "/calendar" },
+interface MenuItem {
+  icon: React.ElementType;
+  label: string;
+  path: string;
+  role?: 'user' | 'superadmin' | 'any';
+}
+
+const menuItems: MenuItem[] = [
+  { icon: LayoutDashboard, label: "Дашборд", path: "/dashboard/user", role: 'user' },
+  { icon: Shield, label: "Админ панель", path: "/dashboard/admin", role: 'superadmin' },
+  { icon: MessageCircle, label: "Чат", path: "/chat", role: 'any' },
+  { icon: CheckSquare, label: "Задачи", path: "/tasks", role: 'any' },
+  { icon: FileText, label: "Заметки", path: "/notes", role: 'any' },
+  { icon: Calendar, label: "Календарь", path: "/calendar", role: 'any' },
 ];
 
 interface SidebarProps {
@@ -24,6 +35,17 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
+  const location = useLocation();
+  const { isSuperAdmin } = useAuth();
+  
+  // Filter menu items based on user role
+  const filteredMenuItems = menuItems.filter(item => {
+    if (item.role === 'superadmin' && !isSuperAdmin()) {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <div
       className={`
@@ -44,19 +66,26 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
       </div>
 
       <div className="mt-6 px-2 flex-1">
-        {menuItems.map((item, index) => (
-          <Link
-            key={index}
-            to={item.path}
-            className={`
-              flex items-center gap-3 px-3 py-2.5 rounded-md mb-1
-              text-sidebar-foreground hover:bg-sidebar-accent transition-colors
-            `}
-          >
-            <item.icon size={20} />
-            {!collapsed && <span>{item.label}</span>}
-          </Link>
-        ))}
+        {filteredMenuItems.map((item, index) => {
+          const isActive = location.pathname === item.path || 
+                          (item.path !== '/' && location.pathname.startsWith(item.path));
+          
+          return (
+            <Link
+              key={index}
+              to={item.path}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-md mb-1 transition-colors",
+                isActive 
+                  ? "bg-sidebar-accent text-sidebar-foreground" 
+                  : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+              )}
+            >
+              <item.icon size={20} />
+              {!collapsed && <span>{item.label}</span>}
+            </Link>
+          );
+        })}
       </div>
 
       <div className="mt-auto px-2 mb-4">
