@@ -1,4 +1,12 @@
 
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  session_id: string;
+}
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -13,4 +21,8 @@ export interface GlobalConfig {
   n8n_webhook_test: string;
   n8n_webhook_production: string | null;
   n8n_mode: 'test' | 'production';
+}
+
+export interface N8nResponse {
+  reply: string;
 }

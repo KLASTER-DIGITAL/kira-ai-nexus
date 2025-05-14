@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useToast } from './use-toast';
 import { useAuth } from '@/context/auth';
 import { supabase } from '@/integrations/supabase/client';
+import { ChatMessage, N8nResponse } from '@/types/chat';
 
 export interface ChatMessage {
   id: string;
