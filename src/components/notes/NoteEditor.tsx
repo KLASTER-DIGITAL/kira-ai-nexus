@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -189,13 +188,12 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
           
           <div className="flex flex-wrap gap-2 mb-2">
             {tags.map((tag, index) => (
-              <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                {tag}
-                <X 
-                  className="h-3 w-3 cursor-pointer" 
-                  onClick={() => removeTag(tag)}
-                />
-              </Badge>
+              <TagBadge 
+                key={index} 
+                tag={tag} 
+                variant="colored"
+                onRemove={() => removeTag(tag)} 
+              />
             ))}
           </div>
           

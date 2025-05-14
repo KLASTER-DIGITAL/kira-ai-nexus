@@ -3,9 +3,7 @@ import React from "react";
 import { Search, X, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Select, 
   SelectContent, 
@@ -13,8 +11,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { SortOption, GroupByOption } from "@/hooks/notes/types";
+import TagBadge from "../TagBadge";
 
 interface FilterBarProps {
   searchText: string;
@@ -74,14 +72,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
       <div className="flex flex-wrap gap-2 items-center">
         {/* Selected Tags */}
         {selectedTags.map((tag) => (
-          <Badge
+          <TagBadge
             key={tag}
-            variant="secondary"
-            className="cursor-pointer"
-            onClick={() => toggleTag(tag)}
-          >
-            {tag} <X className="ml-1 h-3 w-3" />
-          </Badge>
+            tag={tag}
+            variant="colored"
+            onRemove={() => toggleTag(tag)}
+          />
         ))}
 
         {/* Filter/Sort Controls */}
@@ -98,14 +94,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
               {allTags.length > 0 ? (
                 <div className="flex flex-wrap gap-1">
                   {allTags.map((tag) => (
-                    <Badge
+                    <TagBadge
                       key={tag}
-                      variant={selectedTags.includes(tag) ? "default" : "outline"}
-                      className="cursor-pointer"
+                      tag={tag}
+                      variant={selectedTags.includes(tag) ? "colored" : "outline"}
                       onClick={() => toggleTag(tag)}
-                    >
-                      {tag}
-                    </Badge>
+                    />
                   ))}
                 </div>
               ) : (

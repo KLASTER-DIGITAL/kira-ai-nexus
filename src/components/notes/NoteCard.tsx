@@ -3,11 +3,11 @@ import React from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Note } from "@/types/notes";
-import { Edit, Trash2, Tag } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import TagBadge from "./TagBadge";
 
 interface NoteCardProps {
   note: Note;
@@ -57,9 +57,12 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete }) => {
         {hasTags && (
           <div className="mt-3 flex flex-wrap gap-1">
             {note.tags.map((tag, index) => (
-              <Badge key={index} variant="outline" className="text-xs bg-muted/50">
-                {tag}
-              </Badge>
+              <TagBadge 
+                key={index} 
+                tag={tag} 
+                variant="colored"
+                size="sm"
+              />
             ))}
           </div>
         )}
