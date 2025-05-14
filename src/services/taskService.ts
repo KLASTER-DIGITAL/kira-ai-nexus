@@ -18,15 +18,18 @@ export const fetchTasks = async (userId: string, filter?: TaskFilter) => {
   
   if (filter) {
     if (filter.priority) {
-      query = query.eq('content->priority', filter.priority);
+      // Fix: Use string comparison instead of direct object comparison
+      query = query.eq('content->>priority', filter.priority);
     }
     
     if (filter.completed !== undefined) {
-      query = query.eq('content->completed', filter.completed ? 'true' : 'false');
+      // Fix: Use string comparison for boolean values
+      query = query.eq('content->>completed', filter.completed ? 'true' : 'false');
     }
     
     if (filter.dueDate) {
-      query = query.eq('content->dueDate', filter.dueDate);
+      // Fix: Use string comparison for date values
+      query = query.eq('content->>dueDate', filter.dueDate);
     }
   }
   
