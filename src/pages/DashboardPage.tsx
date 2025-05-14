@@ -8,6 +8,10 @@ const DashboardPage: React.FC = () => {
   return (
     <Layout title="Дашборд">
       <Dashboard />
+      <Metadata 
+        title="KIRA AI | Дашборд" 
+        description="Интеллектуальный помощник для управления задачами и информацией"
+      />
     </Layout>
   );
 };
