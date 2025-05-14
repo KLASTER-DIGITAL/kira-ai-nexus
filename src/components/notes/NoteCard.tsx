@@ -3,10 +3,11 @@ import React from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Note } from "@/types/notes";
-import { Edit, Trash2, Tags } from "lucide-react";
+import { Edit, Trash2, Tag } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface NoteCardProps {
   note: Note;
@@ -16,63 +17,78 @@ interface NoteCardProps {
 
 const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete }) => {
   // Format date to Russian locale
-  const formattedDate = format(new Date(note.updated_at), "d MMMM yyyy, HH:mm", {
+  const formattedDate = format(new Date(note.updated_at || note.created_at || new Date()), "d MMMM yyyy, HH:mm", {
     locale: ru,
   });
 
-  // Truncate content for preview by stripping HTML
-  const contentPreview = note.content 
-    ? stripHtml(note.content).substring(0, 200) + (note.content.length > 200 ? "..." : "")
-    : "";
-
   // Function to strip HTML tags for preview
-  function stripHtml(html: string) {
+  const stripHtml = (html: string) => {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     return doc.body.textContent || "";
-  }
+  };
+
+  // Truncate content for preview by stripping HTML
+  const contentPreview = note.content 
+    ? stripHtml(note.content).substring(0, 150) + (stripHtml(note.content).length > 150 ? "..." : "")
+    : "";
+
+  // Check if note has tags
+  const hasTags = note.tags && Array.isArray(note.tags) && note.tags.length > 0;
 
   return (
-    <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => onEdit(note)}>
+    <Card 
+      className={cn(
+        "cursor-pointer hover:shadow-md transition-all h-full flex flex-col",
+        note.color || "" // Apply note color if available
+      )} 
+      onClick={() => onEdit(note)}
+    >
       <CardHeader className="pb-2">
-        <h3 className="font-medium text-lg line-clamp-1">{note.title}</h3>
+        <h3 className="font-medium text-lg line-clamp-2">{note.title}</h3>
       </CardHeader>
-      <CardContent>
-        <p className="text-muted-foreground whitespace-pre-line line-clamp-4">
-          {contentPreview}
-        </p>
+      
+      <CardContent className="flex-grow">
+        {contentPreview && (
+          <p className="text-muted-foreground whitespace-pre-line line-clamp-3 text-sm">
+            {contentPreview}
+          </p>
+        )}
         
-        {note.tags && note.tags.length > 0 && (
+        {hasTags && (
           <div className="mt-3 flex flex-wrap gap-1">
             {note.tags.map((tag, index) => (
-              <Badge key={index} variant="outline" className="text-xs">
+              <Badge key={index} variant="outline" className="text-xs bg-muted/50">
                 {tag}
               </Badge>
             ))}
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex justify-between">
+      
+      <CardFooter className="flex justify-between pt-2 mt-auto border-t border-border">
         <span className="text-xs text-muted-foreground">{formattedDate}</span>
-        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            className="h-7 w-7"
             onClick={(e) => {
               e.stopPropagation();
               onEdit(note);
             }}
+            title="Редактировать"
           >
             <Edit className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
-            className="h-8 w-8 text-destructive hover:text-destructive"
+            className="h-7 w-7 hover:text-destructive"
             onClick={(e) => {
               e.stopPropagation();
               onDelete(note.id);
             }}
+            title="Удалить"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
