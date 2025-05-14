@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
 import LoadingScreen from './LoadingScreen';
+import { getRedirectPath } from './authUtils';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -48,21 +49,17 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  // Check dashboard routes specifically
-  if (location.pathname === '/dashboard/admin' && !isSuperAdmin?.()) {
-    console.log('Regular user tried to access admin dashboard - redirecting to user dashboard');
-    return <Navigate to="/dashboard/user" replace />;
-  }
-  
-  if (location.pathname === '/dashboard/user' && isSuperAdmin?.()) {
-    console.log('Superadmin tried to access user dashboard - redirecting to admin dashboard');
-    return <Navigate to="/dashboard/admin" replace />;
+  // Check for redirects based on role and current path
+  const redirectPath = getRedirectPath(profile, location, isAuthenticated);
+  if (redirectPath) {
+    console.log(`Redirecting to ${redirectPath} based on role checks`);
+    return <Navigate to={redirectPath} replace />;
   }
   
   // For role-specific routes with explicit requiredRole prop
   if (requiredRole && profile?.role !== requiredRole) {
     console.log(`Access denied: User role ${profile?.role} does not match required role ${requiredRole}`);
-    const fallbackPath = isSuperAdmin?.() ? '/dashboard/admin' : '/dashboard/user';
+    const fallbackPath = profile?.role === 'superadmin' ? '/dashboard/admin' : '/dashboard/user';
     return <Navigate to={fallbackPath} replace />;
   }
 

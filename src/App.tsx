@@ -1,4 +1,3 @@
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
@@ -25,16 +24,15 @@ const queryClient = new QueryClient();
 
 // Role-based redirect component
 const RoleBasedRedirect = () => {
-  const { profile, isSuperAdmin } = useAuth();
+  const { profile } = useAuth();
   
   console.log("RoleBasedRedirect check:", { 
     profile, 
-    isSuperAdmin: isSuperAdmin?.(), 
     role: profile?.role 
   });
   
-  if (isSuperAdmin?.()) {
-    console.log("Redirecting to admin dashboard based on isSuperAdmin() check");
+  if (profile?.role === 'superadmin') {
+    console.log("Redirecting to admin dashboard based on role check");
     return <Navigate to="/dashboard/admin" replace />;
   }
   

@@ -30,19 +30,29 @@ export const cleanupAuthState = () => {
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
   try {
     console.log("Fetching profile for userId:", userId);
-    const { data, error } = await supabase
+    
+    // First attempt to get the profile
+    let { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', userId)
-      .single();
+      .eq('id', userId);
 
     if (error) {
       console.error('Error fetching user profile:', error.message);
       return null;
     }
     
-    console.log("Profile data received:", data);
-    return data as UserProfile;
+    // If we got multiple rows, take the first one
+    if (Array.isArray(data) && data.length > 0) {
+      console.log("Profile data received (array):", data[0]);
+      return data[0] as UserProfile;
+    } else if (data) {
+      console.log("Profile data received (single):", data);
+      return data as UserProfile;
+    }
+    
+    console.log("No profile found for user:", userId);
+    return null;
   } catch (error) {
     console.error('Exception when fetching user profile:', error);
     return null;
