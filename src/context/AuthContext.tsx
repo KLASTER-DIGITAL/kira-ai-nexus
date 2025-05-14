@@ -86,6 +86,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     isAuthenticated: true,
                     isLoading: false 
                   }));
+
+                  // Redirect based on role after login
+                  if (profile && profile.role === 'superadmin') {
+                    navigate('/dashboard/admin');
+                  } else {
+                    navigate('/dashboard/user');
+                  }
                 }, 0);
               }
             } else if (event === 'SIGNED_OUT') {
@@ -176,7 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           title: "Вход выполнен",
           description: "Добро пожаловать в KIRA AI"
         });
-        navigate('/dashboard');
+        // Перенаправление будет выполнено в onAuthStateChange
       }
       
       return { error };
