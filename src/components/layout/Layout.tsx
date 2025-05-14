@@ -7,9 +7,10 @@ import AISidebar from "../ai/AISidebar";
 interface LayoutProps {
   children: React.ReactNode;
   title?: string;
+  actions?: React.ReactNode;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, title }) => {
+const Layout: React.FC<LayoutProps> = ({ children, title, actions }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const toggleSidebar = () => {
@@ -24,6 +25,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
           sidebarCollapsed={sidebarCollapsed} 
           toggleSidebar={toggleSidebar}
           pageTitle={title}
+          actions={actions}
         />
         <main className="flex-1 overflow-y-auto p-6">
           {children}

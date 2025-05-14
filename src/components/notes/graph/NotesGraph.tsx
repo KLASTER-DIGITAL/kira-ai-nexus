@@ -15,7 +15,7 @@ import {
 import "reactflow/dist/style.css";
 import { useNotes } from "@/hooks/useNotes";
 import { Button } from "@/components/ui/button";
-import { Search, Filter } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import NoteNode from "./NoteNode";
@@ -54,7 +54,11 @@ const NotesGraph: React.FC = () => {
         throw error;
       }
 
-      return data as LinksData[];
+      // Transform the data to match our interface
+      return (data || []).map(link => ({
+        sourceId: link.source_id,
+        targetId: link.target_id
+      })) as LinksData[];
     },
     enabled: !!user,
   });
