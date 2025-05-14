@@ -5,6 +5,7 @@ import {
   useNotesQuery, 
   PaginatedNotesResult 
 } from "./notes/useNotesQuery";
+import { useNotesMutations } from "./notes/useNotesMutations";
 import { NoteFilter } from "./notes/types";
 
 export interface NotesQueryOptions {
@@ -16,6 +17,7 @@ export interface NotesQueryOptions {
 // Re-export the notes hook functionality
 export const useNotes = (options: NotesQueryOptions = {}) => {
   const result = useNotesHook(options);
+  const { createNote, updateNote, deleteNote } = useNotesMutations();
   
   return {
     notes: result.notes,
@@ -24,5 +26,8 @@ export const useNotes = (options: NotesQueryOptions = {}) => {
     totalCount: result.totalCount,
     totalPages: result.totalPages,
     currentPage: result.currentPage,
+    createNote,
+    updateNote,
+    deleteNote
   };
 };
