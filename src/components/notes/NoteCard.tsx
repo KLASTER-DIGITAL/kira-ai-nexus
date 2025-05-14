@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Note } from "@/hooks/useNotes";
+import { Note } from "@/types/notes";
 import { Edit, Trash2, Tags } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";

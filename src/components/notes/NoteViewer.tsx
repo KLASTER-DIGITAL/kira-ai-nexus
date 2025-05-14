@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Note } from "@/hooks/useNotes";
+import { Note } from "@/types/notes";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import TipTapEditor from "./TipTapEditor";
 

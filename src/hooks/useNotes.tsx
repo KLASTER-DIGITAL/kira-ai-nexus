@@ -57,11 +57,14 @@ export const useNotes = (filter?: NoteFilter) => {
       }
       
       // Transform the data to ensure tags field exists
-      const notesWithTags = data.map(note => ({
-        ...note,
-        tags: note.content?.tags || [],
-        content: typeof note.content === 'object' ? note.content?.text || null : note.content
-      }));
+      const notesWithTags = data.map(note => {
+        const content = note.content as any;
+        return {
+          ...note,
+          tags: content?.tags || [],
+          content: typeof content === 'object' ? content?.text || null : content
+        };
+      });
       
       return notesWithTags as Note[];
     },
@@ -106,10 +109,11 @@ export const useNotes = (filter?: NoteFilter) => {
       });
 
       // Transform the returned data to match Note type
+      const content = data.content as any;
       const transformedNote: Note = {
         ...data,
-        tags: data.content?.tags || [],
-        content: typeof data.content === 'object' ? data.content?.text || null : data.content
+        tags: content?.tags || [],
+        content: typeof content === 'object' ? content?.text || null : content
       };
 
       return transformedNote;
@@ -157,10 +161,11 @@ export const useNotes = (filter?: NoteFilter) => {
       });
 
       // Transform the returned data to match Note type
+      const content = data.content as any;
       const transformedNote: Note = {
         ...data,
-        tags: data.content?.tags || [],
-        content: typeof data.content === 'object' ? data.content?.text || null : data.content
+        tags: content?.tags || [],
+        content: typeof content === 'object' ? content?.text || null : content
       };
 
       return transformedNote;

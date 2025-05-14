@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import NoteCard from "./NoteCard";
 import NoteEditor from "./NoteEditor";
-import { useNotes, Note } from "@/hooks/useNotes";
+import { useNotes } from "@/hooks/useNotes";
+import { Note } from "@/types/notes";
 import {
   Dialog,
   DialogContent,
