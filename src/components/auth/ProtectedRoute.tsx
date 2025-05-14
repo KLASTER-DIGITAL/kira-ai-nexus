@@ -29,7 +29,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
   
-  // Special case: Always allow superadmins to access AI Settings
+  // Special case: Allow superadmins to access AI Settings without redirection
   if (profile?.role === 'superadmin' && location.pathname === '/ai-settings') {
     return <>{children}</>;
   }

@@ -40,7 +40,7 @@ export const useWebhookSettings = () => {
     },
     // Optimize caching for better performance
     staleTime: 1000 * 60 * 15, // 15 minutes
-    cacheTime: 1000 * 60 * 60, // 60 minutes
+    gcTime: 1000 * 60 * 60, // 60 minutes - renamed from cacheTime to gcTime
   });
 
   // Use mutation for saving data
