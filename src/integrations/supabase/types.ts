@@ -164,8 +164,12 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      get_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
       is_superadmin: {
-        Args: { user_id: string }
+        Args: Record<PropertyKey, never> | { user_id: string }
         Returns: boolean
       }
     }
