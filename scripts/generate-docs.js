@@ -30,6 +30,13 @@ function ensureDirectories() {
     fs.mkdirSync(DOCS_DIR, { recursive: true });
     console.log('Создана директория docs/');
   }
+  
+  // Создаем директорию для раздела помощи, если она отсутствует
+  const helpDocsDir = path.join(DOCS_DIR, 'help');
+  if (!fs.existsSync(helpDocsDir)) {
+    fs.mkdirSync(helpDocsDir, { recursive: true });
+    console.log('Создана директория docs/help/');
+  }
 }
 
 // Синхронизация содержимого Help страниц с Mintlify документацией
@@ -37,12 +44,6 @@ function syncHelpContent() {
   try {
     console.log('Синхронизация содержимого справки с Mintlify...');
     
-    // Создаем директорию для раздела помощи, если она отсутствует
-    const helpDocsDir = path.join(DOCS_DIR, 'help');
-    if (!fs.existsSync(helpDocsDir)) {
-      fs.mkdirSync(helpDocsDir, { recursive: true });
-    }
-
     // Обновляем файлы документации для разделов помощи
     syncUserHelpContent();
     syncAdminHelpContent();

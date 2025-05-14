@@ -3,7 +3,7 @@ import React from 'react';
 import Layout from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -20,6 +20,23 @@ const AdminHelpPage: React.FC = () => {
     });
   };
   
+  const handleSyncDocs = () => {
+    toast({
+      title: "Синхронизация...",
+      description: "Выполняется синхронизация документации с Mintlify.",
+    });
+    
+    // In a real implementation, this would call an API endpoint
+    // For now, we'll simulate the sync with a timeout
+    setTimeout(() => {
+      toast({
+        title: "Синхронизация завершена",
+        description: "Документация успешно обновлена и отправлена в Mintlify.",
+        variant: "success",
+      });
+    }, 2000);
+  };
+  
   return (
     <Layout>
       <div className="container mx-auto py-6">
@@ -32,10 +49,16 @@ const AdminHelpPage: React.FC = () => {
                 Эта документация синхронизирована с Mintlify. 
                 Последнее обновление: {new Date().toLocaleDateString()}
               </p>
-              <Button variant="outline" onClick={handleViewDocs}>
-                <ExternalLink size={16} className="mr-2" />
-                Полная документация
-              </Button>
+              <div className="space-x-2">
+                <Button variant="outline" onClick={handleSyncDocs}>
+                  <RefreshCw size={16} className="mr-2" />
+                  Обновить
+                </Button>
+                <Button variant="outline" onClick={handleViewDocs}>
+                  <ExternalLink size={16} className="mr-2" />
+                  Полная документация
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

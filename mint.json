@@ -10,6 +10,7 @@
     { "section": "Обзор", "pages": ["introduction", "getting-started"] },
     { "section": "Права доступа", "pages": ["user", "superadmin"] },
     { "section": "API", "pages": ["auth", "endpoints"] },
+    { "section": "Справка", "pages": ["help/user-guide", "help/admin-guide"] },
     { "section": "Changelog", "pages": ["changelog"] },
     { "section": "Помощь", "pages": ["faq", "support"] }
   ],
