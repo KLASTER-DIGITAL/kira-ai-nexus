@@ -103,6 +103,14 @@ const ChatInterface: React.FC = () => {
     
     console.log('Handling message send:', content.length > 0 ? 'With text' : 'No text', 
       'Attachments:', attachments.length);
+      
+    if (attachments.length > 0) {
+      console.log('File details:');
+      attachments.forEach((file, index) => {
+        console.log(`File ${index + 1}: ${file.name}, Type: ${file.type}, Size: ${file.size} bytes`);
+      });
+    }
+    
     await sendMessage(content, attachments);
   };
 

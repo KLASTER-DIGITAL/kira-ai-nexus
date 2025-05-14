@@ -28,6 +28,12 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSendMessage = async () => {
+    // If we have attachments but no text, send with minimal content
+    if (attachments.length > 0 && !input.trim()) {
+      onSendMessage("📎");
+      return;
+    }
+    
     if (!input.trim() && !attachments.length) return;
     onSendMessage(input);
     setInput("");
@@ -55,8 +61,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
       // Convert FileList to Array and add files
       Array.from(e.target.files).forEach(file => {
         if (file.size > 10 * 1024 * 1024) { // 10MB limit
-          // Handle file size error (should be handled by parent component)
+          console.warn(`File ${file.name} is too large (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+          // You could add a toast notification here
         } else {
+          console.log(`Adding file: ${file.name}, type: ${file.type}, size: ${file.size} bytes`);
           onAddAttachment(file);
         }
       });
@@ -80,7 +88,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyPress}
-          placeholder="Напишите сообщение..."
+          placeholder={attachments.length > 0 ? "Добавьте описание к файлам или отправьте без текста..." : "Напишите сообщение..."}
           className="min-h-[60px] max-h-[120px] pr-28 focus:ring-kira-purple/50 transition-all duration-200"
           disabled={isLoading || !isAuthenticated}
         />
@@ -112,7 +120,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           </Button>
           <Button 
             onClick={handleSendMessage} 
-            disabled={(!input.trim() && !attachments.length) || isLoading || !isAuthenticated}
+            disabled={((!input.trim() && !attachments.length) || isLoading || !isAuthenticated)}
             size="icon"
             className={cn(
               "transition-colors",

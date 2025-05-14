@@ -19,6 +19,8 @@ export interface ChatAttachment {
   url?: string | null;
   size: number;
   local_id?: string | null; // For tracking uploads
+  content?: string | null;  // Base64 content if needed
+  metadata?: Record<string, any>; // Additional file metadata
 }
 
 export interface Message {
@@ -46,3 +48,11 @@ export interface N8nResponse {
   status?: 'success' | 'error';
   error?: string;
 }
+
+export interface N8nFileMetadata {
+  name: string;
+  type: string;
+  size: number;
+  index: number;
+}
+

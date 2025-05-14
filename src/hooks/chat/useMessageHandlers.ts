@@ -34,6 +34,9 @@ export const useMessageHandlers = (
         type: file.type,
         size: file.size,
         local_id: URL.createObjectURL(file),
+        metadata: {
+          lastModified: file.lastModified,
+        }
       }));
 
       // Create and save user message
@@ -70,7 +73,7 @@ export const useMessageHandlers = (
         ...(data.files && data.files.length > 0 && {
           extension: {
             files: data.files,
-            metadata: data.metadata
+            metadata: data.metadata || {}
           }
         })
       };
@@ -101,7 +104,9 @@ export const useMessageHandlers = (
             name: file.name,
             type: file.type,
             url: file.url,
-            size: file.size
+            size: file.size,
+            hasContent: !!file.content,
+            hasMetadata: !!file.metadata
           });
         });
       }

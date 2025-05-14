@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { N8nResponse, ChatAttachment } from '@/types/chat';
+import { N8nResponse, ChatAttachment, N8nFileMetadata } from '@/types/chat';
 
 export const useChatAPI = () => {
   // Get webhook URL from config
@@ -58,6 +58,17 @@ export const useChatAPI = () => {
         formData.append('user_id', userId);
         formData.append('session_id', sessionId);
         
+        // Generate file metadata for n8n processing
+        const filesMetadata: N8nFileMetadata[] = files.map((file, index) => ({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          index: index
+        }));
+        
+        // Add files metadata as a JSON string
+        formData.append('filesMetadata', JSON.stringify(filesMetadata));
+        
         // Add files as array using the 'files[]' format that n8n expects
         files.forEach((file) => {
           formData.append('files[]', file);
@@ -66,6 +77,7 @@ export const useChatAPI = () => {
         console.log('Sending FormData with files to webhook using files[] format');
         console.log('File count:', files.length);
         console.log('File names:', files.map(f => f.name).join(', '));
+        console.log('Files metadata:', JSON.stringify(filesMetadata));
         
         // For FormData we don't set Content-Type, browser will set it with boundary
         response = await fetch(webhookUrl, {
@@ -150,8 +162,15 @@ export const useChatAPI = () => {
           type: file.type || 'application/octet-stream',
           url: file.url || null,
           size: file.size || 0,
-          local_id: file.local_id || null
+          local_id: file.local_id || null,
+          metadata: file.metadata || null,
+          content: file.content || null
         }));
+        
+        // Log detailed information about files
+        console.log('Processed files from response:', 
+          validatedResponse.files.map(f => ({ name: f.name, type: f.type, hasUrl: !!f.url, hasContent: !!f.content }))
+        );
       }
       
       if (data.metadata) {
