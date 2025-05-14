@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/auth';
-import { ChatMessage } from '@/types/chat';
+import { ChatMessage, ChatAttachment } from '@/types/chat';
 import { useChatSession } from './useChatSession';
 import { useChatStorage } from './useChatStorage';
 import { useChatAPI } from './useChatAPI';
@@ -12,6 +12,7 @@ import { useChatRealtime } from './useChatRealtime';
 export const useChatMessages = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [attachments, setAttachments] = useState<File[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
   const { sessionId, resetSession: resetSessionId } = useChatSession();
@@ -59,44 +60,80 @@ export const useChatMessages = () => {
     loadMessages();
   }, [sessionId, user, fetchMessages, saveMessage]);
 
+  // Handle file attachments
+  const addAttachment = useCallback((file: File) => {
+    setAttachments(prev => [...prev, file]);
+  }, []);
+
+  const removeAttachment = useCallback((fileName: string) => {
+    setAttachments(prev => prev.filter(file => file.name !== fileName));
+  }, []);
+
+  const clearAttachments = useCallback(() => {
+    setAttachments([]);
+  }, []);
+
   // Send message to n8n and process response
   const sendMessage = useCallback(async (content: string) => {
-    if (!user || !sessionId || !content.trim()) return;
+    if (!user || !sessionId || (!content.trim() && attachments.length === 0)) return;
 
     setIsLoading(true);
 
     try {
+      // Create file attachments metadata if files are present
+      const fileAttachments: ChatAttachment[] = attachments.map(file => ({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        local_id: URL.createObjectURL(file),
+      }));
+
       // Create and save user message
       const userMessage: ChatMessage = {
         id: uuidv4(),
         role: 'user',
-        content,
+        content: content.trim(),
         timestamp: new Date(),
-        session_id: sessionId
+        session_id: sessionId,
+        ...(attachments.length > 0 && {
+          extension: {
+            files: fileAttachments
+          }
+        })
       };
 
       await saveMessage(userMessage);
       setMessages(prev => [...prev, userMessage]);
 
-      // Send message to n8n webhook
-      const data = await sendToWebhook(content, user.id, sessionId);
+      // Send message to n8n webhook with files
+      console.log('Sending message to webhook with attachments:', attachments.length);
+      const data = await sendToWebhook(content, user.id, sessionId, attachments);
 
       // Create and save assistant message from response
       const assistantMessage: ChatMessage = {
         id: uuidv4(),
         role: 'assistant',
-        content: data.reply || "Извините, я не смог обработать ваш запрос.",
+        content: data.reply || "",
         timestamp: new Date(),
-        session_id: sessionId
+        session_id: sessionId,
+        ...(data.files && data.files.length > 0 && {
+          extension: {
+            files: data.files,
+            metadata: data.metadata
+          }
+        })
       };
 
       await saveMessage(assistantMessage);
       setMessages(prev => [...prev, assistantMessage]);
+      
+      // Clear attachments after successful send
+      clearAttachments();
     } catch (error) {
       console.error("Error sending message:", error);
       toast({
         title: "Ошибка",
-        description: "Не удалось отправить сообщение или получить ответ",
+        description: error.message || "Не удалось отправить сообщение или получить ответ",
         variant: "destructive",
       });
       
@@ -114,18 +151,23 @@ export const useChatMessages = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, sessionId, saveMessage, sendToWebhook, toast]);
+  }, [user, sessionId, attachments, saveMessage, sendToWebhook, toast, clearAttachments]);
 
   const resetSession = useCallback(() => {
     const newSessionId = resetSessionId();
     setMessages([]);
-  }, [resetSessionId]);
+    clearAttachments();
+  }, [resetSessionId, clearAttachments]);
 
   return {
     messages,
     isLoading,
     sessionId,
     sendMessage,
-    resetSession
+    resetSession,
+    attachments,
+    addAttachment,
+    removeAttachment,
+    clearAttachments
   };
 };

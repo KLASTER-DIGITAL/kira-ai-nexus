@@ -19,6 +19,10 @@ export const useChatStorage = (userId?: string) => {
         user_id: userId,
         session_id: message.session_id,
         created_at: message.timestamp.toISOString(),
+        extension: message.extension || null,
+        payload: message.extension?.files ? { 
+          file_count: message.extension.files.length 
+        } : null
       });
 
       if (error) throw error;
@@ -53,7 +57,8 @@ export const useChatStorage = (userId?: string) => {
           role: msg.role as 'user' | 'assistant',
           content: msg.content,
           timestamp: new Date(msg.created_at),
-          session_id: msg.session_id
+          session_id: msg.session_id,
+          extension: msg.extension || undefined
         }));
       }
       

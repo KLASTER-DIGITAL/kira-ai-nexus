@@ -5,6 +5,20 @@ export interface ChatMessage {
   content: string;
   timestamp: Date;
   session_id: string;
+  extension?: ChatMessageExtension;
+}
+
+export interface ChatMessageExtension {
+  files?: ChatAttachment[];
+  metadata?: Record<string, any>;
+}
+
+export interface ChatAttachment {
+  name: string;
+  type: string;
+  url?: string;
+  size: number;
+  local_id?: string; // For tracking uploads
 }
 
 export interface Message {
@@ -14,6 +28,8 @@ export interface Message {
   user_id: string;
   session_id: string;
   created_at: string;
+  extension?: ChatMessageExtension;
+  payload?: any; // For storing additional data
 }
 
 export interface GlobalConfig {
@@ -25,4 +41,8 @@ export interface GlobalConfig {
 
 export interface N8nResponse {
   reply: string;
+  files?: ChatAttachment[];
+  metadata?: Record<string, any>;
+  status?: 'success' | 'error';
+  error?: string;
 }
