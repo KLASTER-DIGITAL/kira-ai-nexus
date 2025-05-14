@@ -6,8 +6,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/auth';
 import { toast } from '@/hooks/use-toast';
 
+type CreateTaskInput = Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'type'>;
+type UpdateTaskInput = Partial<Task> & { id: string };
+
 export const useTasks = (filter?: TaskFilter) => {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   
   // Получение задач с опциональной фильтрацией
@@ -70,7 +73,7 @@ export const useTasks = (filter?: TaskFilter) => {
 
   // Создание новой задачи
   const createTaskMutation = useMutation({
-    mutationFn: async (newTask: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'type'>) => {
+    mutationFn: async (newTask: CreateTaskInput) => {
       if (!user) throw new Error('User not authenticated');
       
       const { title, priority, completed, dueDate, description } = newTask;
@@ -117,7 +120,7 @@ export const useTasks = (filter?: TaskFilter) => {
 
   // Обновление задачи
   const updateTaskMutation = useMutation({
-    mutationFn: async (updatedTask: Partial<Task> & { id: string }) => {
+    mutationFn: async (updatedTask: UpdateTaskInput) => {
       if (!user) throw new Error('User not authenticated');
       
       // Получаем текущие данные задачи
@@ -138,7 +141,7 @@ export const useTasks = (filter?: TaskFilter) => {
       
       const currentContent = currentTask.content as Record<string, any> || {};
       
-      const taskContent = {
+      const updatedContent = {
         ...currentContent,
         ...(priority !== undefined && { priority }),
         ...(completed !== undefined && { completed }),
@@ -147,7 +150,7 @@ export const useTasks = (filter?: TaskFilter) => {
       };
       
       const updateData: Record<string, any> = {
-        content: taskContent
+        content: updatedContent
       };
       
       if (title !== undefined) {
@@ -203,7 +206,7 @@ export const useTasks = (filter?: TaskFilter) => {
       
       return taskId;
     },
-    onSuccess: (deletedTaskId) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       toast({
         title: "Задача удалена",
