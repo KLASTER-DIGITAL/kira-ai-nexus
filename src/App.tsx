@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 // Auth Provider
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { useAuth } from "@/context/AuthContext";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
@@ -22,6 +23,17 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Role-based redirect component
+const RoleBasedRedirect = () => {
+  const { profile } = useAuth();
+  
+  if (profile?.role === 'superadmin') {
+    return <Navigate to="/dashboard/admin" replace />;
+  }
+  
+  return <Navigate to="/dashboard/user" replace />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -35,12 +47,12 @@ const App = () => (
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-            {/* Protected routes - User & Admin */}
+            {/* Smart Dashboard Redirect - detects role and redirects appropriately */}
             <Route 
               path="/dashboard" 
               element={
                 <ProtectedRoute>
-                  <Navigate to="/dashboard/user" replace />
+                  <RoleBasedRedirect />
                 </ProtectedRoute>
               } 
             />
@@ -49,7 +61,7 @@ const App = () => (
             <Route 
               path="/dashboard/user" 
               element={
-                <ProtectedRoute requiredRole="user">
+                <ProtectedRoute>
                   <UserDashboardPage />
                 </ProtectedRoute>
               } 

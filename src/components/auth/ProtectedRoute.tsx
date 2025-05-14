@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -34,17 +35,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  // If role is required and user doesn't have it, redirect to appropriate dashboard
-  if (requiredRole && profile && profile.role !== requiredRole) {
-    if (requiredRole === 'superadmin' && profile.role === 'user') {
-      return <Navigate to="/dashboard/user" replace />;
-    }
-    
-    if (requiredRole === 'user' && profile.role === 'superadmin') {
-      // Admins can always access user routes, so this branch isn't actually needed,
-      // but we'll keep it for clarity and potential future changes
-      return <Navigate to="/dashboard/admin" replace />;
-    }
+  // If user is superadmin but trying to access user dashboard, redirect to admin dashboard
+  if (profile?.role === 'superadmin' && location.pathname === '/dashboard/user') {
+    return <Navigate to="/dashboard/admin" replace />;
+  }
+
+  // If user is not superadmin but trying to access admin dashboard, redirect to user dashboard
+  if (profile?.role === 'user' && requiredRole === 'superadmin') {
+    return <Navigate to="/dashboard/user" replace />;
   }
 
   return <>{children}</>;
