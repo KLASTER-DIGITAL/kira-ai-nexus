@@ -1,7 +1,8 @@
 
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth";
+import { ChatMessage } from "@/types/chat";
 import { 
   useChatSession,
   useChatStorage,
@@ -27,11 +28,11 @@ const ChatInterface: React.FC = () => {
   } = useChatAttachments();
   const { createInitialMessage } = useInitialMessage();
   
-  const [messages, setMessages] = React.useState<any[]>([]);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Handle new messages received via real-time subscription
-  const handleNewMessage = React.useCallback((message: any) => {
+  const handleNewMessage = useCallback((message: ChatMessage) => {
     console.log('Received real-time message:', message);
     setMessages(prev => {
       // Check if the message is already in the list
@@ -42,7 +43,7 @@ const ChatInterface: React.FC = () => {
   }, []);
 
   // Set up real-time subscription
-  useChatRealtime(sessionId, handleNewMessage);
+  useChatRealtime(sessionId, user?.id, handleNewMessage);
 
   // Initialize message handlers with current context
   const { sendMessage } = useMessageHandlers(
@@ -54,14 +55,14 @@ const ChatInterface: React.FC = () => {
     clearAttachments
   );
 
-  // Load messages when session changes
-  React.useEffect(() => {
+  // Load messages when session or user changes
+  useEffect(() => {
     const loadMessages = async () => {
       if (!sessionId || !user?.id) return;
       
       setIsLoading(true);
       try {
-        console.log('Loading messages for session:', sessionId);
+        console.log('Loading messages for user:', user.id, 'and session:', sessionId);
         // Fetch existing messages from storage
         const chatHistory = await fetchMessages(sessionId);
         console.log('Fetched chat history:', chatHistory.length, 'messages');
@@ -114,12 +115,19 @@ const ChatInterface: React.FC = () => {
     await sendMessage(content, attachments);
   };
 
+  // Reset session and create a new chat
+  const handleResetSession = useCallback(() => {
+    const newSessionId = resetSession();
+    setMessages([]);
+    return newSessionId;
+  }, [resetSession]);
+
   return (
     <div className="h-full flex flex-col">
       <MessageList messages={messages} isLoading={isLoading} />
       
       <div className="mt-auto">
-        <ChatHeader onNewChat={resetSession} />
+        <ChatHeader onNewChat={handleResetSession} />
         
         <ChatInput
           onSendMessage={handleSendMessage}

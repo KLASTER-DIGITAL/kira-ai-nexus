@@ -4,24 +4,28 @@ import { supabase } from '@/integrations/supabase/client';
 import { ChatMessage, ChatMessageExtension } from '@/types/chat';
 
 export const useChatRealtime = (
-  sessionId?: string, 
+  sessionId?: string,
+  userId?: string,
   onNewMessage?: (message: ChatMessage) => void
 ) => {
   useEffect(() => {
-    if (!sessionId || !onNewMessage) return;
+    if (!sessionId || !userId || !onNewMessage) return;
 
-    console.log(`Setting up realtime subscription for session: ${sessionId}`);
+    console.log(`Setting up realtime subscription for user: ${userId} and session: ${sessionId}`);
+
+    // Создаем фильтр, включающий и user_id, и session_id
+    const filter = `session_id=eq.${sessionId},user_id=eq.${userId}`;
 
     // Set up subscription
     const channel = supabase
-      .channel(`public:messages:session_id=eq.${sessionId}`)
+      .channel(`public:messages:${filter}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
-          filter: `session_id=eq.${sessionId}`
+          filter: filter
         },
         (payload) => {
           console.log('Realtime message received:', payload);
@@ -67,5 +71,5 @@ export const useChatRealtime = (
       console.log('Cleaning up realtime subscription');
       supabase.removeChannel(channel);
     };
-  }, [sessionId, onNewMessage]);
+  }, [sessionId, userId, onNewMessage]);
 };

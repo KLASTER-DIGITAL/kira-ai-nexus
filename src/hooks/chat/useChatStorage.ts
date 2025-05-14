@@ -52,6 +52,8 @@ export const useChatStorage = (userId?: string) => {
         }
       }
 
+      console.log(`Saving message to Supabase with user_id: ${userId} and session_id: ${message.session_id}`);
+
       const { error } = await supabase.from('messages').insert({
         id: message.id,
         role: message.role,
@@ -81,13 +83,18 @@ export const useChatStorage = (userId?: string) => {
     if (!userId || !sessionId) return [];
 
     try {
+      console.log(`Fetching messages with user_id: ${userId} and session_id: ${sessionId}`);
+      
       const { data, error } = await supabase
         .from('messages')
         .select('*')
         .eq('session_id', sessionId)
+        .eq('user_id', userId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
+      
+      console.log(`Fetched ${data?.length || 0} messages for session ${sessionId}`);
 
       if (data && data.length > 0) {
         return data.map(msg => {

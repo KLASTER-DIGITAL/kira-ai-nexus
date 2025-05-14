@@ -31,8 +31,8 @@ export const useChatMessages = () => {
     });
   }, []);
 
-  // Set up real-time subscription
-  useChatRealtime(sessionId, handleNewMessage);
+  // Set up real-time subscription with user_id
+  useChatRealtime(sessionId, user?.id, handleNewMessage);
 
   // Initialize message handlers with current context
   const { sendMessage } = useMessageHandlers(
@@ -51,6 +51,7 @@ export const useChatMessages = () => {
       
       setIsLoading(true);
       try {
+        console.log('Loading messages for user:', user.id, 'and session:', sessionId);
         // Fetch existing messages from storage
         const chatHistory = await fetchMessages(sessionId);
         
