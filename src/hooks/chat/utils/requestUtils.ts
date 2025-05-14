@@ -30,6 +30,7 @@ export const sendFileRequest = async (
   formData.append('session_id', sessionId);
   formData.append('timestamp', timestamp);
   formData.append('message_type', messageType);
+  formData.append('file_count', String(files.length));
   
   // Generate file metadata for n8n processing
   const filesMetadata: N8nFileMetadata[] = files.map((file, index) => ({
@@ -46,12 +47,12 @@ export const sendFileRequest = async (
   // Also add the payload as JSON for n8n to easily parse
   formData.append('payload', JSON.stringify(messagePayload));
   
-  // Add files as array using the 'files[]' format that n8n expects
-  files.forEach((file) => {
-    formData.append('files[]', file);
+  // Add files individually with explicit keys
+  files.forEach((file, index) => {
+    formData.append(`file_${index}`, file);
   });
   
-  console.log('Sending FormData with files to webhook using files[] format');
+  console.log('Sending FormData with files to webhook');
   console.log('File count:', files.length);
   console.log('File names:', files.map(f => f.name).join(', '));
   console.log('Files metadata:', JSON.stringify(filesMetadata));

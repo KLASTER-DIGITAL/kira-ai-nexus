@@ -51,7 +51,7 @@ export const useMessageHandlers = (
       const userMessage: ChatMessage = {
         id: uuidv4(),
         role: 'user',
-        content: content.trim(),
+        content: content.trim() || "📎 Прикрепленные файлы",
         timestamp: new Date(),
         session_id: sessionId,
         type: messageType,
