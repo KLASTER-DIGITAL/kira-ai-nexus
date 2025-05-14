@@ -22,8 +22,7 @@ export const fetchTasks = async (userId: string, filter?: TaskFilter) => {
     }
     
     if (filter.completed !== undefined) {
-      const completedStr = filter.completed ? 'true' : 'false';
-      query = query.eq('content->completed', completedStr);
+      query = query.eq('content->completed', filter.completed ? 'true' : 'false');
     }
     
     if (filter.dueDate) {

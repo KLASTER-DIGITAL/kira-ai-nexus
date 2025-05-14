@@ -7,7 +7,7 @@ import { useAuth } from '@/context/auth';
 export const useTaskQuery = (filter?: TaskFilter) => {
   const { user } = useAuth();
   
-  return useQuery({
+  const result = useQuery({
     queryKey: ['tasks', filter],
     queryFn: async () => {
       if (!user) throw new Error('User not authenticated');
@@ -15,4 +15,10 @@ export const useTaskQuery = (filter?: TaskFilter) => {
     },
     enabled: !!user
   });
+  
+  return {
+    tasks: result.data,
+    isLoading: result.isLoading,
+    error: result.error
+  };
 };
