@@ -41,11 +41,11 @@ export const useChatRealtime = (
             const extension: ChatMessageExtension = {};
             
             if (typeof newMsg.extension === 'object' && newMsg.extension !== null) {
-              if (newMsg.extension.files && Array.isArray(newMsg.extension.files)) {
+              if ('files' in newMsg.extension && Array.isArray(newMsg.extension.files)) {
                 extension.files = newMsg.extension.files;
               }
               
-              if (newMsg.extension.metadata) {
+              if ('metadata' in newMsg.extension) {
                 extension.metadata = newMsg.extension.metadata;
               }
             }

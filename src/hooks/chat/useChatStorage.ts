@@ -4,6 +4,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { ChatMessage, ChatMessageExtension } from '@/types/chat';
 import { useToast } from '@/hooks/use-toast';
 
+// Define a type that matches Supabase's Json type constraints
+type JsonCompatible = 
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: JsonCompatible }
+  | JsonCompatible[];
+
 export const useChatStorage = (userId?: string) => {
   const { toast } = useToast();
 
@@ -13,12 +22,12 @@ export const useChatStorage = (userId?: string) => {
 
     try {
       // Convert the extension to a format Supabase can handle (JSON)
-      let extensionJson = null;
-      let payloadJson = null;
+      let extensionJson: JsonCompatible | null = null;
+      let payloadJson: JsonCompatible | null = null;
       
       if (message.extension) {
         // We need to serialize the extension to match Supabase's Json type
-        extensionJson = {};
+        extensionJson = {} as { [key: string]: JsonCompatible };
         
         if (message.extension.files) {
           // Convert files to plain objects that can be serialized
@@ -98,12 +107,12 @@ export const useChatStorage = (userId?: string) => {
             // Type guard to check if extension is an object with the expected properties
             if (typeof msg.extension === 'object' && msg.extension !== null) {
               // Handle files if they exist in the extension
-              if (msg.extension.files && Array.isArray(msg.extension.files)) {
+              if (msg.extension && 'files' in msg.extension && Array.isArray(msg.extension.files)) {
                 extension.files = msg.extension.files;
               }
               
               // Handle metadata if it exists in the extension
-              if (msg.extension.metadata) {
+              if (msg.extension && 'metadata' in msg.extension) {
                 extension.metadata = msg.extension.metadata;
               }
             }
