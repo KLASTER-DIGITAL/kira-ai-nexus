@@ -1,6 +1,5 @@
-
 import React, { memo } from "react";
-import { Handle, Position } from "reactflow";
+import { Handle, Position } from "@xyflow/react";
 import { Note } from "@/types/notes";
 import { cn } from "@/lib/utils";
 
@@ -68,13 +67,23 @@ const NoteNode: React.FC<NoteNodeProps> = ({ data, selected }) => {
       <Handle
         type="target"
         position={Position.Left}
-        style={handleStyle}
+        style={{
+          width: 6,
+          height: 6,
+          backgroundColor: "#9d5cff",
+          border: "1px solid white",
+        }}
         isConnectable={false}
       />
       <Handle
         type="source"
         position={Position.Right}
-        style={handleStyle}
+        style={{
+          width: 6,
+          height: 6,
+          backgroundColor: "#9d5cff",
+          border: "1px solid white",
+        }}
         isConnectable={false}
       />
     </div>

@@ -11,7 +11,7 @@ import {
   Node,
   Edge,
   NodeTypes,
-} from "reactflow";
+} from "@xyflow/react";
 import "reactflow/dist/style.css";
 import { useNotes } from "@/hooks/useNotes";
 import { Button } from "@/components/ui/button";

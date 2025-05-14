@@ -31,12 +31,14 @@ interface HeaderProps {
   sidebarCollapsed: boolean;
   toggleSidebar: () => void;
   pageTitle?: string;
+  actions?: React.ReactNode; // Add this line to accept actions
 }
 
 const Header: React.FC<HeaderProps> = ({ 
   sidebarCollapsed, 
   toggleSidebar, 
-  pageTitle = "Дашборд"
+  pageTitle = "Дашборд",
+  actions     // Add this parameter
 }) => {
   const navigate = useNavigate();
   const { user, profile, isSuperAdmin, signOut } = useAuth();
@@ -114,6 +116,9 @@ const Header: React.FC<HeaderProps> = ({
       </div>
       
       <div className="flex items-center gap-2">
+        {/* Add the actions before the bell icon */}
+        {actions}
+        
         <Button variant="ghost" size="icon" className="relative">
           <Bell size={20} />
           <span className="absolute top-1 right-1 w-2 h-2 bg-kira-purple rounded-full"></span>

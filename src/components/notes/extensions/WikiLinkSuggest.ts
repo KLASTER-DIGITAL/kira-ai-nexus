@@ -1,4 +1,3 @@
-
 import { Extension } from '@tiptap/core';
 import Suggestion, { SuggestionOptions } from '@tiptap/suggestion';
 import tippy from 'tippy.js';
