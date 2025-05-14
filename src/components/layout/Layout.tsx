@@ -1,8 +1,11 @@
 
-import React, { useState } from "react";
+import React from "react";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import AISidebar from "../ai/AISidebar";
+import { cn } from "@/lib/utils";
+import { ANIMATIONS } from "@/lib/animations";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,29 +13,23 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, title }) => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
-
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar collapsed={sidebarCollapsed} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header 
-          sidebarCollapsed={sidebarCollapsed} 
-          toggleSidebar={toggleSidebar}
-          pageTitle={title}
-        />
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
-        </main>
+    <SidebarProvider>
+      <div className="flex h-screen w-full overflow-hidden">
+        <Sidebar />
+        
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header pageTitle={title} />
+          
+          <main className={cn("flex-1 overflow-y-auto p-6", ANIMATIONS.fadeIn)}>
+            {children}
+          </main>
+        </div>
+        
+        {/* AI Sidebar component */}
+        <AISidebar />
       </div>
-      
-      {/* AI Sidebar component */}
-      <AISidebar />
-    </div>
+    </SidebarProvider>
   );
 };
 

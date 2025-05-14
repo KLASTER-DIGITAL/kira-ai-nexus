@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Grip, MoreVertical, Maximize2, Minimize2, X, Settings } from 'lucide-react';
+import { GripHorizontal, Maximize2, Minimize2, X, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
   DropdownMenu,
@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { ANIMATIONS } from '@/lib/animations';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 interface DashboardItemProps {
@@ -25,22 +25,21 @@ const DashboardItem: React.FC<DashboardItemProps> = ({
   children,
   className = ""
 }) => {
-  const [expanded, setExpanded] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
   return (
     <Card 
       className={cn(
-        "kira-dashboard-item h-full w-full",
-        "transition-all duration-300 hover:shadow-md border-muted/40",
+        "h-full w-full",
+        "transition-all duration-300 group hover:shadow-md",
         className,
-        ANIMATIONS.slideIn,
+        ANIMATIONS.fadeIn,
         "flex flex-col"
       )}
     >
-      <CardHeader className="kira-dashboard-item-header p-3 flex-row justify-between items-center space-y-0">
+      <CardHeader className="p-3 flex-row justify-between items-center space-y-0 border-b select-none">
         <div className="flex items-center gap-2">
-          <Grip size={16} className="text-muted-foreground kira-draggable cursor-move" />
+          <GripHorizontal size={16} className="text-muted-foreground cursor-move" />
           <h3 className="font-medium text-base">{title}</h3>
         </div>
         <div className="flex items-center gap-1">
@@ -48,7 +47,7 @@ const DashboardItem: React.FC<DashboardItemProps> = ({
             variant="ghost" 
             size="icon" 
             onClick={() => setCollapsed(!collapsed)} 
-            className="hover:bg-kira-purple/10 transition-colors rounded-full h-7 w-7"
+            className="h-7 w-7 rounded-full hover:bg-accent"
             aria-label={collapsed ? "Развернуть" : "Свернуть содержимое"}
             title={collapsed ? "Развернуть" : "Свернуть содержимое"}
           >
@@ -64,7 +63,7 @@ const DashboardItem: React.FC<DashboardItemProps> = ({
               <Button 
                 variant="ghost" 
                 size="icon"
-                className="hover:bg-kira-purple/10 transition-colors rounded-full h-7 w-7"
+                className="h-7 w-7 rounded-full hover:bg-accent"
                 aria-label="Настройки"
               >
                 <Settings size={14} />
@@ -91,7 +90,7 @@ const DashboardItem: React.FC<DashboardItemProps> = ({
               variant="ghost" 
               size="icon" 
               onClick={onRemove}
-              className="hover:bg-destructive/10 hover:text-destructive transition-colors rounded-full h-7 w-7"
+              className="h-7 w-7 rounded-full hover:bg-destructive/10 hover:text-destructive"
               aria-label="Удалить"
               title="Удалить"
             >

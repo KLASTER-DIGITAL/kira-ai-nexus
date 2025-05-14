@@ -5,14 +5,14 @@ import ChatInterface from "../chat/ChatInterface";
 import TaskList from "../tasks/TaskList";
 import NotesList from "../notes/NotesList";
 import CalendarView from "../calendar/CalendarView";
-import { AlertCircle, Bot, LayoutDashboard, PlusCircle } from "lucide-react";
+import { Bot, LayoutDashboard, PlusCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { ANIMATIONS } from "@/lib/animations";
 import { Button } from "@/components/ui/button";
 import AddWidgetDialog from "./AddWidgetDialog";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
-// CSS для react-resizable добавлен в index.css
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -117,9 +117,8 @@ const Dashboard: React.FC = () => {
     setLayouts({ ...layouts, lg: currentLayout });
   };
 
-  // Function to open AI sidebar (using document click to trigger the floating button)
+  // Function to open AI sidebar
   const openAISidebar = () => {
-    // Find the AI button in the DOM and click it programmatically
     const aiButton = document.querySelector('[data-ai-trigger="true"]') as HTMLButtonElement;
     if (aiButton) {
       aiButton.click();
@@ -132,54 +131,55 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className={ANIMATIONS.fadeIn}>
-      <div className="mb-6 space-y-2">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm p-4 rounded-xl border">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-md bg-kira-purple text-white">
-              <LayoutDashboard size={20} />
+    <div>
+      {/* Welcome Card */}
+      <Card className="mb-6 overflow-hidden">
+        <div className="md:grid md:grid-cols-2">
+          <CardHeader className="gap-y-1 pb-0">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-md bg-kira-purple text-white">
+                <LayoutDashboard size={18} />
+              </div>
+              <CardTitle>Добро пожаловать в KIRA AI</CardTitle>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold mb-0 bg-gradient-to-r from-kira-purple to-kira-blue bg-clip-text text-transparent">
-                Добро пожаловать в KIRA AI
-              </h1>
-              <p className="text-muted-foreground text-sm">
-                Ваш интеллектуальный помощник для управления задачами и информацией
-              </p>
+            <CardDescription>
+              Ваш интеллектуальный помощник для управления задачами и информацией
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="py-6 md:pl-0">
+            <div className="flex justify-end gap-3">
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 text-kira-purple border-kira-purple/30 hover:bg-kira-purple hover:text-white"
+                onClick={openAISidebar}
+              >
+                <Bot size={16} />
+                <span>Спросить AI</span>
+              </Button>
+              
+              <div className="bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full text-xs flex items-center">
+                MVP версия
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2 bg-kira-purple/10 text-kira-purple border-kira-purple/30 hover:bg-kira-purple hover:text-white"
-              onClick={openAISidebar}
-            >
-              <Bot size={16} />
-              <span>Спросить AI</span>
-            </Button>
-            <div className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs flex items-center animate-pulse-slow">
-              <AlertCircle size={12} className="mr-1" />
-              <span>MVP версия</span>
-            </div>
-          </div>
+          </CardContent>
         </div>
-        
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-medium">Мой дашборд</h2>
-            <span className="text-xs text-muted-foreground">
-              {widgets.length} {widgets.length === 1 ? 'виджет' : widgets.length >= 2 && widgets.length <= 4 ? 'виджета' : 'виджетов'}
-            </span>
-          </div>
-          <AddWidgetDialog onAddWidget={addWidget}>
-            <Button 
-              className="flex items-center gap-2 bg-kira-purple hover:bg-kira-purple-dark text-white transition-colors"
-            >
-              <PlusCircle size={16} />
-              <span>Добавить виджет</span>
-            </Button>
-          </AddWidgetDialog>
+      </Card>
+      
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-medium">Мой дашборд</h2>
+          <span className="text-xs text-muted-foreground">
+            {widgets.length} {widgets.length === 1 ? 'виджет' : widgets.length >= 2 && widgets.length <= 4 ? 'виджета' : 'виджетов'}
+          </span>
         </div>
+        <AddWidgetDialog onAddWidget={addWidget}>
+          <Button 
+            className="flex items-center gap-2 bg-kira-purple hover:bg-kira-purple-dark text-white"
+          >
+            <PlusCircle size={16} />
+            <span>Добавить виджет</span>
+          </Button>
+        </AddWidgetDialog>
       </div>
 
       <ResponsiveGridLayout

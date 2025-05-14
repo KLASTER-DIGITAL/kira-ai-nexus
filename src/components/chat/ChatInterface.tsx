@@ -4,7 +4,8 @@ import { Send, Paperclip, Mic, MoreVertical, Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 
 interface Message {
   id: string;
@@ -41,7 +42,7 @@ const ChatInterface: React.FC = () => {
     // Автоматическое изменение размера textarea
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      textareaRef.current.style.height = `${Math.min(120, textareaRef.current.scrollHeight)}px`;
     }
   };
 
@@ -71,7 +72,7 @@ const ChatInterface: React.FC = () => {
       textareaRef.current.style.height = "auto";
     }
 
-    // Simulate AI response after a short delay
+    // Симуляция ответа
     setTimeout(() => {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -86,47 +87,47 @@ const ChatInterface: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Chat header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b">
+      <div className="flex items-center justify-between px-4 py-2 border-b bg-card">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-kira-purple rounded-full flex items-center justify-center text-white font-medium">
-            K
-          </div>
+          <Avatar className="h-8 w-8 bg-kira-purple text-white">
+            <AvatarFallback>K</AvatarFallback>
+          </Avatar>
           <div>
-            <h2 className="font-medium">KIRA AI</h2>
+            <h2 className="font-medium text-sm">KIRA AI</h2>
             <p className="text-xs text-muted-foreground">Интеллектуальный ассистент</p>
           </div>
         </div>
-        <Button variant="ghost" size="icon">
-          <MoreVertical size={18} />
+        <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
+          <MoreVertical size={16} />
         </Button>
       </div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}
             className={cn(
-              "flex",
+              "flex gap-3",
               message.role === "user" ? "justify-end" : "justify-start"
             )}
           >
             {message.role === "assistant" && (
-              <div className="w-8 h-8 bg-kira-purple rounded-full flex items-center justify-center text-white font-medium mr-2 flex-shrink-0">
-                K
-              </div>
+              <Avatar className="h-8 w-8 bg-kira-purple text-white flex-shrink-0">
+                <AvatarFallback>K</AvatarFallback>
+              </Avatar>
             )}
             
             <div
               className={cn(
-                "max-w-[85%] rounded-2xl px-4 py-3",
+                "max-w-[75%] rounded-lg px-4 py-2",
                 message.role === "user"
                   ? "bg-kira-purple text-white"
                   : "bg-secondary border border-border"
               )}
             >
               <p className="text-sm">{message.content}</p>
-              <div className="text-xs opacity-70 mt-1 text-right">
+              <div className="text-[10px] opacity-70 mt-1 text-right">
                 {message.timestamp.toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -135,24 +136,22 @@ const ChatInterface: React.FC = () => {
             </div>
             
             {message.role === "user" && (
-              <div className="w-8 h-8 rounded-full bg-gray-300 ml-2 flex-shrink-0">
-                <AspectRatio ratio={1} className="bg-muted">
-                  <div className="flex items-center justify-center h-full w-full text-muted-foreground">
-                    К
-                  </div>
-                </AspectRatio>
-              </div>
+              <Avatar className="h-8 w-8 bg-gray-300 flex-shrink-0">
+                <AvatarFallback>К</AvatarFallback>
+              </Avatar>
             )}
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
 
+      <Separator />
+
       {/* Input area */}
-      <div className="border-t p-4">
-        <div className="relative flex items-end bg-secondary rounded-lg border">
-          <Button variant="ghost" size="icon" className="flex-shrink-0">
-            <Smile size={20} />
+      <div className="p-3 bg-card">
+        <div className="relative flex items-end rounded-lg border bg-background">
+          <Button variant="ghost" size="icon" className="h-9 w-9">
+            <Smile size={18} />
           </Button>
           
           <Textarea
@@ -161,23 +160,23 @@ const ChatInterface: React.FC = () => {
             onChange={handleInputChange}
             onKeyDown={handleKeyPress}
             placeholder="Напишите сообщение..."
-            className="min-h-[40px] max-h-[120px] resize-none border-0 focus-visible:ring-0 bg-transparent flex-1"
+            className="min-h-[40px] max-h-[120px] resize-none border-0 focus-visible:ring-0 bg-transparent flex-1 py-3 px-0"
           />
           
-          <div className="flex items-center space-x-2 px-3 py-2">
-            <Button variant="ghost" size="icon" className="text-muted-foreground">
-              <Paperclip size={20} />
+          <div className="flex items-center px-2">
+            <Button variant="ghost" size="icon" className="text-muted-foreground h-9 w-9">
+              <Paperclip size={18} />
             </Button>
-            <Button variant="ghost" size="icon" className="text-muted-foreground">
-              <Mic size={20} />
+            <Button variant="ghost" size="icon" className="text-muted-foreground h-9 w-9">
+              <Mic size={18} />
             </Button>
             <Button 
               onClick={handleSendMessage} 
               disabled={!input.trim()}
               size="icon"
-              className="bg-kira-purple hover:bg-kira-purple-dark text-white"
+              className="bg-kira-purple hover:bg-kira-purple-dark text-white h-9 w-9"
             >
-              <Send size={18} />
+              <Send size={16} />
             </Button>
           </div>
         </div>

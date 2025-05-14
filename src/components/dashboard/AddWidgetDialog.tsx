@@ -2,10 +2,10 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Calendar, Notebook, ListChecks, MessageSquareText, Check, CheckCircle, Plus } from "lucide-react";
-import { ANIMATIONS } from "@/lib/animations";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Calendar, FileText, CheckSquare, MessageSquare, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ANIMATIONS } from "@/lib/animations";
+import { Card } from "@/components/ui/card";
 
 interface WidgetOption {
   id: string;
@@ -19,21 +19,21 @@ const widgetOptions: WidgetOption[] = [
   {
     id: "chat",
     title: "Чат с KIRA AI",
-    icon: MessageSquareText,
+    icon: MessageSquare,
     description: "Задавайте вопросы и получайте помощь от ИИ-ассистента",
     color: "bg-purple-100 dark:bg-purple-900/30 text-purple-600"
   },
   {
     id: "tasks",
     title: "Мои задачи",
-    icon: ListChecks,
+    icon: CheckSquare,
     description: "Управляйте задачами и отслеживайте их выполнение",
     color: "bg-blue-100 dark:bg-blue-900/30 text-blue-600"
   },
   {
     id: "notes",
     title: "Заметки",
-    icon: Notebook,
+    icon: FileText,
     description: "Создавайте и управляйте заметками",
     color: "bg-amber-100 dark:bg-amber-900/30 text-amber-600"
   },
@@ -66,14 +66,7 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ onAddWidget, children
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {children || (
-          <Button 
-            className="flex items-center gap-2 bg-kira-purple hover:bg-kira-purple-dark text-white transition-colors"
-          >
-            <Plus size={16} />
-            <span>Добавить виджет</span>
-          </Button>
-        )}
+        {children}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[650px]">
         <DialogHeader>
@@ -86,32 +79,30 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ onAddWidget, children
             const isSelected = selectedWidget === option.id;
             
             return (
-              <div 
+              <Card 
                 key={option.id}
                 className={cn(
-                  "relative p-4 rounded-lg border-2 cursor-pointer transition-all",
-                  isSelected ? 'border-kira-purple bg-kira-purple/5 dark:bg-kira-purple/10' : 'border-border hover:border-kira-purple/30',
+                  "relative p-4 cursor-pointer transition-all hover:shadow",
+                  isSelected ? 'border-kira-purple bg-kira-purple/5 dark:bg-kira-purple/10' : 'hover:border-kira-purple/30',
                   ANIMATIONS.fadeIn
                 )}
                 onClick={() => setSelectedWidget(option.id)}
               >
                 {isSelected && (
-                  <div className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded-full bg-kira-purple text-white">
+                  <div className="absolute top-3 right-3 w-5 h-5 flex items-center justify-center rounded-full bg-kira-purple text-white">
                     <Check size={12} />
                   </div>
                 )}
-                <div className="flex flex-col items-center text-center gap-3">
-                  <AspectRatio ratio={1/1} className="w-16">
-                    <div className={cn("rounded-full w-full h-full flex items-center justify-center", option.color)}>
-                      <Icon size={24} />
-                    </div>
-                  </AspectRatio>
+                <div className="flex gap-4 items-center">
+                  <div className={cn("rounded-md w-12 h-12 flex items-center justify-center", option.color)}>
+                    <Icon size={24} />
+                  </div>
                   <div>
                     <h3 className="font-medium text-base">{option.title}</h3>
                     <p className="text-xs text-muted-foreground mt-1">{option.description}</p>
                   </div>
                 </div>
-              </div>
+              </Card>
             );
           })}
         </div>
@@ -129,7 +120,7 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ onAddWidget, children
           <Button 
             disabled={!selectedWidget}
             onClick={handleAddWidget}
-            className="bg-kira-purple hover:bg-kira-purple-dark text-white transition-colors"
+            className="bg-kira-purple hover:bg-kira-purple-dark text-white"
           >
             Добавить виджет
           </Button>
