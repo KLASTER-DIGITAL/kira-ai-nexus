@@ -3,13 +3,18 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ChatMessage } from '@/types/chat';
 
-export const useChatRealtime = (sessionId: string, onNewMessage: (message: ChatMessage) => void) => {
-  // Set up realtime subscription
+export const useChatRealtime = (
+  sessionId?: string, 
+  onNewMessage?: (message: ChatMessage) => void
+) => {
   useEffect(() => {
-    if (!sessionId) return;
+    if (!sessionId || !onNewMessage) return;
 
+    console.log(`Setting up realtime subscription for session: ${sessionId}`);
+
+    // Set up subscription
     const channel = supabase
-      .channel('public:messages')
+      .channel(`public:messages:session_id=eq.${sessionId}`)
       .on(
         'postgres_changes',
         {
@@ -19,22 +24,29 @@ export const useChatRealtime = (sessionId: string, onNewMessage: (message: ChatM
           filter: `session_id=eq.${sessionId}`
         },
         (payload) => {
-          const newMessage = payload.new as any;
+          console.log('Realtime message received:', payload);
+          const newMsg = payload.new as any;
           
-          const formattedMessage: ChatMessage = {
-            id: newMessage.id,
-            role: newMessage.role,
-            content: newMessage.content,
-            timestamp: new Date(newMessage.created_at),
-            session_id: newMessage.session_id
+          // Convert database row to ChatMessage
+          const chatMessage: ChatMessage = {
+            id: newMsg.id,
+            role: newMsg.role as 'user' | 'assistant',
+            content: newMsg.content,
+            timestamp: new Date(newMsg.created_at),
+            session_id: newMsg.session_id,
+            ...(newMsg.extension && { extension: newMsg.extension })
           };
           
-          onNewMessage(formattedMessage);
+          onNewMessage(chatMessage);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`Supabase realtime status: ${status}`);
+      });
 
+    // Cleanup subscription
     return () => {
+      console.log('Cleaning up realtime subscription');
       supabase.removeChannel(channel);
     };
   }, [sessionId, onNewMessage]);

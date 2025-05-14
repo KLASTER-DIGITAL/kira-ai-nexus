@@ -58,7 +58,8 @@ export const useChatStorage = (userId?: string) => {
           content: msg.content,
           timestamp: new Date(msg.created_at),
           session_id: msg.session_id,
-          extension: msg.extension || undefined
+          // Handle extension field with null checking
+          ...(msg.extension && { extension: msg.extension })
         }));
       }
       
