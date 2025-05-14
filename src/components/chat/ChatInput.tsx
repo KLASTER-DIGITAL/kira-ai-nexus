@@ -30,7 +30,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const handleSendMessage = async () => {
     // If we have attachments but no text, send with file name or placeholder
     if (attachments.length > 0 && !input.trim()) {
-      onSendMessage(attachments[0].name || "📎");
+      onSendMessage(attachments[0].name || "Прикрепленный файл");
       return;
     }
     

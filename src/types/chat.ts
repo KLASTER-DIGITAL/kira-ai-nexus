@@ -44,12 +44,14 @@ export interface GlobalConfig {
 }
 
 export interface N8nResponse {
-  reply: string;
+  reply?: string;
   files?: ChatAttachment[];
   metadata?: Record<string, any>;
-  status?: 'success' | 'error';
+  status?: 'success' | 'error' | 'received';
   error?: string;
   type?: 'text' | 'voice' | 'file'; // Message type
+  filename?: string;
+  message?: string;
 }
 
 export interface N8nFileMetadata {

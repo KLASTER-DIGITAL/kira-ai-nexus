@@ -12,11 +12,16 @@ export const sendFileRequest = async (
   files: File[],
   signal: AbortSignal
 ): Promise<Response> => {
-  // Use FormData for file uploads with array format for n8n compatibility
+  // Use FormData for file uploads
   const formData = new FormData();
   
-  // Add file count to match expected format
-  const fileCount = files.length;
+  // Add message data as text/plain fields
+  formData.append('message', content || (files.length > 0 ? files[0].name : "Прикрепленный файл"));
+  formData.append('user_id', userId);
+  formData.append('session_id', sessionId);
+  formData.append('timestamp', timestamp);
+  formData.append('message_type', messageType);
+  formData.append('file_count', String(files.length));
   
   // Generate file metadata for n8n processing
   const filesMetadata: N8nFileMetadata[] = files.map((file, index) => ({
@@ -26,41 +31,26 @@ export const sendFileRequest = async (
     index: index
   }));
   
-  // Create the complete message payload with all required fields
-  const messagePayload: N8nMessagePayload = {
-    message: content || (fileCount > 0 ? files[0].name : "Прикрепленный файл"),
-    user_id: userId,
-    session_id: sessionId,
-    timestamp: timestamp,
-    message_type: messageType,
-    file_count: fileCount,
-    files_metadata: filesMetadata
-  };
-  
-  // Add all fields to formData individually
-  formData.append('message', messagePayload.message);
-  formData.append('user_id', userId);
-  formData.append('session_id', sessionId);
-  formData.append('timestamp', timestamp);
-  formData.append('message_type', messageType);
-  formData.append('file_count', String(fileCount));
-  
   // Add files_metadata as JSON string
   formData.append('files_metadata', JSON.stringify(filesMetadata));
   
-  // Add the complete payload as JSON for n8n to easily parse
-  formData.append('payload', JSON.stringify(messagePayload));
+  // Add only the first file as 'file' key (for simplified n8n processing)
+  if (files.length > 0) {
+    formData.append('file', files[0]);
+  }
   
-  // Add files individually with explicit keys based on index
+  // Add all files with numbered keys as backup
   files.forEach((file, index) => {
-    formData.append(`file_${index}`, file);
+    if (index > 0) { // Skip the first one as it's already added as 'file'
+      formData.append(`file_${index}`, file);
+    }
   });
   
   console.log('Sending FormData with files to webhook');
-  console.log('File count:', fileCount);
+  console.log('File count:', files.length);
   console.log('Files metadata:', JSON.stringify(filesMetadata));
+  console.log('Message:', content);
   console.log('Full webhook URL:', webhookUrl);
-  console.log('Message payload:', JSON.stringify(messagePayload));
   
   try {
     // For FormData we don't set Content-Type, browser will set it with boundary

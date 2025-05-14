@@ -60,10 +60,18 @@ export const processWebhookResponse = async (response: Response): Promise<N8nRes
   
   // Make sure the response structure is valid
   const validatedResponse: N8nResponse = {
-    reply: data.reply || "",
+    reply: data.reply,
     status: data.status || "success",
     type: data.type || "text"  // Default to text if not specified
   };
+
+  // Handle simple responses from n8n (like your specified format)
+  if (data.status === "received" && data.filename) {
+    validatedResponse.status = "received";
+    validatedResponse.filename = data.filename;
+    validatedResponse.message = data.message || "ok";
+    validatedResponse.reply = `Файл ${data.filename} успешно получен.`;
+  }
   
   if (data.files && Array.isArray(data.files)) {
     // Validate and convert each file attachment

@@ -77,7 +77,7 @@ export const useMessageHandlers = (
       const assistantMessage: ChatMessage = {
         id: uuidv4(),
         role: 'assistant',
-        content: data.reply || "",
+        content: data.reply || data.message || "",
         timestamp: new Date(),
         session_id: sessionId,
         type: data.type || 'text',
@@ -88,6 +88,11 @@ export const useMessageHandlers = (
           }
         })
       };
+
+      // Если мы получили специальный ответ о получении файла
+      if (data.status === 'received' && data.filename) {
+        assistantMessage.content = `Файл ${data.filename} успешно получен. ${data.message || ''}`;
+      }
 
       // If there was an error, show a toast notification
       if (data.status === 'error') {
