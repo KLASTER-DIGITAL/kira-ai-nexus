@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { fetchUserProfile, getRedirectPath } from './utils';
 import { AuthState } from './types';
@@ -19,6 +19,7 @@ const initialState: AuthState = {
 export const useAuthState = () => {
   const [state, setState] = useState<AuthState>(initialState);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -46,8 +47,8 @@ export const useAuthState = () => {
                     isLoading: false 
                   }));
 
-                  // Redirect based on role after login
-                  if (profile) {
+                  // Не делаем автоматические редиректы на странице auth
+                  if (profile && location.pathname !== '/auth') {
                     const redirectPath = getRedirectPath(profile);
                     console.log("Redirecting to:", redirectPath, "based on role:", profile.role);
                     navigate(redirectPath, { replace: true });
@@ -63,13 +64,15 @@ export const useAuthState = () => {
                 isLoading: false,
                 isAuthenticated: false
               });
-              // Force redirect to auth page on sign out
-              navigate('/auth', { replace: true });
+              // Редирект на auth только если не на странице auth
+              if (location.pathname !== '/auth') {
+                navigate('/auth', { replace: true });
+              }
             }
           }
         );
 
-        // Then check for existing session
+        // Проверяем существующую сессию
         const { data: { session } } = await supabase.auth.getSession();
         console.log("Existing session check:", session?.user?.email);
         
@@ -85,12 +88,13 @@ export const useAuthState = () => {
             isAuthenticated: true
           });
           
-          // Check if we need to redirect based on current URL and role
-          if (profile) {
-            const currentPath = window.location.pathname;
+          // Проверяем, нужно ли редиректить на основе текущего URL и роли
+          // Не делаем редирект, если пользователь уже на странице auth
+          if (profile && location.pathname !== '/auth') {
+            const currentPath = location.pathname;
             console.log("Current path check:", currentPath, "role:", profile.role);
             
-            // Redirect if user is on the wrong dashboard or at root paths
+            // Редиректим только если пользователь на неправильном дашборде или на корневых путях
             if ((currentPath === '/dashboard/user' && profile.role === 'superadmin') ||
                 (currentPath === '/dashboard/admin' && profile.role !== 'superadmin') ||
                 (currentPath === '/dashboard' || currentPath === '/')) {
@@ -101,6 +105,10 @@ export const useAuthState = () => {
           }
         } else {
           setState(prev => ({ ...prev, isLoading: false }));
+          // Редиректим на авторизацию только если пользователь не на странице auth
+          if (location.pathname !== '/auth' && !location.pathname.startsWith('/reset-password')) {
+            navigate('/auth', { replace: true });
+          }
         }
 
         return () => {
@@ -113,7 +121,7 @@ export const useAuthState = () => {
     };
 
     initializeAuth();
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   return state;
 };

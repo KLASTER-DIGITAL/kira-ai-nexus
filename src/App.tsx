@@ -1,4 +1,5 @@
 
+import React, { useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { Toaster } from "@/components/ui/toaster"
 
@@ -20,6 +21,17 @@ import ProtectedRoute from './components/auth/ProtectedRoute'
 import HomePage from './pages/HomePage'
 
 function App() {
+  // Установка favicon программно
+  useEffect(() => {
+    const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+    if (!link) {
+      const newLink = document.createElement('link');
+      newLink.rel = 'icon';
+      newLink.href = '/favicon.ico';
+      document.getElementsByTagName('head')[0].appendChild(newLink);
+    }
+  }, []);
+
   return (
     <>
       <Routes>
