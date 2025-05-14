@@ -4,17 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/auth';
-
-export interface Note {
-  id: string;
-  title: string;
-  content: string | null;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-  type: string;
-  tags: string[];
-}
+import { Note } from '@/types/notes';
 
 interface NoteInput {
   title: string;
@@ -66,7 +56,14 @@ export const useNotes = (filter?: NoteFilter) => {
         throw error;
       }
       
-      return data as Note[];
+      // Transform the data to ensure tags field exists
+      const notesWithTags = data.map(note => ({
+        ...note,
+        tags: note.content?.tags || [],
+        content: typeof note.content === 'object' ? note.content?.text || null : note.content
+      }));
+      
+      return notesWithTags as Note[];
     },
     enabled: !!user,
   });
@@ -82,8 +79,10 @@ export const useNotes = (filter?: NoteFilter) => {
         user_id: user.id,
         type: 'note',
         title: newNote.title,
-        content: newNote.content,
-        tags: newNote.tags || []
+        content: {
+          text: newNote.content,
+          tags: newNote.tags || []
+        }
       };
 
       const { data, error } = await supabase
@@ -106,7 +105,14 @@ export const useNotes = (filter?: NoteFilter) => {
         description: `"${newNote.title}" успешно сохранена`
       });
 
-      return data as Note;
+      // Transform the returned data to match Note type
+      const transformedNote: Note = {
+        ...data,
+        tags: data.content?.tags || [],
+        content: typeof data.content === 'object' ? data.content?.text || null : data.content
+      };
+
+      return transformedNote;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
@@ -116,13 +122,18 @@ export const useNotes = (filter?: NoteFilter) => {
   // Update an existing note
   const updateNoteMutation = useMutation({
     mutationFn: async (updatedNote: Partial<Note> & { id: string }): Promise<Note> => {
+      // Prepare the content object
+      const contentUpdate = {
+        text: updatedNote.content,
+        tags: updatedNote.tags || []
+      };
+      
       const updateData: any = {
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        content: contentUpdate
       };
       
       if (updatedNote.title !== undefined) updateData.title = updatedNote.title;
-      if (updatedNote.content !== undefined) updateData.content = updatedNote.content;
-      if (updatedNote.tags !== undefined) updateData.tags = updatedNote.tags;
       
       const { data, error } = await supabase
         .from('nodes')
@@ -145,7 +156,14 @@ export const useNotes = (filter?: NoteFilter) => {
         description: `"${updatedNote.title || 'Заметка'}" успешно сохранена`
       });
 
-      return data as Note;
+      // Transform the returned data to match Note type
+      const transformedNote: Note = {
+        ...data,
+        tags: data.content?.tags || [],
+        content: typeof data.content === 'object' ? data.content?.text || null : data.content
+      };
+
+      return transformedNote;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
