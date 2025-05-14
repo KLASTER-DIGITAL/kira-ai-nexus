@@ -3,7 +3,6 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
 import LoadingScreen from './LoadingScreen';
-import { getRedirectPath } from './authUtils';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -22,12 +21,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { isAuthenticated, isLoading, profile, isSuperAdmin } = useAuth();
   const location = useLocation();
-  const userRole = profile?.role || 'user';
   
   console.log('Protected Route Check:', { 
     isAuthenticated, 
     isLoading, 
-    userRole,
+    profile,
+    userRole: profile?.role,
     requiredRole,
     isSuperAdmin: isSuperAdmin(),
     path: location.pathname
@@ -43,17 +42,17 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
   
-  // For role-specific routes, check if user has required role
-  if (requiredRole && userRole !== requiredRole) {
-    console.log(`Access denied: User role ${userRole} does not match required role ${requiredRole}`);
-    const fallbackPath = isSuperAdmin() ? '/dashboard/admin' : '/dashboard/user';
-    return <Navigate to={fallbackPath} replace />;
-  }
-
-  // Auto-redirect superadmins to admin dashboard if they try to access user dashboard
+  // For superadmin trying to access user dashboard, redirect to admin dashboard
   if (isSuperAdmin() && location.pathname === '/dashboard/user') {
     console.log('Superadmin redirected from user dashboard to admin dashboard');
     return <Navigate to="/dashboard/admin" replace />;
+  }
+  
+  // For role-specific routes, check if user has required role
+  if (requiredRole && profile?.role !== requiredRole) {
+    console.log(`Access denied: User role ${profile?.role} does not match required role ${requiredRole}`);
+    const fallbackPath = isSuperAdmin() ? '/dashboard/admin' : '/dashboard/user';
+    return <Navigate to={fallbackPath} replace />;
   }
 
   // User is authenticated and has proper role, render children

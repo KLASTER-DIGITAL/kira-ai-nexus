@@ -37,7 +37,7 @@ export const useAuthState = () => {
               if (session?.user) {
                 setTimeout(async () => {
                   const profile = await fetchUserProfile(session.user.id);
-                  console.log("Fetched profile:", profile);
+                  console.log("Fetched profile after sign in:", profile);
                   
                   setState(prev => ({ 
                     ...prev, 
@@ -84,6 +84,12 @@ export const useAuthState = () => {
             isLoading: false,
             isAuthenticated: true
           });
+          
+          // Check if we need to redirect based on current URL and role
+          if (profile && window.location.pathname === '/dashboard/user' && profile.role === 'superadmin') {
+            console.log("Initial redirect: Superadmin on user dashboard, redirecting to admin dashboard");
+            navigate('/dashboard/admin', { replace: true });
+          }
         } else {
           setState(prev => ({ ...prev, isLoading: false }));
         }

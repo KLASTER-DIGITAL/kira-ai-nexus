@@ -15,8 +15,13 @@ export const useAuthProvider = () => {
 
   // Helper function to check if user is superadmin
   const isSuperAdmin = () => {
-    console.log("isSuperAdmin check:", authState.profile?.role);
-    return authState.profile?.role === 'superadmin';
+    const isSuperAdminUser = authState.profile?.role === 'superadmin';
+    console.log("isSuperAdmin check:", { 
+      role: authState.profile?.role, 
+      isSuperAdmin: isSuperAdminUser,
+      profile: authState.profile
+    });
+    return isSuperAdminUser;
   };
 
   return {

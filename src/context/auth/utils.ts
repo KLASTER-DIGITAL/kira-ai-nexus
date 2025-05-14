@@ -97,7 +97,12 @@ export const isSuperAdminRole = (profile: UserProfile | null): boolean => {
  * navigate(path);
  */
 export const getRedirectPath = (profile: UserProfile | null): string => {
-  const path = profile?.role === 'superadmin' ? '/dashboard/admin' : '/dashboard/user';
+  if (!profile) {
+    console.log("getRedirectPath: No profile, redirecting to /auth");
+    return '/auth';
+  }
+  
+  const path = profile.role === 'superadmin' ? '/dashboard/admin' : '/dashboard/user';
   console.log("getRedirectPath determined:", { role: profile?.role, path });
   return path;
 };
