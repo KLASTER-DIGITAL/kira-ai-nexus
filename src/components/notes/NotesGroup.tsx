@@ -13,7 +13,8 @@ interface NotesGroupProps {
 }
 
 const NotesGroup: React.FC<NotesGroupProps> = ({ group, onEdit, onDelete }) => {
-  const [isExpanded, setIsExpanded] = useState(group.isExpanded || true);
+  // Fix: Use explicit boolean value rather than relying on group.isExpanded which might be undefined
+  const [isExpanded, setIsExpanded] = useState<boolean>(group.isExpanded !== false);
   
   return (
     <div className="mb-8">

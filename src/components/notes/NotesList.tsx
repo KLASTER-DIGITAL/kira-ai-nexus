@@ -1,29 +1,19 @@
 
 import React, { useState, useEffect } from "react";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useNotes } from "@/hooks/useNotes";
 import { Note } from "@/types/notes";
-import FilterBar from "./filters/FilterBar";
-import EmptyState from "./EmptyState";
-import NoteCardGrid from "./NoteCardGrid";
 import DeleteNoteDialog from "./DeleteNoteDialog";
 import NoteEditDialog from "./NoteEditDialog";
-import { 
-  Pagination, 
-  PaginationContent, 
-  PaginationItem, 
-  PaginationLink, 
-  PaginationEllipsis, 
-  PaginationNext, 
-  PaginationPrevious 
-} from "@/components/ui/pagination";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SortOption, GroupByOption } from "@/hooks/notes/types";
 import { useNotesGrouping } from "@/hooks/notes/useNotesGrouping";
-import NotesGroup from "./NotesGroup";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import NotesHeader from "./header/NotesHeader";
+import FilterBar from "./filters/FilterBar";
+import NotesContent from "./content/NotesContent";
+import NotesPagination from "./pagination/NotesPagination";
+import { useNotesKeyboardShortcuts } from "@/hooks/notes/useNotesKeyboardShortcuts";
 
 const NotesList: React.FC = () => {
   // Local state for UI management
@@ -48,7 +38,15 @@ const NotesList: React.FC = () => {
   const { toast } = useToast();
 
   // Use our notes hook with pagination and sorting
-  const { notes, isLoading, createNote, updateNote, deleteNote, totalPages, totalCount } = useNotes({
+  const { 
+    notes, 
+    isLoading, 
+    createNote, 
+    updateNote, 
+    deleteNote, 
+    totalPages, 
+    totalCount 
+  } = useNotes({
     filter: {
       searchText: searchText || undefined,
       tags: selectedTags.length > 0 ? selectedTags : undefined,
@@ -60,6 +58,25 @@ const NotesList: React.FC = () => {
   
   // Use our notes grouping hook
   const noteGroups = useNotesGrouping(notes || [], groupByOption);
+
+  // Set up keyboard shortcuts
+  useNotesKeyboardShortcuts({
+    onNewNote: handleNewNote,
+    isEditorOpen,
+    onCloseEditor: () => setIsEditorOpen(false),
+    onNextPage: () => {
+      if (currentPage < totalPages) {
+        setCurrentPage(prev => prev + 1);
+      }
+    },
+    onPrevPage: () => {
+      if (currentPage > 1) {
+        setCurrentPage(prev => prev - 1);
+      }
+    },
+    canGoNext: currentPage < totalPages,
+    canGoPrev: currentPage > 1
+  });
 
   // Set up realtime subscription
   useEffect(() => {
@@ -96,56 +113,20 @@ const NotesList: React.FC = () => {
     };
   }, [toast]);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Alt/Option + N to create new note
-      if (e.altKey && e.key === 'n') {
-        e.preventDefault();
-        handleNewNote();
-      }
-      
-      // Escape to close editor
-      if (e.key === 'Escape' && isEditorOpen) {
-        setIsEditorOpen(false);
-      }
-      
-      // Alt/Option + Right/Left for pagination
-      if (e.altKey && e.key === 'ArrowRight') {
-        e.preventDefault();
-        if (currentPage < totalPages) {
-          setCurrentPage(prev => prev + 1);
-        }
-      }
-      
-      if (e.altKey && e.key === 'ArrowLeft') {
-        e.preventDefault();
-        if (currentPage > 1) {
-          setCurrentPage(prev => prev - 1);
-        }
-      }
-    };
-    
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isEditorOpen, currentPage, totalPages]);
-
   // Handle opening the editor for a new note
-  const handleNewNote = () => {
+  function handleNewNote() {
     setActiveNote(undefined);
     setIsEditorOpen(true);
-  };
+  }
 
   // Handle editing a note
-  const handleEditNote = (note: Note) => {
+  function handleEditNote(note: Note) {
     setActiveNote(note);
     setIsEditorOpen(true);
-  };
+  }
 
   // Handle saving a note (both new and edit)
-  const handleSaveNote = (noteData: { title: string; content: string; tags: string[] }) => {
+  function handleSaveNote(noteData: { title: string; content: string; tags: string[] }) {
     if (activeNote) {
       // Update existing note
       updateNote({
@@ -163,32 +144,32 @@ const NotesList: React.FC = () => {
       });
     }
     setIsEditorOpen(false);
-  };
+  }
 
   // Handle opening the delete confirmation dialog
-  const handleDeletePrompt = (noteId: string) => {
+  function handleDeletePrompt(noteId: string) {
     const note = notes?.find((n) => n.id === noteId);
     if (note) {
       setActiveNote(note);
       setIsDeleteDialogOpen(true);
     }
-  };
+  }
 
   // Handle confirming note deletion
-  const handleConfirmDelete = () => {
+  function handleConfirmDelete() {
     if (activeNote) {
       deleteNote(activeNote.id);
     }
     setIsDeleteDialogOpen(false);
-  };
+  }
 
   // Handle note selection via wiki links
-  const handleNoteSelect = (noteId: string) => {
+  function handleNoteSelect(noteId: string) {
     const selectedNote = notes?.find((note) => note.id === noteId);
     if (selectedNote) {
       handleEditNote(selectedNote);
     }
-  };
+  }
 
   // Extract all unique tags from notes
   const allTags = React.useMemo(() => {
@@ -203,64 +184,27 @@ const NotesList: React.FC = () => {
   }, [notes]);
 
   // Toggle tag selection
-  const toggleTag = (tag: string) => {
+  function toggleTag(tag: string) {
     if (selectedTags.includes(tag)) {
       setSelectedTags(selectedTags.filter(t => t !== tag));
     } else {
       setSelectedTags([...selectedTags, tag]);
     }
-  };
+  }
 
   // Clear all filters
-  const clearFilters = () => {
+  function clearFilters() {
     setSearchText("");
     setSelectedTags([]);
     setCurrentPage(1);
-  };
+  }
 
   // Check if any filters are active
   const hasActiveFilters = searchText.trim() !== "" || selectedTags.length > 0;
 
-  // Generate page numbers for pagination
-  const pageNumbers = React.useMemo(() => {
-    if (totalPages <= 7) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }
-    
-    if (currentPage <= 3) {
-      return [1, 2, 3, 4, 5, 'ellipsis', totalPages];
-    }
-    
-    if (currentPage >= totalPages - 2) {
-      return [1, 'ellipsis', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-    }
-    
-    return [
-      1, 
-      'ellipsis',
-      currentPage - 1,
-      currentPage,
-      currentPage + 1,
-      'ellipsis',
-      totalPages
-    ];
-  }, [currentPage, totalPages]);
-
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-medium">Мои заметки</h3>
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex items-center gap-1"
-          onClick={handleNewNote}
-        >
-          <Plus size={14} />
-          <span>Новая заметка</span>
-          <span className="ml-1 hotkey-indicator">Alt+N</span>
-        </Button>
-      </div>
+      <NotesHeader onNewNote={handleNewNote} />
 
       <FilterBar
         searchText={searchText}
@@ -275,79 +219,25 @@ const NotesList: React.FC = () => {
         setGroupByOption={setGroupByOption}
       />
 
-      {isLoading ? (
-        <div className="flex justify-center my-10">
-          <p>Загрузка заметок...</p>
-        </div>
-      ) : notes && notes.length === 0 ? (
-        <EmptyState
-          hasFilters={hasActiveFilters}
-          onCreateNew={handleNewNote}
-          onClearFilters={clearFilters}
+      <NotesContent 
+        notes={notes || []}
+        isLoading={isLoading}
+        hasActiveFilters={hasActiveFilters}
+        groupByOption={groupByOption}
+        noteGroups={noteGroups}
+        onEdit={handleEditNote}
+        onDelete={handleDeletePrompt}
+        onNewNote={handleNewNote}
+        onClearFilters={clearFilters}
+        totalCount={totalCount}
+      />
+
+      {totalPages > 1 && (
+        <NotesPagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
         />
-      ) : (
-        <>
-          {/* Display notes grouped or ungrouped */}
-          {groupByOption === 'none' ? (
-            <NoteCardGrid
-              notes={notes || []}
-              onEdit={handleEditNote}
-              onDelete={handleDeletePrompt}
-            />
-          ) : (
-            noteGroups.map((group, index) => (
-              <NotesGroup
-                key={`${group.title}-${index}`}
-                group={group}
-                onEdit={handleEditNote}
-                onDelete={handleDeletePrompt}
-              />
-            ))
-          )}
-          
-          {totalPages > 1 && (
-            <Pagination className="mt-6">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                  />
-                </PaginationItem>
-                
-                {pageNumbers.map((page, index) => (
-                  page === 'ellipsis' ? (
-                    <PaginationItem key={`ellipsis-${index}`}>
-                      <PaginationEllipsis />
-                    </PaginationItem>
-                  ) : (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        onClick={() => setCurrentPage(Number(page))}
-                        isActive={currentPage === page}
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  )
-                ))}
-                
-                <PaginationItem>
-                  <PaginationNext 
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          )}
-          
-          {totalCount > 0 && (
-            <div className="text-center text-sm text-muted-foreground mt-2">
-              Всего: {totalCount} заметок
-            </div>
-          )}
-        </>
       )}
 
       {/* Note Editor Dialog */}

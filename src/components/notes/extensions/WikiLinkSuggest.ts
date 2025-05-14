@@ -1,231 +1,193 @@
 
 import { ReactRenderer } from '@tiptap/react';
+import { Editor } from '@tiptap/core';
 import tippy from 'tippy.js';
-import { Extension } from '@tiptap/core';
-import Suggestion from '@tiptap/suggestion';
+import { SuggestionProps, SuggestionOptions } from '@tiptap/suggestion';
+import { PluginKey } from '@tiptap/pm/state';
 
-interface SuggestionItem {
+interface WikiLinkItem {
   id: string;
   title: string;
   index: number;
-  type?: 'existing' | 'create';
+  type: string;
 }
 
-interface SuggestionProps {
-  items: SuggestionItem[];
-  command: (props: { id: string; title: string }) => void;
-  editor: any;
-  range: any;
+interface WikiLinkSuggestionListProps {
+  items: WikiLinkItem[];
+  command: (item: WikiLinkItem) => void;
 }
 
 class WikiLinkSuggestionList {
-  items: SuggestionItem[];
-  command: (props: { id: string; title: string }) => void;
-  editor: any;
-  range: any;
   element: HTMLElement;
-  scrollHandler: any;
-  selectIndex: number;
+  items: WikiLinkItem[];
+  command: (item: WikiLinkItem) => void;
 
-  constructor({ items, command, editor, range }: SuggestionProps) {
+  constructor({ items, command }: WikiLinkSuggestionListProps) {
     this.items = items;
     this.command = command;
-    this.editor = editor;
-    this.range = range;
-    this.selectIndex = 0;
-
     this.element = document.createElement('div');
-    this.element.className = 'wiki-link-suggestion';
+    this.element.className = 'tippy-box wiki-links-dropdown';
     this.element.innerHTML = `
-      <div class="items"></div>
+      <div class="tippy-content">
+        <div class="items">
+          ${items.map(item => `
+            <button class="item" data-index="${item.index}">
+              ${item.title}
+            </button>
+          `).join('')}
+        </div>
+      </div>
     `;
 
-    this.renderItems();
-
-    this.scrollHandler = this.handleScroll.bind(this);
-    this.element.addEventListener('scroll', this.scrollHandler);
-  }
-
-  renderItems() {
-    const itemsContainer = this.element.querySelector('.items');
-    if (!itemsContainer) return;
-
-    itemsContainer.innerHTML = '';
-
-    if (this.items.length === 0) {
-      const noResults = document.createElement('div');
-      noResults.className = 'no-results';
-      noResults.textContent = 'Нет результатов';
-      itemsContainer.appendChild(noResults);
-      return;
-    }
-
-    this.items.forEach((item, index) => {
-      const button = document.createElement('button');
-      button.className = 'item';
-      button.innerHTML = `
-        <div class="title">${item.type === 'create' ? '➕ Создать: ' : ''}${this.highlight(item.title)}</div>
-      `;
-      button.setAttribute('data-index', String(index));
-      
-      // Handle selection
-      if (index === this.selectIndex) {
-        button.setAttribute('aria-selected', 'true');
-      }
-      
+    // Add click event listeners
+    const buttons = this.element.querySelectorAll('button');
+    buttons.forEach((button) => {
       button.addEventListener('click', () => {
-        this.selectItem(index);
+        const index = parseInt(button.dataset.index || '0', 10);
+        const item = this.items[index];
+        if (item) {
+          this.command(item);
+        }
       });
-      
-      button.addEventListener('mousemove', () => {
-        this.selectIndex = index;
-        this.updateSelect();
-      });
-      
-      itemsContainer.appendChild(button);
     });
-  }
-
-  highlight(text: string) {
-    // This is a simple implementation, you might want to enhance it
-    return text;
   }
 
   selectItem(index: number) {
     const item = this.items[index];
-    
     if (item) {
-      this.command({
-        id: item.id,
-        title: item.title
+      this.command(item);
+    }
+  }
+
+  updateItems(items: WikiLinkItem[]) {
+    this.items = items;
+    // Update the DOM to reflect new items
+    const itemsContainer = this.element.querySelector('.items');
+    if (itemsContainer) {
+      itemsContainer.innerHTML = items.map(item => `
+        <button class="item" data-index="${item.index}">
+          ${item.title}
+        </button>
+      `).join('');
+
+      // Re-add click event listeners
+      const buttons = this.element.querySelectorAll('button');
+      buttons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const index = parseInt(button.dataset.index || '0', 10);
+          const item = this.items[index];
+          if (item) {
+            this.command(item);
+          }
+        });
       });
     }
   }
-
-  updateSelect() {
-    const buttons = Array.from(this.element.querySelectorAll('.item'));
-    
-    buttons.forEach((button, index) => {
-      if (index === this.selectIndex) {
-        button.setAttribute('aria-selected', 'true');
-      } else {
-        button.removeAttribute('aria-selected');
-      }
-    });
-  }
-
-  onKeyDown({ event }: { event: KeyboardEvent }) {
-    if (event.key === 'ArrowDown') {
-      this.selectIndex = (this.selectIndex + 1) % this.items.length;
-      this.updateSelect();
-      return true;
-    }
-    
-    if (event.key === 'ArrowUp') {
-      this.selectIndex = (this.selectIndex + this.items.length - 1) % this.items.length;
-      this.updateSelect();
-      return true;
-    }
-    
-    if (event.key === 'Enter') {
-      this.selectItem(this.selectIndex);
-      return true;
-    }
-    
-    return false;
-  }
-
-  handleScroll() {
-    // Handle scroll events if needed
-  }
-
-  destroy() {
-    this.element.removeEventListener('scroll', this.scrollHandler);
-  }
 }
 
-export const WikiLinkSuggest = Extension.create({
-  name: 'wikiLinkSuggest',
+// Create a suggestion plugin key
+export const wikiLinkPluginKey = new PluginKey('wiki-link-suggestion');
 
-  defaultOptions: {
-    suggestion: {
-      char: '[[',
-      allowSpaces: true,
-      startOfLine: false,
-      isolating: false,
+export const WikiLinkSuggest = (
+  fetchNotes: (query: string) => Promise<WikiLinkItem[]>, 
+  editor: Editor
+) => {
+  const getSuggestions = async ({ query }: { query: string }) => {
+    if (query.length < 2) {
+      return [];
+    }
 
-      // This is the function that will be called when user types [[ in the editor
-      // It should return items for the suggestion list
-      items: ({ query }: { query: string }) => {
-        return [
-          {
-            id: 'create',
-            title: query,
-            index: 0,
-            type: 'create'
-          }
-        ];
+    try {
+      const items = await fetchNotes(query);
+      return items.map((item, index) => ({
+        ...item,
+        index, // Add index to each item
+      }));
+    } catch (error) {
+      console.error('Error fetching wiki link suggestions:', error);
+      return [];
+    }
+  };
+
+  // Wrap the ReactRenderer to fit the expected interface
+  const renderItems = () => {
+    let component: {
+      updateProps: (props: WikiLinkSuggestionListProps) => void;
+      destroy: () => void;
+    };
+
+    let popup: any = null;
+
+    return {
+      onStart: (props: SuggestionProps) => {
+        component = new ReactRenderer(WikiLinkSuggestionList, {
+          props,
+          editor: props.editor,
+        }) as unknown as { updateProps: (props: WikiLinkSuggestionListProps) => void; destroy: () => void };
+
+        // Create tippy instance
+        if (!props.clientRect) {
+          return;
+        }
+
+        popup = tippy('body', {
+          getReferenceClientRect: props.clientRect,
+          appendTo: () => document.body,
+          content: component.element,
+          showOnCreate: true,
+          interactive: true,
+          trigger: 'manual',
+          placement: 'bottom-start',
+        });
       },
 
-      // This callback is triggered when a suggestion is clicked
-      command: ({ editor, range, props }: any) => {
-        // Override default behavior
+      onUpdate: (props: SuggestionProps) => {
+        component.updateProps(props as unknown as WikiLinkSuggestionListProps);
+
+        if (!props.clientRect) {
+          return;
+        }
+
+        popup[0].setProps({
+          getReferenceClientRect: props.clientRect,
+        });
       },
 
-      render: () => {
-        let component: { destroy: () => void };
-        let popup: any;
+      onKeyDown: (props: { event: KeyboardEvent }) => {
+        if (props.event.key === 'Escape') {
+          popup[0].hide();
+          return true;
+        }
 
-        return {
-          onStart: (props: SuggestionProps) => {
-            component = new ReactRenderer(WikiLinkSuggestionList, {
-              props,
-              editor: props.editor,
-            });
-
-            popup = tippy('body', {
-              getReferenceClientRect: props.clientRect,
-              appendTo: () => document.body,
-              content: component.element,
-              showOnCreate: true,
-              interactive: true,
-              trigger: 'manual',
-              placement: 'bottom-start',
-              theme: 'wiki-link-suggestion',
-            })[0];
-          },
-
-          onUpdate(props: SuggestionProps) {
-            component.updateProps(props);
-
-            popup?.setProps({
-              getReferenceClientRect: props.clientRect,
-            });
-          },
-
-          onKeyDown(props: { event: KeyboardEvent }) {
-            if (component.ref) {
-              return component.ref.onKeyDown(props);
-            }
-
-            return false;
-          },
-
-          onExit() {
-            popup?.destroy();
-            component.destroy();
-          },
-        };
+        return false;
       },
+
+      onExit: () => {
+        if (popup && popup[0]) {
+          popup[0].destroy();
+        }
+        component.destroy();
+      },
+    };
+  };
+
+  // Return the suggestion configuration
+  return {
+    char: '[[',
+    allowSpaces: true,
+    startOfLine: false,
+    isolating: true,
+    items: getSuggestions,
+    command: ({ editor, range, props }) => {
+      // Delete the suggestion placeholder
+      editor
+        .chain()
+        .deleteRange(range)
+        .insertContent(`[[${props.title}]]`)
+        .run();
     },
-  },
-
-  addProseMirrorPlugins() {
-    return [
-      Suggestion({
-        editor: this.editor,
-        ...this.options.suggestion,
-      }),
-    ];
-  },
-});
+    render: renderItems,
+    editor,
+    pluginKey: wikiLinkPluginKey,
+  };
+};
