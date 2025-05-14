@@ -1,100 +1,128 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Note } from "@/types/notes";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { NoteInput } from "./types";
 
+export interface CreateNoteInput {
+  title: string;
+  content: string;
+  tags: string[];
+  color?: string;
+}
+
+export interface UpdateNoteInput {
+  id: string;
+  title?: string;
+  content?: string;
+  tags?: string[];
+  color?: string;
+}
+
 export const useNotesMutations = () => {
   const queryClient = useQueryClient();
-
+  
   // Create a new note
   const createNoteMutation = useMutation({
-    mutationFn: async (noteData: NoteInput): Promise<Note> => {
+    mutationFn: async (noteData: CreateNoteInput): Promise<Note> => {
       const { data, error } = await supabase
         .from('nodes')
         .insert({
           title: noteData.title,
-          content: noteData.content,
-          tags: noteData.tags || [],
-          color: noteData.color || null,
+          content: noteData.content || '',
           type: 'note',
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          // Convert array to JSON compatible format
+          meta: {
+            tags: noteData.tags || [],
+            color: noteData.color || ''
+          }
         })
-        .select('*')
+        .select()
         .single();
-
+      
       if (error) {
         console.error("Error creating note:", error);
-        toast({
-          title: "Ошибка создания заметки",
-          description: error.message,
-          variant: "destructive",
-        });
         throw error;
       }
-
-      // Convert the data to a Note type with all required fields
+      
+      // Format the note with proper types before returning
       return {
+        ...data,
         id: data.id,
         title: data.title,
-        content: data.content?.toString() || null,
-        tags: data.content?.tags || [],
-        color: data.content?.color || undefined,
+        content: data.content,
+        tags: data.meta?.tags as string[] || [],
+        color: data.meta?.color as string || undefined,
         type: data.type,
-        user_id: data.user_id,
-        created_at: data.created_at,
-        updated_at: data.updated_at
-      } as Note;
+        user_id: data.user_id
+      };
     },
     onSuccess: () => {
+      // Invalidate relevant queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['notes'] });
       queryClient.invalidateQueries({ queryKey: ['allNotes'] });
     }
   });
-
+  
   // Update an existing note
   const updateNoteMutation = useMutation({
-    mutationFn: async ({ id, ...noteData }: NoteInput & { id: string }): Promise<Note> => {
+    mutationFn: async (noteData: UpdateNoteInput): Promise<Note> => {
+      // Prepare update data
+      const updateData: any = {};
+      
+      if (noteData.title !== undefined) {
+        updateData.title = noteData.title;
+      }
+      
+      if (noteData.content !== undefined) {
+        updateData.content = noteData.content;
+      }
+      
+      // Handle metadata updates with proper typing
+      const { data: currentNote } = await supabase
+        .from('nodes')
+        .select('meta')
+        .eq('id', noteData.id)
+        .single();
+      
+      const currentMeta = currentNote?.meta || { tags: [], color: '' };
+      
+      // Update metadata preserving existing fields
+      updateData.meta = {
+        ...currentMeta,
+        tags: noteData.tags !== undefined ? noteData.tags : currentMeta.tags,
+        color: noteData.color !== undefined ? noteData.color : currentMeta.color
+      };
+      
+      // Perform the update
       const { data, error } = await supabase
         .from('nodes')
-        .update({
-          title: noteData.title,
-          content: noteData.content,
-          tags: noteData.tags,
-          color: noteData.color,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
-        .select('*')
+        .update(updateData)
+        .eq('id', noteData.id)
+        .select()
         .single();
-
+      
       if (error) {
         console.error("Error updating note:", error);
-        toast({
-          title: "Ошибка обновления заметки",
-          description: error.message,
-          variant: "destructive",
-        });
         throw error;
       }
-
-      // Convert the data to a Note type with all required fields
+      
+      // Format the note with proper types before returning
       return {
+        ...data,
         id: data.id,
         title: data.title,
-        content: data.content?.toString() || null,
-        tags: data.content?.tags || [],
-        color: data.content?.color || undefined,
+        content: data.content,
+        tags: data.meta?.tags as string[] || [],
+        color: data.meta?.color as string || undefined,
         type: data.type,
-        user_id: data.user_id,
-        created_at: data.created_at,
-        updated_at: data.updated_at
-      } as Note;
+        user_id: data.user_id
+      };
     },
-    onSuccess: (updatedNote) => {
+    onSuccess: (_, variables) => {
+      // Invalidate relevant queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['note', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['notes'] });
-      queryClient.invalidateQueries({ queryKey: ['note', updatedNote.id] });
       queryClient.invalidateQueries({ queryKey: ['allNotes'] });
     }
   });
@@ -124,8 +152,8 @@ export const useNotesMutations = () => {
   });
 
   return {
-    createNote: createNoteMutation.mutateAsync,
-    updateNote: updateNoteMutation.mutateAsync,
+    createNote: (noteData: CreateNoteInput) => createNoteMutation.mutate(noteData),
+    updateNote: (noteData: UpdateNoteInput) => updateNoteMutation.mutate(noteData),
     deleteNote: deleteNoteMutation.mutateAsync,
     isCreating: createNoteMutation.isPending,
     isUpdating: updateNoteMutation.isPending,

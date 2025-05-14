@@ -41,6 +41,8 @@ export const useEditorConfig = ({
   } = useWikiLinks(noteId, onNoteCreated);
 
   const getEditorConfig = useCallback(() => {
+    const suggestionConfig = createWikiLinkSuggestion(fetchNotesForSuggestion, handleCreateNote);
+    
     return {
       extensions: [
         StarterKit,
@@ -56,9 +58,7 @@ export const useEditorConfig = ({
         WikiLink.configure({
           validateLink: validateWikiLink
         }),
-        Suggestion({
-          ...createWikiLinkSuggestion(fetchNotesForSuggestion, handleCreateNote),
-        }),
+        Suggestion.configure(suggestionConfig),
       ],
       content,
       editable,
