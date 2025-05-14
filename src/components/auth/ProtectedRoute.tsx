@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
 import LoadingScreen from './LoadingScreen';
@@ -29,6 +29,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     path: location.pathname
   });
 
+  useEffect(() => {
+    console.log('ProtectedRoute effect triggered:', {
+      isAuthenticated,
+      isLoading,
+      userRole: profile?.role,
+      path: location.pathname
+    });
+  }, [isAuthenticated, isLoading, profile, location.pathname]);
+
   // If still loading auth state, show loading indicator
   if (isLoading) {
     return <LoadingScreen />;
@@ -38,20 +47,19 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (!isAuthenticated) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
-  
-  // For superadmin trying to access user dashboard, redirect to admin dashboard
-  if (isSuperAdmin?.() && location.pathname === '/dashboard/user') {
-    console.log('Superadmin redirected from user dashboard to admin dashboard');
-    return <Navigate to="/dashboard/admin" replace />;
-  }
-  
-  // For regular user trying to access admin dashboard, redirect to user dashboard
-  if (!isSuperAdmin?.() && location.pathname === '/dashboard/admin') {
-    console.log('Regular user redirected from admin dashboard to user dashboard');
+
+  // Check dashboard routes specifically
+  if (location.pathname === '/dashboard/admin' && !isSuperAdmin?.()) {
+    console.log('Regular user tried to access admin dashboard - redirecting to user dashboard');
     return <Navigate to="/dashboard/user" replace />;
   }
   
-  // For role-specific routes, check if user has required role
+  if (location.pathname === '/dashboard/user' && isSuperAdmin?.()) {
+    console.log('Superadmin tried to access user dashboard - redirecting to admin dashboard');
+    return <Navigate to="/dashboard/admin" replace />;
+  }
+  
+  // For role-specific routes with explicit requiredRole prop
   if (requiredRole && profile?.role !== requiredRole) {
     console.log(`Access denied: User role ${profile?.role} does not match required role ${requiredRole}`);
     const fallbackPath = isSuperAdmin?.() ? '/dashboard/admin' : '/dashboard/user';

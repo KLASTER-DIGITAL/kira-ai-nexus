@@ -50,7 +50,7 @@ export const useAuthState = () => {
                   if (profile) {
                     const redirectPath = getRedirectPath(profile);
                     console.log("Redirecting to:", redirectPath, "based on role:", profile.role);
-                    navigate(redirectPath);
+                    navigate(redirectPath, { replace: true });
                   }
                 }, 0);
               }
@@ -64,7 +64,7 @@ export const useAuthState = () => {
                 isAuthenticated: false
               });
               // Force redirect to auth page on sign out
-              navigate('/auth');
+              navigate('/auth', { replace: true });
             }
           }
         );
@@ -88,8 +88,9 @@ export const useAuthState = () => {
           // Check if we need to redirect based on current URL and role
           if (profile) {
             const currentPath = window.location.pathname;
-            console.log("Current path check:", currentPath);
+            console.log("Current path check:", currentPath, "role:", profile.role);
             
+            // Redirect if user is on the wrong dashboard or at root paths
             if ((currentPath === '/dashboard/user' && profile.role === 'superadmin') ||
                 (currentPath === '/dashboard/admin' && profile.role !== 'superadmin') ||
                 (currentPath === '/dashboard' || currentPath === '/')) {
