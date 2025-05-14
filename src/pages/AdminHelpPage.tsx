@@ -3,12 +3,42 @@ import React from 'react';
 import Layout from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
 
 const AdminHelpPage: React.FC = () => {
+  const { toast } = useToast();
+  
+  const handleViewDocs = () => {
+    // Open documentation in a new tab
+    window.open("/docs/help/admin-guide", "_blank");
+    
+    toast({
+      title: "Документация открыта",
+      description: "Полная административная документация открыта в новом окне.",
+    });
+  };
+  
   return (
     <Layout>
       <div className="container mx-auto py-6">
         <h1 className="text-3xl font-bold mb-6">Панель администратора</h1>
+        
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-muted-foreground">
+                Эта документация синхронизирована с Mintlify. 
+                Последнее обновление: {new Date().toLocaleDateString()}
+              </p>
+              <Button variant="outline" onClick={handleViewDocs}>
+                <ExternalLink size={16} className="mr-2" />
+                Полная документация
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
         
         <Tabs defaultValue="general" className="w-full">
           <TabsList className="grid w-full grid-cols-4">

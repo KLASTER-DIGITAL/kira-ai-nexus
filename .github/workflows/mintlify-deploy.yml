@@ -8,6 +8,8 @@ on:
     paths:
       - 'docs/**'
       - 'mint.json'
+      - 'src/pages/UserHelpPage.tsx'
+      - 'src/pages/AdminHelpPage.tsx'
       - '.github/workflows/mintlify-deploy.yml'
       
   # Позволяет запускать workflow вручную из GitHub Actions
@@ -28,16 +30,16 @@ jobs:
         with:
           node-version: '18'
           
-      - name: Install Mintlify CLI
-        run: npm install -g mintlify
+      - name: Install Dependencies
+        run: npm install -g mintlify conventional-changelog-cli
+        
+      - name: Sync Help Content
+        run: node scripts/generate-docs.js --sync
         
       - name: Generate Changelog
-        run: |
-          npm install -g conventional-changelog-cli
-          conventional-changelog -p angular -i docs/changelog.md -s -r 0
+        run: node scripts/generate-docs.js --changelog
         
       - name: Deploy Documentation
-        run: |
-          mintlify deploy
+        run: mintlify deploy
         env:
           MINTLIFY_API_KEY: ${{ secrets.MINTLIFY_API_KEY }}
