@@ -9,7 +9,8 @@ import {
   Calendar,
   Settings,
   User,
-  Shield
+  Shield,
+  Bot
 } from "lucide-react";
 import { useAuth } from '@/context/AuthContext';
 import { cn } from "@/lib/utils";
@@ -24,6 +25,7 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { icon: LayoutDashboard, label: "Дашборд", path: "/dashboard/user", role: 'user' },
   { icon: Shield, label: "Админ панель", path: "/dashboard/admin", role: 'superadmin' },
+  { icon: Bot, label: "Настройки AI", path: "/ai-settings", role: 'superadmin' },
   { icon: MessageCircle, label: "Чат", path: "/chat", role: 'any' },
   { icon: CheckSquare, label: "Задачи", path: "/tasks", role: 'any' },
   { icon: FileText, label: "Заметки", path: "/notes", role: 'any' },
