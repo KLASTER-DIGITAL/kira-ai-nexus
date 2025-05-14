@@ -1,16 +1,35 @@
 
 .wiki-link {
-  color: var(--wiki-link-color, #6366f1);
   text-decoration: none;
-  border-bottom: 1px dashed var(--wiki-link-color, #6366f1);
+  border-bottom: 1px dashed;
   cursor: pointer;
   position: relative;
   padding: 0 2px;
 }
 
+.wiki-link-valid {
+  color: var(--wiki-link-color, #9b87f5);
+  border-bottom-color: var(--wiki-link-color, #9b87f5);
+}
+
+.wiki-link-invalid {
+  color: var(--wiki-link-invalid-color, #ea384c);
+  border-bottom-color: var(--wiki-link-invalid-color, #ea384c);
+  background-color: rgba(234, 56, 76, 0.05);
+}
+
 .wiki-link:hover {
-  color: var(--wiki-link-hover-color, #4f46e5);
   border-bottom-style: solid;
+}
+
+.wiki-link-valid:hover {
+  color: var(--wiki-link-hover-color, #7E69AB);
+  border-bottom-color: var(--wiki-link-hover-color, #7E69AB);
+}
+
+.wiki-link-invalid:hover {
+  color: var(--wiki-link-invalid-hover-color, #c42538);
+  border-bottom-color: var(--wiki-link-invalid-hover-color, #c42538);
 }
 
 .wiki-link::before {
@@ -20,13 +39,18 @@
   opacity: 0.7;
 }
 
+.wiki-link-invalid::before {
+  content: '❓';
+}
+
 .wiki-link-highlight {
-  color: var(--wiki-link-color, #6366f1);
+  color: var(--wiki-link-color, #9b87f5);
   background-color: rgba(99, 102, 241, 0.1);
   border-radius: 4px;
   padding: 0 2px;
 }
 
+/* Suggestion dropdown styling */
 .tippy-box[data-theme~='wiki-link-suggestion'] {
   background-color: white;
   color: #333;
@@ -41,12 +65,12 @@
   color: #f3f4f6;
 }
 
-.wiki-link-suggestion .items {
+.wiki-links-dropdown .items {
   max-height: 250px;
   overflow-y: auto;
 }
 
-.wiki-link-suggestion .item {
+.wiki-links-dropdown .item {
   display: block;
   width: 100%;
   padding: 8px 12px;
@@ -56,21 +80,27 @@
   cursor: pointer;
 }
 
-.wiki-link-suggestion .item:hover,
-.wiki-link-suggestion .item[aria-selected='true'] {
+.wiki-links-dropdown .item:hover,
+.wiki-links-dropdown .item[aria-selected='true'] {
   background-color: rgba(99, 102, 241, 0.1);
 }
 
-.dark .wiki-link-suggestion .item:hover,
-.dark .wiki-link-suggestion .item[aria-selected='true'] {
+.dark .wiki-links-dropdown .item:hover,
+.dark .wiki-links-dropdown .item[aria-selected='true'] {
   background-color: rgba(99, 102, 241, 0.2);
 }
 
-.wiki-link-suggestion .title {
-  font-weight: 500;
+.wiki-links-dropdown .new-item {
+  color: #10B981;
+  font-style: italic;
 }
 
-.wiki-link-suggestion .no-results {
+.dark .wiki-links-dropdown .new-item {
+  color: #34D399;
+}
+
+.wiki-links-dropdown .no-results {
   padding: 8px 12px;
   color: #888;
+  font-style: italic;
 }

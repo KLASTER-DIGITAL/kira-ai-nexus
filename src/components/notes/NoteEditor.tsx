@@ -10,6 +10,7 @@ import { useNoteLinks } from "@/hooks/notes/useNoteLinks";
 import BacklinksList from "./BacklinksList";
 import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/use-debounce";
+import TagBadge from "./TagBadge";
 
 interface NoteEditorProps {
   note?: Note;

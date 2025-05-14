@@ -10,6 +10,8 @@ import { MenuBar } from "./TipTapMenuBar";
 import { WikiLink } from "./extensions/WikiLink";
 import { WikiLinkSuggest } from "./extensions/WikiLinkSuggest";
 import { useNoteLinks } from "@/hooks/notes/useNoteLinks";
+import { useNotesMutations } from "@/hooks/notes/useNotesMutations";
+import { toast } from "@/hooks/use-toast";
 
 interface TipTapEditorProps {
   content: string;
@@ -19,6 +21,7 @@ interface TipTapEditorProps {
   editable?: boolean;
   noteId?: string;
   onLinkClick?: (noteId: string) => void;
+  onNoteCreated?: (noteId: string) => void;
 }
 
 const TipTapEditor: React.FC<TipTapEditorProps> = ({
@@ -29,13 +32,64 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
   editable = true,
   noteId,
   onLinkClick,
+  onNoteCreated,
 }) => {
-  const { allNotes, createLink } = useNoteLinks(noteId);
+  const { allNotes, createLink, updateLinks } = useNoteLinks(noteId);
+  const { createNote } = useNotesMutations();
+
+  // Create a new note from a wiki link
+  const handleCreateNote = useCallback(async (title: string) => {
+    try {
+      // Create a new note with the link text as the title
+      const newNote = await createNote({
+        title,
+        content: '',
+        tags: []
+      });
+      
+      // If we have a source note ID, create a link between them
+      if (noteId) {
+        createLink({
+          sourceId: noteId,
+          targetId: newNote.id
+        });
+      }
+      
+      // Notify parent component
+      if (onNoteCreated) {
+        onNoteCreated(newNote.id);
+      }
+      
+      toast({
+        title: "Заметка создана",
+        description: `Создана новая заметка "${title}"`,
+      });
+      
+      return {
+        id: newNote.id,
+        title: newNote.title,
+        type: 'note'
+      };
+    } catch (error) {
+      console.error("Error creating note from link:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось создать заметку",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  }, [noteId, createNote, createLink, onNoteCreated]);
+
+  // Validate links against existing notes
+  const validateWikiLink = useCallback((href: string) => {
+    return allNotes.some(note => note.id === href);
+  }, [allNotes]);
 
   const handleWikiLinkClick = useCallback((href: string) => {
-    // Find the note with this title
+    // Find the note with this ID
     const targetNote = allNotes.find((note) => 
-      note.title.toLowerCase() === href.toLowerCase());
+      note.id === href || note.title.toLowerCase() === href.toLowerCase());
     
     if (targetNote && onLinkClick) {
       // If the link is valid and we have a noteId, create the link in database
@@ -62,38 +116,26 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       }),
       Underline,
       Image,
-      WikiLink,
-      WikiLinkSuggest.configure({
-        suggestion: {
-          char: '[[',
-          allowSpaces: true,
-          items: ({ query, editor }) => {
-            if (!query) return [];
-            
-            const lowercaseQuery = query.toLowerCase();
-            return allNotes
-              .filter(note => note.title.toLowerCase().includes(lowercaseQuery))
-              .slice(0, 10)
-              .map((note, index) => ({
-                index,
-                id: note.id,
-                title: note.title,
-              }));
-          },
-          command: ({ editor, range, props }) => {
-            const nodeAfter = editor.view.state.selection.$to.nodeAfter;
-            const overrideSpace = nodeAfter?.text?.startsWith(' ');
-            
-            if (overrideSpace) {
-              range.to += 1;
-            }
-            
-            editor.chain().focus().deleteRange(range).setWikiLink({
-              href: props.id,
-              label: props.title
-            }).run();
-          }
-        }
+      WikiLink.configure({
+        validateLink: validateWikiLink
+      }),
+      WikiLinkSuggest({
+        fetchNotes: async (query) => {
+          if (!query) return [];
+          
+          const lowercaseQuery = query.toLowerCase();
+          return allNotes
+            .filter(note => note.title.toLowerCase().includes(lowercaseQuery))
+            .slice(0, 10)
+            .map((note, index) => ({
+              index,
+              id: note.id,
+              title: note.title,
+              type: 'note'
+            }));
+        },
+        editor,
+        onCreateNote: handleCreateNote
       }),
     ],
     content,
@@ -103,24 +145,42 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       
       // Process and extract wiki links from content after each update
       if (noteId) {
-        // Note: In a real application, you might want to debounce this
+        // Extract wiki links from content
         const processWikiLinks = async () => {
           const wikiLinks = [];
           editor.state.doc.descendants((node, pos) => {
+            const marks = node.marks.filter(mark => mark.type.name === 'wikiLink');
+            
+            if (marks.length > 0) {
+              for (const mark of marks) {
+                wikiLinks.push({
+                  href: mark.attrs.href,
+                  label: mark.attrs.label || mark.attrs.href,
+                  isValid: mark.attrs.isValid !== false
+                });
+              }
+            }
+            
+            // Also check for [[text]] format
             if (node.type.name === 'text' && node.text) {
               const regex = /\[\[(.+?)\]\]/g;
               let match;
               while ((match = regex.exec(node.text)) !== null) {
-                wikiLinks.push(match[1]);
+                wikiLinks.push({
+                  href: match[1],
+                  label: match[1],
+                  isValid: true // We don't know yet
+                });
               }
             }
+            
             return true;
           });
           
           // For each wiki link, find the corresponding note and create a link
-          for (const linkText of wikiLinks) {
+          for (const link of wikiLinks) {
             const targetNote = allNotes.find(
-              (note) => note.title.toLowerCase() === linkText.toLowerCase()
+              (note) => note.id === link.href || note.title.toLowerCase() === link.href.toLowerCase()
             );
             
             if (targetNote && targetNote.id !== noteId) {
@@ -167,6 +227,45 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       };
     }
   }, [editor, editable, handleWikiLinkClick]);
+
+  // Update wiki links when notes are renamed
+  useEffect(() => {
+    if (!editor || !noteId) return;
+    
+    const validateLinks = () => {
+      editor.view.state.doc.descendants((node, pos) => {
+        const wikiLinkMarks = node.marks.filter(mark => mark.type.name === 'wikiLink');
+        
+        if (wikiLinkMarks.length > 0) {
+          wikiLinkMarks.forEach(mark => {
+            const href = mark.attrs.href;
+            const isValid = allNotes.some(note => note.id === href);
+            
+            // If validity has changed, update the mark
+            if (isValid !== mark.attrs.isValid) {
+              const from = pos;
+              const to = pos + node.nodeSize;
+              
+              editor.view.dispatch(
+                editor.view.state.tr.removeMark(from, to, mark.type).addMark(
+                  from,
+                  to,
+                  mark.type.create({
+                    ...mark.attrs,
+                    isValid
+                  })
+                )
+              );
+            }
+          });
+        }
+        
+        return true;
+      });
+    };
+    
+    validateLinks();
+  }, [editor, allNotes, noteId]);
 
   return (
     <div className="tiptap-editor border rounded-md bg-background">
