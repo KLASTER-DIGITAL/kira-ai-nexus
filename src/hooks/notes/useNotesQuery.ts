@@ -37,6 +37,7 @@ export const useNotesQuery = ({ filter, page = 1, pageSize = 10 }: NotesQueryOpt
         
       if (filter?.searchText) {
         const searchTerm = filter.searchText.toLowerCase();
+        // Fix: The or method expects a string containing filter conditions
         query = query.or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%`);
       }
 
