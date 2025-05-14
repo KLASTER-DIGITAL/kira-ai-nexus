@@ -65,7 +65,9 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       WikiLink,
       WikiLinkSuggest.configure({
         suggestion: {
-          items: ({ query }) => {
+          char: '[[',
+          allowSpaces: true,
+          items: ({ query, editor }) => {
             if (!query) return [];
             
             const lowercaseQuery = query.toLowerCase();
@@ -77,6 +79,19 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
                 id: note.id,
                 title: note.title,
               }));
+          },
+          command: ({ editor, range, props }) => {
+            const nodeAfter = editor.view.state.selection.$to.nodeAfter;
+            const overrideSpace = nodeAfter?.text?.startsWith(' ');
+            
+            if (overrideSpace) {
+              range.to += 1;
+            }
+            
+            editor.chain().focus().deleteRange(range).setWikiLink({
+              href: props.id,
+              label: props.title
+            }).run();
           }
         }
       }),

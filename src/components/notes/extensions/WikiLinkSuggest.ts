@@ -4,9 +4,10 @@ import { SuggestionOptions } from '@tiptap/suggestion';
 import tippy from 'tippy.js';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { EditorView } from '@tiptap/pm/view';
+import { Editor } from '@tiptap/react';
 
 export interface WikiLinkSuggestOptions {
-  suggestion: SuggestionOptions;
+  suggestion: Partial<SuggestionOptions>;
 }
 
 export const WikiLinkSuggest = Extension.create<WikiLinkSuggestOptions>({
@@ -17,7 +18,7 @@ export const WikiLinkSuggest = Extension.create<WikiLinkSuggestOptions>({
       suggestion: {
         char: '[[',
         allowSpaces: true,
-        command: ({ editor, range, props }: any) => {
+        command: ({ editor, range, props }: { editor: Editor; range: any; props: any }) => {
           const nodeAfter = editor.view.state.selection.$to.nodeAfter;
           const overrideSpace = nodeAfter?.text?.startsWith(' ');
           
@@ -31,7 +32,7 @@ export const WikiLinkSuggest = Extension.create<WikiLinkSuggestOptions>({
           }).run();
         },
         items: ({ query }: { query: string }) => {
-          return this.options.suggestion?.items?.({ query }) || [];
+          return [] as any[];
         }
       }
     };
