@@ -15,22 +15,8 @@ export const sendFileRequest = async (
   // Use FormData for file uploads with array format for n8n compatibility
   const formData = new FormData();
   
-  // Create the message payload with type information
-  const messagePayload: N8nMessagePayload = {
-    message: content,
-    user_id: userId,
-    session_id: sessionId,
-    timestamp: timestamp,
-    message_type: messageType,
-  };
-  
-  // Добавляем базовые поля в FormData
-  formData.append('message', content);
-  formData.append('user_id', userId);
-  formData.append('session_id', sessionId);
-  formData.append('timestamp', timestamp);
-  formData.append('message_type', messageType);
-  formData.append('file_count', String(files.length));
+  // Add file count to match expected format
+  const fileCount = files.length;
   
   // Generate file metadata for n8n processing
   const filesMetadata: N8nFileMetadata[] = files.map((file, index) => ({
@@ -40,21 +26,38 @@ export const sendFileRequest = async (
     index: index
   }));
   
-  // Add files metadata as a JSON string
-  formData.append('files_metadata', JSON.stringify(filesMetadata));
-  messagePayload.files_metadata = filesMetadata;
+  // Create the complete message payload with all required fields
+  const messagePayload: N8nMessagePayload = {
+    message: content || (fileCount > 0 ? files[0].name : "Прикрепленный файл"),
+    user_id: userId,
+    session_id: sessionId,
+    timestamp: timestamp,
+    message_type: messageType,
+    file_count: fileCount,
+    files_metadata: filesMetadata
+  };
   
-  // Also add the payload as JSON for n8n to easily parse
+  // Add all fields to formData individually
+  formData.append('message', messagePayload.message);
+  formData.append('user_id', userId);
+  formData.append('session_id', sessionId);
+  formData.append('timestamp', timestamp);
+  formData.append('message_type', messageType);
+  formData.append('file_count', String(fileCount));
+  
+  // Add files_metadata as JSON string
+  formData.append('files_metadata', JSON.stringify(filesMetadata));
+  
+  // Add the complete payload as JSON for n8n to easily parse
   formData.append('payload', JSON.stringify(messagePayload));
   
-  // Add files individually with explicit keys
+  // Add files individually with explicit keys based on index
   files.forEach((file, index) => {
     formData.append(`file_${index}`, file);
   });
   
   console.log('Sending FormData with files to webhook');
-  console.log('File count:', files.length);
-  console.log('File names:', files.map(f => f.name).join(', '));
+  console.log('File count:', fileCount);
   console.log('Files metadata:', JSON.stringify(filesMetadata));
   console.log('Full webhook URL:', webhookUrl);
   console.log('Message payload:', JSON.stringify(messagePayload));
@@ -88,7 +91,9 @@ export const sendJsonRequest = async (
     user_id: userId,
     session_id: sessionId,
     timestamp: timestamp,
-    message_type: messageType
+    message_type: messageType,
+    file_count: 0,
+    files_metadata: []
   };
   
   console.log('Sending JSON to webhook:', JSON.stringify(requestBody));

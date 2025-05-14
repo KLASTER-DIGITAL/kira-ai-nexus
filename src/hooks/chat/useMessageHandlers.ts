@@ -44,6 +44,7 @@ export const useMessageHandlers = (
         local_id: URL.createObjectURL(file),
         metadata: {
           lastModified: file.lastModified,
+          index: attachments.indexOf(file) // Add index to match n8n format
         }
       }));
 
@@ -51,7 +52,7 @@ export const useMessageHandlers = (
       const userMessage: ChatMessage = {
         id: uuidv4(),
         role: 'user',
-        content: content.trim() || "📎 Прикрепленные файлы",
+        content: content.trim() || (attachments.length > 0 ? attachments[0].name : "Прикрепленный файл"),
         timestamp: new Date(),
         session_id: sessionId,
         type: messageType,

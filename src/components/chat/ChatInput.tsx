@@ -28,9 +28,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSendMessage = async () => {
-    // If we have attachments but no text, send with minimal content
+    // If we have attachments but no text, send with file name or placeholder
     if (attachments.length > 0 && !input.trim()) {
-      onSendMessage("📎");
+      onSendMessage(attachments[0].name || "📎");
       return;
     }
     
