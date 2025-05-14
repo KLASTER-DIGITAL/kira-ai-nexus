@@ -35,7 +35,13 @@ export const useChatAPI = () => {
     files?: File[]
   ): Promise<N8nResponse> => {
     const webhookUrl = await getWebhookUrl();
-    console.log(`Sending to webhook: ${webhookUrl}`, { content, userId, sessionId, hasFiles: !!files?.length });
+    console.log(`Sending to webhook: ${webhookUrl}`, { 
+      content, 
+      userId, 
+      sessionId, 
+      hasFiles: !!files?.length,
+      fileNames: files?.map(f => f.name)
+    });
     
     // Create controller for request timeout
     const controller = new AbortController();
@@ -46,19 +52,21 @@ export const useChatAPI = () => {
       
       // Check if we have files to upload
       if (files && files.length > 0) {
-        // Use FormData for file uploads
+        // Use FormData for file uploads with array format for n8n compatibility
         const formData = new FormData();
         formData.append('message', content);
         formData.append('user_id', userId);
         formData.append('session_id', sessionId);
         
-        // Add files
-        files.forEach((file, index) => {
-          formData.append(`file${index}`, file);
+        // Add files as array using the 'files[]' format that n8n expects
+        // IMPORTANT: This is the key change - using files[] instead of fileX
+        files.forEach((file) => {
+          formData.append('files[]', file);
         });
-        formData.append('file_count', String(files.length));
         
-        console.log('Sending FormData with files to webhook');
+        console.log('Sending FormData with files to webhook using files[] format');
+        console.log('File count:', files.length);
+        console.log('File names:', files.map(f => f.name).join(', '));
         
         // For FormData we don't set Content-Type, browser will set it with boundary
         response = await fetch(webhookUrl, {
@@ -88,14 +96,32 @@ export const useChatAPI = () => {
 
       clearTimeout(timeoutId);
       
+      // Log response status for debugging
+      console.log('Webhook response status:', response.status);
+      
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`Webhook error: ${response.status}`, errorText);
         throw new Error(`Error: ${response.status} - ${errorText}`);
       }
 
-      const data = await response.json();
-      console.log('Webhook response received:', data);
+      // Try to get response as JSON
+      const responseText = await response.text();
+      console.log('Raw webhook response:', responseText);
+      
+      let data;
+      try {
+        // Parse the JSON response
+        data = JSON.parse(responseText);
+        console.log('Webhook response parsed:', data);
+      } catch (e) {
+        console.error('Failed to parse webhook response as JSON:', e);
+        // If parsing fails, create a minimal valid response with the text
+        data = {
+          reply: responseText,
+          status: "success"
+        };
+      }
       
       // Make sure the response structure is valid
       const validatedResponse: N8nResponse = {

@@ -61,10 +61,13 @@ const ChatInterface: React.FC = () => {
       
       setIsLoading(true);
       try {
+        console.log('Loading messages for session:', sessionId);
         // Fetch existing messages from storage
         const chatHistory = await fetchMessages(sessionId);
+        console.log('Fetched chat history:', chatHistory.length, 'messages');
         
         if (chatHistory.length === 0) {
+          console.log('No existing messages, creating welcome message');
           // If no messages, create welcome message
           const initialMessage = createInitialMessage(sessionId);
           await saveMessage(initialMessage);
@@ -97,7 +100,9 @@ const ChatInterface: React.FC = () => {
       });
       return;
     }
-
+    
+    console.log('Handling message send:', content.length > 0 ? 'With text' : 'No text', 
+      'Attachments:', attachments.length);
     await sendMessage(content, attachments);
   };
 
