@@ -30,7 +30,7 @@ const TasksPage: React.FC = () => {
 
   return (
     <Layout title="Задачи">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <TaskList />
       </div>
     </Layout>

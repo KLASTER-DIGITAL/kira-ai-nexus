@@ -32,7 +32,8 @@ export const useTasks = (filter?: TaskFilter) => {
         }
         
         if (filter.completed !== undefined) {
-          query = query.eq('content->completed', filter.completed.toString());
+          const completedStr = filter.completed ? 'true' : 'false';
+          query = query.eq('content->completed', completedStr);
         }
         
         if (filter.dueDate) {
