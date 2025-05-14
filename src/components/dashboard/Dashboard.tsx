@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import AddWidgetDialog from "./AddWidgetDialog";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
-import "react-resizable/css/styles.css";
+// Removed the problematic import: "react-resizable/css/styles.css"
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
