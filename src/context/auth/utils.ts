@@ -45,10 +45,10 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
     // If we got multiple rows, take the first one
     if (Array.isArray(data) && data.length > 0) {
       console.log("Profile data received (array):", data[0]);
-      return data[0] as UserProfile;
+      return data[0] as unknown as UserProfile;
     } else if (data) {
       console.log("Profile data received (single):", data);
-      return data as UserProfile;
+      return data as unknown as UserProfile;
     }
     
     console.log("No profile found for user:", userId);
