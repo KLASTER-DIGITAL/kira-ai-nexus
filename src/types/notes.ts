@@ -4,13 +4,14 @@ import { UserProfile } from './auth';
 export interface Note {
   id: string;
   title: string;
-  content: string;
-  date: string;
-  color: string;
-  user_id?: string;
+  content: string | null;
+  date?: string;
+  color?: string;
+  user_id: string;
   tags?: string[];
   created_at?: string;
   updated_at?: string;
+  type: string;
   user?: UserProfile;
 }
 

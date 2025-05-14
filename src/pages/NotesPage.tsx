@@ -6,7 +6,7 @@ import NotesList from "@/components/notes/NotesList";
 const NotesPage: React.FC = () => {
   return (
     <Layout title="Заметки">
-      <div className="max-w-4xl mx-auto">
+      <div className="container mx-auto">
         <NotesList />
       </div>
     </Layout>
