@@ -26,25 +26,20 @@ export const useNotesMutations = () => {
   // Create a new note
   const createNoteMutation = useMutation({
     mutationFn: async (noteData: CreateNoteInput): Promise<Note> => {
-      // Create the basic note data without meta field
-      const noteInsert = {
-        title: noteData.title,
-        content: noteData.content || '',
-        type: 'note',
-      };
-      
-      // Add metadata as a separate field (assuming Supabase has a meta JSONB column)
-      const metaData = {
+      // For the nodes table, we need to store the metadata (tags, color) in the content field as JSON
+      const contentData = {
+        text: noteData.content || '',
         tags: noteData.tags || [],
         color: noteData.color || ''
       };
       
-      // Insert the note with separate metadata
+      // Insert the note with content as JSON
       const { data, error } = await supabase
         .from('nodes')
         .insert({
-          ...noteInsert,
-          meta: metaData
+          title: noteData.title,
+          content: contentData,
+          type: 'note',
         })
         .select()
         .single();
@@ -58,9 +53,9 @@ export const useNotesMutations = () => {
       return {
         id: data.id,
         title: data.title,
-        content: data.content,
-        tags: data.meta?.tags || [],
-        color: data.meta?.color,
+        content: data.content?.text || '',
+        tags: data.content?.tags || [],
+        color: data.content?.color,
         type: data.type,
         user_id: data.user_id
       };
@@ -82,13 +77,9 @@ export const useNotesMutations = () => {
         updateData.title = noteData.title;
       }
       
-      if (noteData.content !== undefined) {
-        updateData.content = noteData.content;
-      }
-      
-      // Handle metadata updates
+      // Handle content and metadata updates
       try {
-        // First, get the current note to access current metadata
+        // First, get the current note to access current content
         const { data: currentNote, error: fetchError } = await supabase
           .from('nodes')
           .select('*')
@@ -99,16 +90,15 @@ export const useNotesMutations = () => {
           throw fetchError;
         }
         
-        // If we have tags or color updates, update the metadata
-        if (noteData.tags !== undefined || noteData.color !== undefined) {
-          const currentMeta = currentNote.meta || { tags: [], color: '' };
-          
-          updateData.meta = {
-            ...currentMeta,
-            tags: noteData.tags !== undefined ? noteData.tags : currentMeta.tags,
-            color: noteData.color !== undefined ? noteData.color : currentMeta.color
-          };
-        }
+        // If we have content, tags or color updates, update the content field
+        const currentContent = currentNote.content || { text: '', tags: [], color: '' };
+        
+        updateData.content = {
+          ...currentContent,
+          text: noteData.content !== undefined ? noteData.content : currentContent.text,
+          tags: noteData.tags !== undefined ? noteData.tags : currentContent.tags,
+          color: noteData.color !== undefined ? noteData.color : currentContent.color
+        };
         
         // Perform the update
         const { data, error } = await supabase
@@ -126,9 +116,9 @@ export const useNotesMutations = () => {
         return {
           id: data.id,
           title: data.title,
-          content: data.content,
-          tags: data.meta?.tags || [],
-          color: data.meta?.color,
+          content: data.content?.text || '',
+          tags: data.content?.tags || [],
+          color: data.content?.color,
           type: data.type,
           user_id: data.user_id
         };

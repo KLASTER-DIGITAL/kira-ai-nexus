@@ -39,7 +39,7 @@ interface MenuBarProps {
 export const MenuBar: React.FC<MenuBarProps> = ({ editor, noteId }) => {
   const [wikiLinkPopoverOpen, setWikiLinkPopoverOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { allNotes } = useWikiLinks(noteId);
+  const { notes } = useWikiLinks(noteId);
   
   if (!editor) {
     return null;
@@ -71,11 +71,11 @@ export const MenuBar: React.FC<MenuBarProps> = ({ editor, noteId }) => {
     setWikiLinkPopoverOpen(false);
   };
 
-  const filteredNotes = searchQuery
-    ? allNotes.filter(note => 
+  const filteredNotes = searchQuery && notes
+    ? notes.filter(note => 
         note.title.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : allNotes;
+    : notes || [];
 
   return (
     <div className="border-b flex flex-wrap gap-1 p-2 bg-muted/20">

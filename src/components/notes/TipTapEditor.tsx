@@ -1,9 +1,10 @@
+
 import React, { useEffect, useRef } from "react";
 import { useEditor, EditorContent, Editor } from "@tiptap/react";
 import { MenuBar } from "./TipTapMenuBar";
 import { useWikiLinks } from "@/hooks/notes/useWikiLinks";
 import { useEditorConfig } from "@/hooks/notes/useEditorConfig";
-import { addWikiLinkClickHandlers } from "./extensions/wikiLinkUtils";
+import { addWikiLinkClickHandlers } from "./extensions/wiki-link/WikiLinkClickHandler";
 
 interface TipTapEditorProps {
   content: string;
@@ -64,7 +65,9 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
   useEffect(() => {
     if (!editor || !noteId) return;
     
-    validateLinks(editor);
+    if (validateLinks) {
+      validateLinks(editor);
+    }
   }, [editor, noteId, validateLinks]);
 
   return (

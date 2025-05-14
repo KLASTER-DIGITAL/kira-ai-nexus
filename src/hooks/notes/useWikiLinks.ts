@@ -61,6 +61,26 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
   }, []);
 
   /**
+   * Validate all wiki links in the editor content
+   */
+  const validateLinks = useCallback((editor: Editor) => {
+    // Find all wiki links in the document and validate them
+    const wikiLinks = editor.state.doc.descendants((node, pos) => {
+      if (node.type.name === 'wikiLink') {
+        const href = node.attrs.href;
+        const isValid = validateWikiLink(href);
+        
+        // Update link validity if needed
+        if (node.attrs.isValid !== isValid) {
+          editor.chain().setNodeAttribute('wikiLink', { isValid }).run();
+        }
+        return true;
+      }
+      return false;
+    });
+  }, [validateWikiLink]);
+
+  /**
    * Handle click on a wiki link in read-only mode
    */
   const handleWikiLinkClick = useCallback((href: string, onLinkClick: (noteId: string) => void) => {
@@ -90,6 +110,8 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
     validateWikiLink,
     processWikiLinks,
     handleWikiLinkClick,
-    fetchNotesForSuggestion
+    fetchNotesForSuggestion,
+    validateLinks,
+    notes // Add notes to the return value for TipTapMenuBar
   };
 };

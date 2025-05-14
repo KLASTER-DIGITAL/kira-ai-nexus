@@ -2,8 +2,7 @@
 import React from 'react';
 import { ReactRenderer } from '@tiptap/react';
 import tippy from 'tippy.js';
-import { Plugin } from '@tiptap/pm/state';
-import Suggestion, { SuggestionOptions } from '@tiptap/suggestion';
+import Suggestion from '@tiptap/suggestion';
 import WikiLinkSuggestList from './WikiLinkSuggestList';
 
 export interface WikiLinkItem {
@@ -26,7 +25,7 @@ export const createWikiLinkSuggestion = (
     allowedPrefixes: [' ', '\n', null],
     startOfLine: false,
     
-    async items({ query }: { query: string }) {
+    async items({ query, editor }) {
       if (query.length === 0) return [];
       
       try {
@@ -80,17 +79,24 @@ export const createWikiLinkSuggestion = (
             return true;
           }
           
-          if (component.ref && typeof component.ref.onKeyDown === 'function') {
-            return component.ref.onKeyDown(props);
+          if (component && component.ref) {
+            // Type check the ref object to see if it has onKeyDown
+            if (typeof (component.ref as any).onKeyDown === 'function') {
+              return (component.ref as any).onKeyDown(props);
+            }
           }
           
           return false;
         },
         
         onKeyUp(props) {
-          if (component.ref && typeof component.ref.onKeyUp === 'function') {
-            return component.ref.onKeyUp(props);
+          if (component && component.ref) {
+            // Type check the ref object to see if it has onKeyUp
+            if (typeof (component.ref as any).onKeyUp === 'function') {
+              return (component.ref as any).onKeyUp(props);
+            }
           }
+          
           return false;
         },
 
@@ -139,3 +145,6 @@ export const createWikiLinkSuggestion = (
     }
   });
 };
+
+// Export a named component for compatibility with existing imports
+export const WikiLinkSuggestionList = WikiLinkSuggestList;
