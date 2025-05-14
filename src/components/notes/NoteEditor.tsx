@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Note } from "@/hooks/useNotes";
 import { X, Save } from "lucide-react";
+import TipTapEditor from "./TipTapEditor";
 
 interface NoteEditorProps {
   note?: Note;
@@ -52,12 +52,11 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
         />
       </CardHeader>
       <CardContent>
-        <Textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
+        <TipTapEditor 
+          content={content} 
+          onChange={setContent} 
           placeholder="Содержание заметки..."
-          className="min-h-[200px] resize-none"
-          rows={10}
+          autoFocus={false}
         />
       </CardContent>
       <CardFooter className="flex justify-end gap-2">

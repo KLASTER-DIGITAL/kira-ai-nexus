@@ -19,12 +19,16 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete }) => {
     locale: ru,
   });
 
-  // Truncate content for preview
+  // Truncate content for preview by stripping HTML
   const contentPreview = note.content 
-    ? note.content.length > 200 
-      ? `${note.content.substring(0, 200)}...` 
-      : note.content 
+    ? stripHtml(note.content).substring(0, 200) + (note.content.length > 200 ? "..." : "")
     : "";
+
+  // Function to strip HTML tags for preview
+  function stripHtml(html: string) {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || "";
+  }
 
   return (
     <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => onEdit(note)}>
