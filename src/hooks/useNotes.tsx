@@ -13,7 +13,7 @@ export interface Note {
   created_at: string;
   updated_at: string;
   type: string;
-  tags?: string[];
+  tags: string[];
 }
 
 interface NoteInput {
@@ -24,6 +24,7 @@ interface NoteInput {
 
 interface NoteFilter {
   searchText?: string;
+  tags?: string[];
 }
 
 export const useNotes = (filter?: NoteFilter) => {
@@ -82,8 +83,7 @@ export const useNotes = (filter?: NoteFilter) => {
         type: 'note',
         title: newNote.title,
         content: newNote.content,
-        // If you have a tags column, uncomment this:
-        // tags: newNote.tags || []
+        tags: newNote.tags || []
       };
 
       const { data, error } = await supabase
@@ -116,13 +116,17 @@ export const useNotes = (filter?: NoteFilter) => {
   // Update an existing note
   const updateNoteMutation = useMutation({
     mutationFn: async (updatedNote: Partial<Note> & { id: string }): Promise<Note> => {
+      const updateData: any = {
+        updated_at: new Date().toISOString()
+      };
+      
+      if (updatedNote.title !== undefined) updateData.title = updatedNote.title;
+      if (updatedNote.content !== undefined) updateData.content = updatedNote.content;
+      if (updatedNote.tags !== undefined) updateData.tags = updatedNote.tags;
+      
       const { data, error } = await supabase
         .from('nodes')
-        .update({
-          title: updatedNote.title,
-          content: updatedNote.content,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', updatedNote.id)
         .select()
         .single();
@@ -138,7 +142,7 @@ export const useNotes = (filter?: NoteFilter) => {
 
       toast({
         title: "Заметка обновлена",
-        description: `"${updatedNote.title}" успешно сохранена`
+        description: `"${updatedNote.title || 'Заметка'}" успешно сохранена`
       });
 
       return data as Note;

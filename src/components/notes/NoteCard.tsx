@@ -3,9 +3,10 @@ import React from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Note } from "@/hooks/useNotes";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Tags } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
+import { Badge } from "@/components/ui/badge";
 
 interface NoteCardProps {
   note: Note;
@@ -39,6 +40,16 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete }) => {
         <p className="text-muted-foreground whitespace-pre-line line-clamp-4">
           {contentPreview}
         </p>
+        
+        {note.tags && note.tags.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1">
+            {note.tags.map((tag, index) => (
+              <Badge key={index} variant="outline" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
       </CardContent>
       <CardFooter className="flex justify-between">
         <span className="text-xs text-muted-foreground">{formattedDate}</span>

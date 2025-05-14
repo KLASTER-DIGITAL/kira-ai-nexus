@@ -8,7 +8,7 @@ export interface Note {
   date?: string;
   color?: string;
   user_id: string;
-  tags?: string[];
+  tags: string[];
   created_at?: string;
   updated_at?: string;
   type: string;
@@ -21,3 +21,9 @@ export type NoteColor =
   | 'bg-green-100' 
   | 'bg-red-100' 
   | 'bg-purple-100';
+
+export interface NoteTag {
+  id: string;
+  name: string;
+  color?: string;
+}
