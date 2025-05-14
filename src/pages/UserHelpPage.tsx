@@ -1,14 +1,25 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ExternalLink, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { HelpCircle } from 'lucide-react';
 
 const UserHelpPage: React.FC = () => {
   const { toast } = useToast();
+  const [docsLastSync, setDocsLastSync] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Check last docs sync time from localStorage
+    const lastSync = localStorage.getItem('docsLastSync');
+    if (lastSync) {
+      const syncDate = new Date(parseInt(lastSync));
+      setDocsLastSync(syncDate.toLocaleString());
+    }
+  }, []);
   
   const handleViewDocs = () => {
     // Open documentation in a new tab
@@ -29,6 +40,10 @@ const UserHelpPage: React.FC = () => {
     // In a real implementation, this would call an API endpoint
     // For now, we'll simulate the sync with a timeout
     setTimeout(() => {
+      // Store the sync time in localStorage
+      localStorage.setItem('docsLastSync', Date.now().toString());
+      setDocsLastSync(new Date().toLocaleString());
+      
       toast({
         title: "Синхронизация завершена",
         description: "Документация успешно обновлена и отправлена в Mintlify.",
@@ -40,23 +55,30 @@ const UserHelpPage: React.FC = () => {
   return (
     <Layout>
       <div className="container mx-auto py-6">
-        <h1 className="text-3xl font-bold mb-6">Помощь пользователю</h1>
+        <div className="flex items-center gap-3 mb-6">
+          <HelpCircle className="h-8 w-8 text-kira-purple" />
+          <h1 className="text-3xl font-bold">Помощь пользователю</h1>
+        </div>
         
         <Card className="mb-6">
           <CardContent className="pt-6">
-            <div className="flex justify-between items-center">
-              <p className="text-sm text-muted-foreground">
-                Эта документация синхронизирована с Mintlify. 
-                Последнее обновление: {new Date().toLocaleDateString()}
-              </p>
-              <div className="space-x-2">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="text-sm text-muted-foreground">
+                <p>Эта документация синхронизирована с Mintlify.</p>
+                {docsLastSync && (
+                  <p className="mt-1">
+                    Последняя синхронизация: <span className="font-medium">{docsLastSync}</span>
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" onClick={handleSyncDocs}>
                   <RefreshCw size={16} className="mr-2" />
                   Обновить
                 </Button>
                 <Button variant="outline" onClick={handleViewDocs}>
                   <ExternalLink size={16} className="mr-2" />
-                  Полная документация
+                  Документация
                 </Button>
               </div>
             </div>

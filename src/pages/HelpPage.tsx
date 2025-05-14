@@ -9,6 +9,7 @@ const HelpPage: React.FC = () => {
   const navigate = useNavigate();
   const [message, setMessage] = useState('Загрузка справочных материалов...');
   const [docsLastSync, setDocsLastSync] = useState<string | null>(null);
+  const [docsLastDeploy, setDocsLastDeploy] = useState<string | null>(null);
 
   useEffect(() => {
     // Check last docs sync time from localStorage
@@ -16,6 +17,13 @@ const HelpPage: React.FC = () => {
     if (lastSync) {
       const syncDate = new Date(parseInt(lastSync));
       setDocsLastSync(syncDate.toLocaleString());
+    }
+    
+    // Check last docs deployment time from localStorage
+    const lastDeploy = localStorage.getItem('docsLastDeploy');
+    if (lastDeploy) {
+      const deployDate = new Date(parseInt(lastDeploy));
+      setDocsLastDeploy(deployDate.toLocaleString());
     }
 
     if (isAuthenticated && profile) {
@@ -40,11 +48,18 @@ const HelpPage: React.FC = () => {
     <div className="h-screen flex flex-col items-center justify-center">
       <Loader2 className="h-8 w-8 animate-spin mb-4" />
       <p className="text-lg">{message}</p>
-      {docsLastSync && (
-        <p className="text-sm text-muted-foreground mt-2">
-          Последняя синхронизация документации: {docsLastSync}
-        </p>
-      )}
+      <div className="text-sm text-muted-foreground mt-4 text-center">
+        {docsLastSync && (
+          <p className="mb-1">
+            Последняя синхронизация документации: {docsLastSync}
+          </p>
+        )}
+        {docsLastDeploy && (
+          <p>
+            Последний деплой в Mintlify: {docsLastDeploy}
+          </p>
+        )}
+      </div>
     </div>
   );
 };

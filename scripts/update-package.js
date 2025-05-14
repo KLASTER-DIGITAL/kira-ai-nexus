@@ -13,6 +13,7 @@ packageJson.scripts = {
   "docs:changelog": "node scripts/generate-docs.js --changelog",
   "docs:sync": "node scripts/generate-docs.js --sync",
   "docs:deploy": "mintlify deploy",
+  "docs:manual-deploy": "node scripts/deploy-mintlify.js",
   "prepare": "husky install",
   "commitlint": "commitlint --edit"
 };
