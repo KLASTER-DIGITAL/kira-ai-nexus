@@ -1,7 +1,8 @@
+
 import { Extension } from '@tiptap/core';
 import { SuggestionOptions } from '@tiptap/suggestion';
 import tippy from 'tippy.js';
-import { PluginKey } from '@tiptap/pm/state';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
 
 export const WikiLinkSuggest = Extension.create({
   name: 'wikiLinkSuggest',
@@ -32,12 +33,11 @@ export const WikiLinkSuggest = Extension.create({
   },
   
   addProseMirrorPlugins() {
-    const suggestion: SuggestionOptions = this.options.suggestion;
-
+    const pluginKey = new PluginKey('wikiLinkSuggest');
+    
     return [
-      new PluginKey('wikiLinkSuggest'),
-      {
-        key: new PluginKey('wikiLinkSuggest'),
+      new Plugin({
+        key: pluginKey,
         view: () => {
           return {
             update: (view) => {
@@ -58,10 +58,7 @@ export const WikiLinkSuggest = Extension.create({
             return false;
           },
         },
-        
-        
-        
-      }
+      })
     ];
   }
 });
