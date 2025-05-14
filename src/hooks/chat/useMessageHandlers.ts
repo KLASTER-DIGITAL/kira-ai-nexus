@@ -26,25 +26,12 @@ export const useMessageHandlers = (
     setIsLoading(true);
 
     try {
-      console.log('Starting message send process with attachments:', attachments.length);
-      
-      // Determine message type based on content and attachments
-      let messageType: 'text' | 'voice' | 'file' = 'text';
-      if (attachments.length > 0) {
-        messageType = 'file';
-      } else if (content.startsWith('data:audio') || content.includes('speech') || content.includes('voice')) {
-        messageType = 'voice';
-      }
-      
       // Create file attachments metadata if files are present
       const fileAttachments: ChatAttachment[] = attachments.map(file => ({
         name: file.name,
         type: file.type,
         size: file.size,
         local_id: URL.createObjectURL(file),
-        metadata: {
-          lastModified: file.lastModified,
-        }
       }));
 
       // Create and save user message
@@ -54,7 +41,6 @@ export const useMessageHandlers = (
         content: content.trim(),
         timestamp: new Date(),
         session_id: sessionId,
-        type: messageType,
         ...(attachments.length > 0 && {
           extension: {
             files: fileAttachments
@@ -67,10 +53,9 @@ export const useMessageHandlers = (
       setMessages(prev => [...prev, userMessage]);
 
       // Send message to n8n webhook with files
-      console.log('Sending message to webhook with attachments:', attachments.length, 
-        'Files:', attachments.map(f => f.name));
+      console.log('Sending message to webhook with attachments:', attachments.length);
       const data = await sendToWebhook(content, userId, sessionId, attachments);
-      console.log('Webhook response received:', data);
+      console.log('Webhook response:', data);
 
       // Create and save assistant message from response
       const assistantMessage: ChatMessage = {
@@ -79,48 +64,15 @@ export const useMessageHandlers = (
         content: data.reply || "",
         timestamp: new Date(),
         session_id: sessionId,
-        type: data.type || 'text',
         ...(data.files && data.files.length > 0 && {
           extension: {
             files: data.files,
-            metadata: data.metadata || {}
+            metadata: data.metadata
           }
         })
       };
 
-      // If there was an error, show a toast notification
-      if (data.status === 'error') {
-        console.error("Error from webhook:", data.error);
-        toast({
-          title: "Ошибка в n8n",
-          description: data.error || "Ошибка при обработке запроса в n8n",
-          variant: "destructive",
-        });
-        
-        // If it's specifically a missing Respond node error, show admin-focused message
-        if (data.error?.includes('Respond to Webhook')) {
-          assistantMessage.content += "\n\n*Для администраторов: Необходимо добавить узел 'Respond to Webhook' " +
-                                      "в рабочий процесс n8n для корректной обработки запросов.*";
-        }
-      }
-
-      console.log('Processing assistant message:', assistantMessage);
-      
-      // Log detailed information about files in the response
-      if (data.files && data.files.length > 0) {
-        console.log('Response contains files:', data.files.length);
-        data.files.forEach((file, index) => {
-          console.log(`File ${index + 1}:`, {
-            name: file.name,
-            type: file.type,
-            url: file.url,
-            size: file.size,
-            hasContent: !!file.content,
-            hasMetadata: !!file.metadata
-          });
-        });
-      }
-
+      console.log('Saving assistant message:', assistantMessage);
       await saveMessage(assistantMessage);
       setMessages(prev => [...prev, assistantMessage]);
       
@@ -128,8 +80,6 @@ export const useMessageHandlers = (
       if (clearAttachments) {
         clearAttachments();
       }
-      
-      return assistantMessage; // Return the assistant message for potential further processing
     } catch (error: any) {
       console.error("Error sending message:", error);
       toast({
@@ -144,13 +94,11 @@ export const useMessageHandlers = (
         role: 'assistant',
         content: "Произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте еще раз позже.",
         timestamp: new Date(),
-        session_id: sessionId,
-        type: 'text'
+        session_id: sessionId
       };
       
       await saveMessage(errorMessage);
       setMessages(prev => [...prev, errorMessage]);
-      return errorMessage; // Return the error message for potential further processing
     } finally {
       setIsLoading(false);
     }
