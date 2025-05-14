@@ -10,7 +10,7 @@ export const useTasks = (filter?: TaskFilter) => {
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   
-  // Fetch tasks with optional filtering
+  // Получение задач с опциональной фильтрацией
   const {
     data: tasks,
     isLoading,
@@ -28,15 +28,15 @@ export const useTasks = (filter?: TaskFilter) => {
       
       if (filter) {
         if (filter.priority) {
-          query = query.eq('content->>priority', filter.priority);
+          query = query.eq('content->priority', filter.priority);
         }
         
         if (filter.completed !== undefined) {
-          query = query.eq('content->>completed', filter.completed.toString());
+          query = query.eq('content->completed', filter.completed.toString());
         }
         
         if (filter.dueDate) {
-          query = query.eq('content->>dueDate', filter.dueDate);
+          query = query.eq('content->dueDate', filter.dueDate);
         }
       }
       
@@ -67,12 +67,12 @@ export const useTasks = (filter?: TaskFilter) => {
     enabled: !!user
   });
 
-  // Create new task
+  // Создание новой задачи
   const createTaskMutation = useMutation({
     mutationFn: async (newTask: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'type'>) => {
       if (!user) throw new Error('User not authenticated');
       
-      const { priority, completed, dueDate, description, ...rest } = newTask;
+      const { title, priority, completed, dueDate, description } = newTask;
       
       const taskContent = {
         priority,
@@ -85,7 +85,7 @@ export const useTasks = (filter?: TaskFilter) => {
         .from('nodes')
         .insert({
           type: 'task',
-          title: newTask.title,
+          title,
           content: taskContent,
           user_id: user.id
         })
@@ -114,12 +114,12 @@ export const useTasks = (filter?: TaskFilter) => {
     }
   });
 
-  // Update task
+  // Обновление задачи
   const updateTaskMutation = useMutation({
     mutationFn: async (updatedTask: Partial<Task> & { id: string }) => {
       if (!user) throw new Error('User not authenticated');
       
-      // Get current task data first
+      // Получаем текущие данные задачи
       const { data: currentTask, error: fetchError } = await supabase
         .from('nodes')
         .select('*')
@@ -132,7 +132,7 @@ export const useTasks = (filter?: TaskFilter) => {
         throw fetchError;
       }
       
-      // Merge current content with updates
+      // Объединяем текущее содержимое с обновлениями
       const { priority, completed, dueDate, description, title } = updatedTask;
       
       const currentContent = currentTask.content as Record<string, any> || {};
@@ -183,7 +183,7 @@ export const useTasks = (filter?: TaskFilter) => {
     }
   });
 
-  // Delete task
+  // Удаление задачи
   const deleteTaskMutation = useMutation({
     mutationFn: async (taskId: string) => {
       if (!user) throw new Error('User not authenticated');
@@ -202,7 +202,7 @@ export const useTasks = (filter?: TaskFilter) => {
       
       return taskId;
     },
-    onSuccess: () => {
+    onSuccess: (deletedTaskId) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       toast({
         title: "Задача удалена",
@@ -218,7 +218,7 @@ export const useTasks = (filter?: TaskFilter) => {
     }
   });
 
-  // Toggle task completion
+  // Переключение статуса выполнения задачи
   const toggleTaskCompletion = useCallback(
     (taskId: string) => {
       const task = tasks?.find((t) => t.id === taskId);
