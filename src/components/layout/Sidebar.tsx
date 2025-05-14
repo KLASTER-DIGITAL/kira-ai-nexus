@@ -40,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
   const location = useLocation();
   const { isSuperAdmin } = useAuth();
   
-  // Filter menu items based on user role
+  // Фильтруем элементы меню на основе роли пользователя
   const filteredMenuItems = menuItems.filter(item => {
     if (item.role === 'superadmin' && !isSuperAdmin()) {
       return false;

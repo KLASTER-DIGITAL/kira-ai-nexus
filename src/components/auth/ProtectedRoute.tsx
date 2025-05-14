@@ -20,29 +20,35 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { isAuthenticated, isLoading, profile } = useAuth();
   const location = useLocation();
 
-  // If still loading auth state, show loading indicator
+  // Если всё ещё загружается состояние аутентификации, показываем индикатор загрузки
   if (isLoading) {
     return <LoadingScreen />;
   }
 
-  // Not authenticated - redirect to login
+  // Не аутентифицирован - перенаправление на страницу входа
   if (!isAuthenticated) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
-
-  // Check for redirects based on role and current path
-  const redirectPath = getRedirectPath(profile, location, isAuthenticated);
-  if (redirectPath) {
-    return <Navigate to={redirectPath} replace />;
-  }
   
-  // For role-specific routes with explicit requiredRole prop
+  // Для маршрутов с конкретной требуемой ролью (явное указание requiredRole)
   if (requiredRole && profile?.role !== requiredRole) {
     const fallbackPath = profile?.role === 'superadmin' ? '/dashboard/admin' : '/dashboard/user';
     return <Navigate to={fallbackPath} replace />;
   }
 
-  // User is authenticated and has proper role, render children
+  // Проверка для перенаправления на основе роли и текущего пути
+  // Специальная проверка для страницы AI Settings - предотвращаем циклическое перенаправление
+  if (profile?.role === 'superadmin' && location.pathname === '/ai-settings') {
+    return <>{children}</>; // Разрешаем доступ без дополнительных проверок
+  }
+  
+  // Проверяем другие возможные перенаправления
+  const redirectPath = getRedirectPath(profile, location, isAuthenticated);
+  if (redirectPath) {
+    return <Navigate to={redirectPath} replace />;
+  }
+
+  // Пользователь аутентифицирован и имеет нужную роль, отображаем дочерние компоненты
   return <>{children}</>;
 };
 

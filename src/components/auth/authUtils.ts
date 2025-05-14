@@ -10,27 +10,27 @@ export const getRedirectPath = (
   location: Location,
   isAuthenticated: boolean
 ): string | null => {
-  // If not authenticated, redirect to auth page
+  // Если пользователь не аутентифицирован, перенаправляем на страницу авторизации
   if (!isAuthenticated) {
     return '/auth';
   }
 
-  // Allow direct access to AI settings for superadmins
+  // Специальная проверка для AI Settings - НЕ перенаправлять, если пользователь суперадмин
   if (profile?.role === 'superadmin' && location.pathname === '/ai-settings') {
-    return null; // No redirect needed for AI settings
+    return null; // Разрешаем доступ к AI Settings для суперадмина без перенаправления
   }
 
-  // If user is superadmin but trying to access user dashboard, redirect to admin dashboard
+  // Если пользователь суперадмин, но пытается получить доступ к пользовательской панели
   if (profile?.role === 'superadmin' && location.pathname === '/dashboard/user') {
     return '/dashboard/admin';
   }
 
-  // If user is not superadmin but trying to access admin dashboard or ai-settings, redirect to user dashboard
+  // Если пользователь не суперадмин, но пытается получить доступ к админской панели или ai-settings
   if (profile?.role !== 'superadmin' && 
       (location.pathname.includes('/dashboard/admin') || location.pathname === '/ai-settings')) {
     return '/dashboard/user';
   }
 
-  // No redirect needed
+  // Перенаправление не требуется
   return null;
 };

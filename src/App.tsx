@@ -22,23 +22,25 @@ import CalendarPage from "./pages/CalendarPage";
 import AISettingsPage from "./pages/AISettingsPage";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Настраиваем QueryClient с улучшенными настройками кэширования
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 минут
+      retry: 1,
+      refetchOnWindowFocus: false
+    },
+  }
+});
 
-// Role-based redirect component
+// Компонент для перенаправления на основе роли
 const RoleBasedRedirect = () => {
   const { profile } = useAuth();
   
-  console.log("RoleBasedRedirect check:", { 
-    profile, 
-    role: profile?.role 
-  });
-  
   if (profile?.role === 'superadmin') {
-    console.log("Redirecting to admin dashboard based on role check");
     return <Navigate to="/dashboard/admin" replace />;
   }
   
-  console.log("Redirecting to user dashboard (default)");
   return <Navigate to="/dashboard/user" replace />;
 };
 
@@ -48,12 +50,12 @@ const App = () => (
       <Toaster />
       <Sonner />
       <Routes>
-        {/* Public routes */}
+        {/* Публичные маршруты */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-        {/* Smart Dashboard Redirect - detects role and redirects appropriately */}
+        {/* Умное перенаправление на панель - определяет роль и перенаправляет соответствующим образом */}
         <Route 
           path="/dashboard" 
           element={
@@ -63,7 +65,7 @@ const App = () => (
           } 
         />
         
-        {/* User dashboard */}
+        {/* Пользовательская панель */}
         <Route 
           path="/dashboard/user" 
           element={
@@ -73,7 +75,7 @@ const App = () => (
           } 
         />
         
-        {/* Admin dashboard */}
+        {/* Административная панель */}
         <Route 
           path="/dashboard/admin" 
           element={
@@ -83,7 +85,7 @@ const App = () => (
           } 
         />
 
-        {/* AI Settings page (SuperAdmin only) */}
+        {/* Страница настроек AI (только для суперадминов) */}
         <Route 
           path="/ai-settings" 
           element={
@@ -93,7 +95,7 @@ const App = () => (
           } 
         />
 
-        {/* Other protected routes */}
+        {/* Другие защищенные маршруты */}
         <Route 
           path="/chat" 
           element={
@@ -127,7 +129,7 @@ const App = () => (
           } 
         />
         
-        {/* 404 page */}
+        {/* Страница 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </TooltipProvider>

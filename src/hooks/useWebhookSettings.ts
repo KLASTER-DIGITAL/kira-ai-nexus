@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from './use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -11,42 +12,40 @@ export interface WebhookSettings {
 }
 
 export const useWebhookSettings = () => {
-  const [settings, setSettings] = useState<WebhookSettings | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const fetchSettings = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('global_config')
-        .select('*')
-        .single();
+  // Используем React Query для кэширования данных
+  const { data: settings, isLoading, error } = useQuery({
+    queryKey: ['webhook-settings'],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('global_config')
+          .select('*')
+          .single();
 
-      if (error) throw error;
-      setSettings(data as WebhookSettings);
-    } catch (error) {
-      console.error("Error fetching webhook settings:", error);
-      toast({
-        title: "Ошибка",
-        description: "Не удалось загрузить настройки webhook",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
+        if (error) throw error;
+        return data as WebhookSettings;
+      } catch (error) {
+        console.error("Error fetching webhook settings:", error);
+        toast({
+          title: "Ошибка",
+          description: "Не удалось загрузить настройки webhook",
+          variant: "destructive",
+        });
+        throw error;
+      }
+    },
+    staleTime: 1000 * 60 * 5, // Кэшируем данные на 5 минут
+  });
 
-  useEffect(() => {
-    fetchSettings();
-  }, [fetchSettings]);
-
-  const saveSettings = useCallback(async (updatedSettings: Partial<WebhookSettings>) => {
-    if (!settings) return;
-
-    setIsSaving(true);
-    try {
+  // Используем мутацию React Query для сохранения данных
+  const mutation = useMutation({
+    mutationFn: async (updatedSettings: Partial<WebhookSettings>) => {
+      if (!settings) return null;
+      
       const { error } = await supabase
         .from('global_config')
         .update({
@@ -57,23 +56,39 @@ export const useWebhookSettings = () => {
         .eq('id', settings.id);
 
       if (error) throw error;
-
-      setSettings(prev => prev ? { ...prev, ...updatedSettings } : null);
+      
+      return { ...settings, ...updatedSettings };
+    },
+    onMutate: () => {
+      setIsSaving(true);
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['webhook-settings'], data);
       toast({
         title: "Успех",
         description: "Настройки webhook успешно сохранены",
       });
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error("Error saving webhook settings:", error);
       toast({
         title: "Ошибка",
         description: "Не удалось сохранить настройки webhook",
         variant: "destructive",
       });
-    } finally {
+    },
+    onSettled: () => {
       setIsSaving(false);
     }
-  }, [settings, toast]);
+  });
+
+  const saveSettings = useCallback(async (updatedSettings: Partial<WebhookSettings>) => {
+    mutation.mutate(updatedSettings);
+  }, [mutation]);
+
+  const fetchSettings = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['webhook-settings'] });
+  }, [queryClient]);
 
   return {
     settings,
