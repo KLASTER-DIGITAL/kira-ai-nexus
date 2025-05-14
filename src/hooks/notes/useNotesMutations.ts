@@ -26,17 +26,25 @@ export const useNotesMutations = () => {
   // Create a new note
   const createNoteMutation = useMutation({
     mutationFn: async (noteData: CreateNoteInput): Promise<Note> => {
+      // Create the basic note data without meta field
+      const noteInsert = {
+        title: noteData.title,
+        content: noteData.content || '',
+        type: 'note',
+      };
+      
+      // Add metadata as a separate field (assuming Supabase has a meta JSONB column)
+      const metaData = {
+        tags: noteData.tags || [],
+        color: noteData.color || ''
+      };
+      
+      // Insert the note with separate metadata
       const { data, error } = await supabase
         .from('nodes')
         .insert({
-          title: noteData.title,
-          content: noteData.content || '',
-          type: 'note',
-          // Store metadata as jsonb
-          meta: {
-            tags: noteData.tags || [],
-            color: noteData.color || ''
-          }
+          ...noteInsert,
+          meta: metaData
         })
         .select()
         .single();
@@ -51,8 +59,8 @@ export const useNotesMutations = () => {
         id: data.id,
         title: data.title,
         content: data.content,
-        tags: data.meta?.tags as string[] || [],
-        color: data.meta?.color as string || undefined,
+        tags: data.meta?.tags || [],
+        color: data.meta?.color,
         type: data.type,
         user_id: data.user_id
       };
@@ -78,48 +86,56 @@ export const useNotesMutations = () => {
         updateData.content = noteData.content;
       }
       
-      // Handle metadata updates with proper typing
-      const { data: currentNote } = await supabase
-        .from('nodes')
-        .select('meta')
-        .eq('id', noteData.id)
-        .single();
-      
-      // If the note has meta field, update it
-      if (currentNote) {
-        const currentMeta = currentNote.meta || { tags: [], color: '' };
+      // Handle metadata updates
+      try {
+        // First, get the current note to access current metadata
+        const { data: currentNote, error: fetchError } = await supabase
+          .from('nodes')
+          .select('*')
+          .eq('id', noteData.id)
+          .single();
         
-        // Update metadata preserving existing fields
-        updateData.meta = {
-          ...currentMeta,
-          tags: noteData.tags !== undefined ? noteData.tags : currentMeta.tags,
-          color: noteData.color !== undefined ? noteData.color : currentMeta.color
+        if (fetchError) {
+          throw fetchError;
+        }
+        
+        // If we have tags or color updates, update the metadata
+        if (noteData.tags !== undefined || noteData.color !== undefined) {
+          const currentMeta = currentNote.meta || { tags: [], color: '' };
+          
+          updateData.meta = {
+            ...currentMeta,
+            tags: noteData.tags !== undefined ? noteData.tags : currentMeta.tags,
+            color: noteData.color !== undefined ? noteData.color : currentMeta.color
+          };
+        }
+        
+        // Perform the update
+        const { data, error } = await supabase
+          .from('nodes')
+          .update(updateData)
+          .eq('id', noteData.id)
+          .select()
+          .single();
+        
+        if (error) {
+          throw error;
+        }
+        
+        // Format the note with proper types before returning
+        return {
+          id: data.id,
+          title: data.title,
+          content: data.content,
+          tags: data.meta?.tags || [],
+          color: data.meta?.color,
+          type: data.type,
+          user_id: data.user_id
         };
-      }
-      
-      // Perform the update
-      const { data, error } = await supabase
-        .from('nodes')
-        .update(updateData)
-        .eq('id', noteData.id)
-        .select()
-        .single();
-      
-      if (error) {
+      } catch (error) {
         console.error("Error updating note:", error);
         throw error;
       }
-      
-      // Format the note with proper types before returning
-      return {
-        id: data.id,
-        title: data.title,
-        content: data.content,
-        tags: data.meta?.tags as string[] || [],
-        color: data.meta?.color as string || undefined,
-        type: data.type,
-        user_id: data.user_id
-      };
     },
     onSuccess: (_, variables) => {
       // Invalidate relevant queries to refresh data

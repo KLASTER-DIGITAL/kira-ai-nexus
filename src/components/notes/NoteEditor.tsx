@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Note } from "@/types/notes";
-import { X, Save, Tags } from "lucide-react";
+import { X, Save } from "lucide-react";
 import TipTapEditor from "./TipTapEditor";
 import { useNoteLinks } from "@/hooks/notes/useNoteLinks";
 import BacklinksList from "./BacklinksList";
 import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/use-debounce";
-import TagBadge from "./TagBadge";
+import TagManager from "./TagManager";
 import ColorPicker from "./ColorPicker";
 
 interface NoteEditorProps {
@@ -34,7 +34,6 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
   const [content, setContent] = useState(note?.content || "");
   const [tags, setTags] = useState<string[]>(note?.tags || []);
   const [color, setColor] = useState<string>(note?.color?.replace('bg-', '')?.replace('-100', '') || '');
-  const [tagInput, setTagInput] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const { toast } = useToast();
@@ -128,24 +127,6 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
     }
   };
 
-  const addTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput("");
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && tagInput) {
-      e.preventDefault();
-      addTag();
-    }
-  };
-
   const handleWikiLinkClick = (noteId: string) => {
     if (onNoteSelect) {
       onNoteSelect(noteId);
@@ -198,40 +179,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
         )}
         
         <div className="mt-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Tags className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Теги:</span>
-          </div>
-          
-          <div className="flex flex-wrap gap-2 mb-2">
-            {tags.map((tag, index) => (
-              <TagBadge 
-                key={index} 
-                tag={tag} 
-                variant="colored"
-                onRemove={() => removeTag(tag)} 
-              />
-            ))}
-          </div>
-          
-          <div className="flex gap-2">
-            <Input
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              placeholder="Добавить тег..."
-              className="text-sm"
-              onKeyPress={handleKeyPress}
-            />
-            <Button 
-              type="button" 
-              variant="outline" 
-              size="sm"
-              onClick={addTag} 
-              disabled={!tagInput.trim()}
-            >
-              Добавить
-            </Button>
-          </div>
+          <TagManager tags={tags} onTagsChange={setTags} />
         </div>
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
