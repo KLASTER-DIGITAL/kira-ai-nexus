@@ -40,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
   const location = useLocation();
   const { isSuperAdmin } = useAuth();
   
-  // Фильтруем элементы меню на основе роли пользователя
+  // Filter menu items based on user role
   const filteredMenuItems = menuItems.filter(item => {
     if (item.role === 'superadmin' && !isSuperAdmin()) {
       return false;
@@ -68,27 +68,22 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
       </div>
 
       <div className="mt-6 px-2 flex-1">
-        {filteredMenuItems.map((item, index) => {
-          const isActive = location.pathname === item.path || 
-                          (item.path !== '/' && location.pathname.startsWith(item.path));
-          
-          return (
-            <NavLink
-              key={index}
-              to={item.path}
-              className={({ isActive }) => cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-md mb-1 transition-colors",
-                isActive 
-                  ? "bg-sidebar-accent text-sidebar-foreground" 
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-              )}
-              end
-            >
-              <item.icon size={20} />
-              {!collapsed && <span>{item.label}</span>}
-            </NavLink>
-          );
-        })}
+        {filteredMenuItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-md mb-1 transition-colors",
+              isActive 
+                ? "bg-sidebar-accent text-sidebar-foreground" 
+                : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+            )}
+            end
+          >
+            <item.icon size={20} />
+            {!collapsed && <span>{item.label}</span>}
+          </NavLink>
+        ))}
       </div>
 
       <div className="mt-auto px-2 mb-4">

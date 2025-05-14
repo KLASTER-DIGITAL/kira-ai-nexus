@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from './use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,7 +16,7 @@ export const useWebhookSettings = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Используем React Query для кэширования данных
+  // Use React Query with optimized caching
   const { data: settings, isLoading, error } = useQuery({
     queryKey: ['webhook-settings'],
     queryFn: async () => {
@@ -38,10 +38,12 @@ export const useWebhookSettings = () => {
         throw error;
       }
     },
-    staleTime: 1000 * 60 * 5, // Кэшируем данные на 5 минут
+    // Optimize caching for better performance
+    staleTime: 1000 * 60 * 15, // 15 minutes
+    cacheTime: 1000 * 60 * 60, // 60 minutes
   });
 
-  // Используем мутацию React Query для сохранения данных
+  // Use mutation for saving data
   const mutation = useMutation({
     mutationFn: async (updatedSettings: Partial<WebhookSettings>) => {
       if (!settings) return null;
@@ -63,6 +65,7 @@ export const useWebhookSettings = () => {
       setIsSaving(true);
     },
     onSuccess: (data) => {
+      // Update cache immediately without refetch
       queryClient.setQueryData(['webhook-settings'], data);
       toast({
         title: "Успех",

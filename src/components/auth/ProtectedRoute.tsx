@@ -3,7 +3,6 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
 import LoadingScreen from './LoadingScreen';
-import { getRedirectPath } from './authUtils';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -20,35 +19,28 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { isAuthenticated, isLoading, profile } = useAuth();
   const location = useLocation();
 
-  // Если всё ещё загружается состояние аутентификации, показываем индикатор загрузки
+  // Show loading screen while auth state is being determined
   if (isLoading) {
     return <LoadingScreen />;
   }
 
-  // Не аутентифицирован - перенаправление на страницу входа
+  // Redirect to auth page if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
   
-  // Для маршрутов с конкретной требуемой ролью (явное указание requiredRole)
+  // Special case: Always allow superadmins to access AI Settings
+  if (profile?.role === 'superadmin' && location.pathname === '/ai-settings') {
+    return <>{children}</>;
+  }
+  
+  // Role-based access check (if a specific role is required)
   if (requiredRole && profile?.role !== requiredRole) {
     const fallbackPath = profile?.role === 'superadmin' ? '/dashboard/admin' : '/dashboard/user';
     return <Navigate to={fallbackPath} replace />;
   }
 
-  // Проверка для перенаправления на основе роли и текущего пути
-  // Специальная проверка для страницы AI Settings - предотвращаем циклическое перенаправление
-  if (profile?.role === 'superadmin' && location.pathname === '/ai-settings') {
-    return <>{children}</>; // Разрешаем доступ без дополнительных проверок
-  }
-  
-  // Проверяем другие возможные перенаправления
-  const redirectPath = getRedirectPath(profile, location, isAuthenticated);
-  if (redirectPath) {
-    return <Navigate to={redirectPath} replace />;
-  }
-
-  // Пользователь аутентифицирован и имеет нужную роль, отображаем дочерние компоненты
+  // Default authorization - allow access
   return <>{children}</>;
 };
 

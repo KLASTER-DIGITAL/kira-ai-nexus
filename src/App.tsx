@@ -22,18 +22,19 @@ import CalendarPage from "./pages/CalendarPage";
 import AISettingsPage from "./pages/AISettingsPage";
 import NotFound from "./pages/NotFound";
 
-// Настраиваем QueryClient с улучшенными настройками кэширования
+// Optimize QueryClient with better caching settings
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 минут
+      staleTime: 1000 * 60 * 5, // 5 minutes cache
       retry: 1,
-      refetchOnWindowFocus: false
+      refetchOnWindowFocus: false,
+      refetchOnMount: true
     },
   }
 });
 
-// Компонент для перенаправления на основе роли
+// Component for role-based redirect
 const RoleBasedRedirect = () => {
   const { profile } = useAuth();
   
@@ -50,12 +51,12 @@ const App = () => (
       <Toaster />
       <Sonner />
       <Routes>
-        {/* Публичные маршруты */}
+        {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-        {/* Умное перенаправление на панель - определяет роль и перенаправляет соответствующим образом */}
+        {/* Smart redirect based on role */}
         <Route 
           path="/dashboard" 
           element={
@@ -65,7 +66,7 @@ const App = () => (
           } 
         />
         
-        {/* Пользовательская панель */}
+        {/* User dashboard */}
         <Route 
           path="/dashboard/user" 
           element={
@@ -75,7 +76,7 @@ const App = () => (
           } 
         />
         
-        {/* Административная панель */}
+        {/* Admin dashboard */}
         <Route 
           path="/dashboard/admin" 
           element={
@@ -85,7 +86,7 @@ const App = () => (
           } 
         />
 
-        {/* Страница настроек AI (только для суперадминов) */}
+        {/* AI Settings page - direct access for superadmins */}
         <Route 
           path="/ai-settings" 
           element={
@@ -129,7 +130,7 @@ const App = () => (
           } 
         />
         
-        {/* Страница 404 */}
+        {/* 404 page */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </TooltipProvider>
