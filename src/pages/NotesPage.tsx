@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import NotesList from "@/components/notes/NotesList";
 import { Button } from "@/components/ui/button";

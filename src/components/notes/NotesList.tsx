@@ -1,6 +1,6 @@
 
-import React, { useState, useMemo, useEffect } from "react";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotes } from "@/hooks/useNotes";
 import { Note } from "@/types/notes";
@@ -12,14 +12,18 @@ import NoteEditDialog from "./NoteEditDialog";
 import { 
   Pagination, 
   PaginationContent, 
-  PaginationEllipsis, 
   PaginationItem, 
   PaginationLink, 
+  PaginationEllipsis, 
   PaginationNext, 
   PaginationPrevious 
 } from "@/components/ui/pagination";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { SortOption, GroupByOption } from "@/hooks/notes/types";
+import { useNotesGrouping } from "@/hooks/notes/useNotesGrouping";
+import NotesGroup from "./NotesGroup";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 
 const NotesList: React.FC = () => {
   // Local state for UI management
@@ -30,17 +34,32 @@ const NotesList: React.FC = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(12);
+  
+  // Load user preferences from localStorage
+  const [sortOption, setSortOption] = useLocalStorage<SortOption>(
+    "notes-sort-option", 
+    "created_desc"
+  );
+  const [groupByOption, setGroupByOption] = useLocalStorage<GroupByOption>(
+    "notes-group-by", 
+    "none"
+  );
+  
   const { toast } = useToast();
 
-  // Use our notes hook with pagination
+  // Use our notes hook with pagination and sorting
   const { notes, isLoading, createNote, updateNote, deleteNote, totalPages, totalCount } = useNotes({
     filter: {
       searchText: searchText || undefined,
       tags: selectedTags.length > 0 ? selectedTags : undefined,
     },
     page: currentPage,
-    pageSize
+    pageSize,
+    sort: sortOption
   });
+  
+  // Use our notes grouping hook
+  const noteGroups = useNotesGrouping(notes || [], groupByOption);
 
   // Set up realtime subscription
   useEffect(() => {
@@ -172,7 +191,7 @@ const NotesList: React.FC = () => {
   };
 
   // Extract all unique tags from notes
-  const allTags = useMemo(() => {
+  const allTags = React.useMemo(() => {
     if (!notes) return [];
     const tagSet = new Set<string>();
     notes.forEach(note => {
@@ -203,7 +222,7 @@ const NotesList: React.FC = () => {
   const hasActiveFilters = searchText.trim() !== "" || selectedTags.length > 0;
 
   // Generate page numbers for pagination
-  const pageNumbers = useMemo(() => {
+  const pageNumbers = React.useMemo(() => {
     if (totalPages <= 7) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     }
@@ -250,6 +269,10 @@ const NotesList: React.FC = () => {
         toggleTag={toggleTag}
         clearFilters={clearFilters}
         allTags={allTags}
+        sortOption={sortOption}
+        setSortOption={setSortOption}
+        groupByOption={groupByOption}
+        setGroupByOption={setGroupByOption}
       />
 
       {isLoading ? (
@@ -264,11 +287,23 @@ const NotesList: React.FC = () => {
         />
       ) : (
         <>
-          <NoteCardGrid
-            notes={notes || []}
-            onEdit={handleEditNote}
-            onDelete={handleDeletePrompt}
-          />
+          {/* Display notes grouped or ungrouped */}
+          {groupByOption === 'none' ? (
+            <NoteCardGrid
+              notes={notes || []}
+              onEdit={handleEditNote}
+              onDelete={handleDeletePrompt}
+            />
+          ) : (
+            noteGroups.map((group, index) => (
+              <NotesGroup
+                key={`${group.title}-${index}`}
+                group={group}
+                onEdit={handleEditNote}
+                onDelete={handleDeletePrompt}
+              />
+            ))
+          )}
           
           {totalPages > 1 && (
             <Pagination className="mt-6">

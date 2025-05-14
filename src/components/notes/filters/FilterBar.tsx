@@ -1,15 +1,20 @@
 
 import React from "react";
-import { Search, X, Filter } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Search, X, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { SortOption, GroupByOption } from "@/hooks/notes/types";
 
 interface FilterBarProps {
   searchText: string;
@@ -18,6 +23,10 @@ interface FilterBarProps {
   toggleTag: (tag: string) => void;
   clearFilters: () => void;
   allTags: string[];
+  sortOption: SortOption;
+  setSortOption: (option: SortOption) => void;
+  groupByOption: GroupByOption;
+  setGroupByOption: (option: GroupByOption) => void;
 }
 
 const FilterBar: React.FC<FilterBarProps> = ({
@@ -27,126 +36,135 @@ const FilterBar: React.FC<FilterBarProps> = ({
   toggleTag,
   clearFilters,
   allTags,
+  sortOption,
+  setSortOption,
+  groupByOption,
+  setGroupByOption
 }) => {
   const hasActiveFilters = searchText.trim() !== "" || selectedTags.length > 0;
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(e.target.value);
+  };
+
+  const handleClearSearch = () => {
+    setSearchText("");
+  };
+
   return (
-    <>
-      {/* Search and filters */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        <div className="relative flex-grow">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Поиск заметок..."
-            className="pl-9 pr-9"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
-          {searchText && (
-            <button
-              onClick={() => setSearchText("")}
-              className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
+    <div className="mb-6 space-y-3">
+      <div className="relative">
+        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Поиск заметок..."
+          className="pl-8 pr-8"
+          value={searchText}
+          onChange={handleSearchChange}
+        />
+        {searchText && (
+          <button
+            className="absolute right-2 top-2.5 text-muted-foreground hover:text-foreground"
+            onClick={handleClearSearch}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="icon" className="h-10 w-10 relative">
-              <Filter className="h-4 w-4" />
-              {selectedTags.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full w-4 h-4 text-[10px] flex items-center justify-center">
-                  {selectedTags.length}
-                </span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-64 p-2" align="end">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Фильтр по тегам</span>
-                {selectedTags.length > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSearchText("")}
-                  >
-                    Сбросить
-                  </Button>
-                )}
-              </div>
+      <div className="flex flex-wrap gap-2 items-center">
+        {/* Selected Tags */}
+        {selectedTags.map((tag) => (
+          <Badge
+            key={tag}
+            variant="secondary"
+            className="cursor-pointer"
+            onClick={() => toggleTag(tag)}
+          >
+            {tag} <X className="ml-1 h-3 w-3" />
+          </Badge>
+        ))}
 
+        {/* Filter/Sort Controls */}
+        <div className="flex-grow"></div>
+        <div className="flex gap-2 items-center">
+          {/* Tag Filter */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8">
+                Теги
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 max-h-80 overflow-y-auto p-2">
               {allTags.length > 0 ? (
-                <ScrollArea className="h-60">
-                  <div className="space-y-1">
-                    {allTags.map((tag) => (
-                      <div
-                        key={tag}
-                        className={`flex items-center px-2 py-1 rounded-md cursor-pointer hover:bg-accent ${
-                          selectedTags.includes(tag) ? "bg-accent" : ""
-                        }`}
-                        onClick={() => toggleTag(tag)}
-                      >
-                        <div className="flex-1">
-                          <Badge
-                            variant={
-                              selectedTags.includes(tag) ? "default" : "outline"
-                            }
-                          >
-                            {tag}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
+                <div className="flex flex-wrap gap-1">
+                  {allTags.map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant={selectedTags.includes(tag) ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => toggleTag(tag)}
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
               ) : (
-                <div className="py-2 text-center text-sm text-muted-foreground">
+                <div className="text-center py-2 text-muted-foreground">
                   Нет доступных тегов
                 </div>
               )}
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
+            </PopoverContent>
+          </Popover>
 
-      {/* Active filters display */}
-      {hasActiveFilters && (
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            Активные фильтры:
-          </span>
-
-          {selectedTags.map((tag) => (
-            <Badge
-              key={tag}
-              variant="secondary"
-              className="flex items-center gap-1"
+          {/* Sort Option */}
+          <div className="min-w-[140px]">
+            <Select 
+              value={sortOption}
+              onValueChange={(value) => setSortOption(value as SortOption)}
             >
-              {tag}
-              <X
-                className="h-3 w-3 cursor-pointer"
-                onClick={() => toggleTag(tag)}
-              />
-            </Badge>
-          ))}
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="Сортировка" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created_desc">Сначала новые</SelectItem>
+                <SelectItem value="created_asc">Сначала старые</SelectItem>
+                <SelectItem value="updated_desc">По дате обновления</SelectItem>
+                <SelectItem value="title_asc">По алфавиту (А-Я)</SelectItem>
+                <SelectItem value="title_desc">По алфавиту (Я-А)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Group By Option */}
+          <div className="min-w-[120px]">
+            <Select 
+              value={groupByOption}
+              onValueChange={(value) => setGroupByOption(value as GroupByOption)}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="Группировка" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Без группировки</SelectItem>
+                <SelectItem value="tags">По тегам</SelectItem>
+                <SelectItem value="date">По дате</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           {hasActiveFilters && (
             <Button
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="h-6"
+              className="h-8 px-2"
             >
-              Сбросить все
+              Сбросить
             </Button>
           )}
         </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 };
 

@@ -6,12 +6,13 @@ import {
   PaginatedNotesResult 
 } from "./notes/useNotesQuery";
 import { useNotesMutations } from "./notes/useNotesMutations";
-import { NoteFilter } from "./notes/types";
+import { NoteFilter, SortOption } from "./notes/types";
 
 export interface NotesQueryOptions {
   filter?: NoteFilter;
   page?: number;
   pageSize?: number;
+  sort?: SortOption;
 }
 
 // Re-export the notes hook functionality

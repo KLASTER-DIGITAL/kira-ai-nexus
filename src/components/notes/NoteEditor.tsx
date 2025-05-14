@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -9,6 +9,8 @@ import TipTapEditor from "./TipTapEditor";
 import { Badge } from "@/components/ui/badge";
 import { useNoteLinks } from "@/hooks/notes/useNoteLinks";
 import BacklinksList from "./BacklinksList";
+import { useToast } from "@/hooks/use-toast";
+import { useDebounce } from "@/hooks/use-debounce";
 
 interface NoteEditorProps {
   note?: Note;
@@ -29,9 +31,17 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
   const [content, setContent] = useState(note?.content || "");
   const [tags, setTags] = useState<string[]>(note?.tags || []);
   const [tagInput, setTagInput] = useState("");
-
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const { toast } = useToast();
+  
   const { links } = useNoteLinks(note?.id);
   const hasBacklinks = links?.incomingLinks && links.incomingLinks.length > 0;
+
+  // Debounce changes for autosave
+  const debouncedTitle = useDebounce(title, 1500);
+  const debouncedContent = useDebounce(content, 1500);
+  const debouncedTags = useDebounce(tags, 1500);
 
   useEffect(() => {
     if (note) {
@@ -41,15 +51,72 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
     }
   }, [note]);
 
-  const handleSave = () => {
-    if (!title.trim()) {
-      return; // Prevent saving without a title
+  // Autosave effect
+  useEffect(() => {
+    if (!isNew && note && (debouncedTitle || debouncedContent)) {
+      const hasChanges = 
+        debouncedTitle !== note.title || 
+        debouncedContent !== note.content || 
+        JSON.stringify(debouncedTags) !== JSON.stringify(note.tags);
+        
+      if (hasChanges && debouncedTitle.trim()) {
+        handleAutosave();
+      }
     }
-    onSave({
-      title,
-      content,
-      tags
-    });
+  }, [debouncedTitle, debouncedContent, debouncedTags]);
+
+  const handleAutosave = useCallback(() => {
+    if (!title.trim() || isNew) return;
+    
+    setIsSaving(true);
+    
+    try {
+      onSave({
+        title,
+        content,
+        tags
+      });
+      setLastSavedAt(new Date());
+    } catch (error) {
+      toast({
+        title: "Ошибка автосохранения",
+        description: "Не удалось сохранить изменения",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [title, content, tags, isNew, onSave]);
+
+  const handleManualSave = () => {
+    if (!title.trim()) {
+      return;
+    }
+    
+    setIsSaving(true);
+    
+    try {
+      onSave({
+        title,
+        content,
+        tags
+      });
+      setLastSavedAt(new Date());
+      
+      if (isNew) {
+        toast({
+          title: "Заметка создана",
+          description: `"${title}" успешно создана`
+        });
+      } else {
+        toast({
+          title: "Заметка сохранена",
+          description: `"${title}" успешно сохранена`
+        });
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const addTag = () => {
@@ -79,13 +146,24 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Заголовок заметки"
-          className="font-medium text-lg"
-          autoFocus
-        />
+        <div className="flex justify-between items-center">
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Заголовок заметки"
+            className="font-medium text-lg"
+            autoFocus
+          />
+          <div className="text-sm text-muted-foreground ml-2">
+            {isSaving ? (
+              <span className="animate-pulse">Сохраняется...</span>
+            ) : lastSavedAt ? (
+              <span>
+                Сохранено: {lastSavedAt.toLocaleTimeString()}
+              </span>
+            ) : null}
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <TipTapEditor 
@@ -152,9 +230,9 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
           <span>Отмена</span>
         </Button>
         <Button
-          onClick={handleSave}
+          onClick={handleManualSave}
           size="sm"
-          disabled={!title.trim()}
+          disabled={!title.trim() || isSaving}
           className="flex items-center"
         >
           <Save className="mr-1 h-4 w-4" />
