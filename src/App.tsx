@@ -1,3 +1,4 @@
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
@@ -18,6 +19,7 @@ import ChatPage from "./pages/ChatPage";
 import TasksPage from "./pages/TasksPage";
 import NotesPage from "./pages/NotesPage";
 import CalendarPage from "./pages/CalendarPage";
+import AISettingsPage from "./pages/AISettingsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -77,6 +79,16 @@ const App = () => (
           element={
             <ProtectedRoute requiredRole="superadmin">
               <AdminDashboardPage />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* AI Settings page (SuperAdmin only) */}
+        <Route 
+          path="/ai-settings" 
+          element={
+            <ProtectedRoute requiredRole="superadmin">
+              <AISettingsPage />
             </ProtectedRoute>
           } 
         />

@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      global_config: {
+        Row: {
+          id: number
+          n8n_mode: string
+          n8n_webhook_production: string | null
+          n8n_webhook_test: string
+        }
+        Insert: {
+          id?: number
+          n8n_mode?: string
+          n8n_webhook_production?: string | null
+          n8n_webhook_test?: string
+        }
+        Update: {
+          id?: number
+          n8n_mode?: string
+          n8n_webhook_production?: string | null
+          n8n_webhook_test?: string
+        }
+        Relationships: []
+      }
       links: {
         Row: {
           id: string
@@ -44,6 +65,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       nodes: {
         Row: {
