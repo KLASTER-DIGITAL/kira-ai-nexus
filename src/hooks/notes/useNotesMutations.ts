@@ -34,7 +34,18 @@ export const useNotesMutations = () => {
         throw error;
       }
 
-      return data as Note;
+      // Convert the data to a Note type with all required fields
+      return {
+        id: data.id,
+        title: data.title,
+        content: data.content?.toString() || null,
+        tags: data.content?.tags || [],
+        color: data.content?.color || undefined,
+        type: data.type,
+        user_id: data.user_id,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      } as Note;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
@@ -68,7 +79,18 @@ export const useNotesMutations = () => {
         throw error;
       }
 
-      return data as Note;
+      // Convert the data to a Note type with all required fields
+      return {
+        id: data.id,
+        title: data.title,
+        content: data.content?.toString() || null,
+        tags: data.content?.tags || [],
+        color: data.content?.color || undefined,
+        type: data.type,
+        user_id: data.user_id,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      } as Note;
     },
     onSuccess: (updatedNote) => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });

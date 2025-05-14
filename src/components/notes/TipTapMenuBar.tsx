@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Editor } from "@tiptap/react";
 import {
@@ -21,7 +20,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNoteLinks } from "@/hooks/notes/useNoteLinks";
+import { useWikiLinks } from "@/hooks/notes/useWikiLinks";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { 
   Command, 
@@ -40,7 +39,7 @@ interface MenuBarProps {
 export const MenuBar: React.FC<MenuBarProps> = ({ editor, noteId }) => {
   const [wikiLinkPopoverOpen, setWikiLinkPopoverOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { allNotes } = useNoteLinks(noteId);
+  const { allNotes } = useWikiLinks(noteId);
   
   if (!editor) {
     return null;
