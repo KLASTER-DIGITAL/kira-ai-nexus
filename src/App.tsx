@@ -5,9 +5,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 // Auth Provider
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider } from "@/context/auth"; // Updated import
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/auth"; // Updated import
 
 // Pages
 import LandingPage from "./pages/LandingPage";
