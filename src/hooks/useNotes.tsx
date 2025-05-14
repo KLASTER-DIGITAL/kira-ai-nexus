@@ -1,23 +1,28 @@
 
-import { useCallback } from 'react';
-import { Note } from '@/types/notes';
-import { NoteFilter, NoteInput } from './notes/types';
-import { useNotesQuery, NotesQueryOptions } from './notes/useNotesQuery';
-import { useNotesMutations } from './notes/useNotesMutations';
+import { Note } from "@/types/notes";
+import { 
+  useNotes as useNotesHook, 
+  useNotesQuery, 
+  PaginatedNotesResult 
+} from "./notes/useNotesQuery";
+import { NoteFilter } from "./notes/types";
 
-export const useNotes = (options?: NotesQueryOptions) => {
-  const { data, isLoading, error } = useNotesQuery(options);
-  const { createNote, updateNote, deleteNote } = useNotesMutations();
+export interface NotesQueryOptions {
+  filter?: NoteFilter;
+  page?: number;
+  pageSize?: number;
+}
 
+// Re-export the notes hook functionality
+export const useNotes = (options: NotesQueryOptions = {}) => {
+  const result = useNotesHook(options);
+  
   return {
-    notes: data?.notes || [],
-    isLoading,
-    error,
-    totalCount: data?.totalCount || 0,
-    totalPages: data?.totalPages || 0,
-    currentPage: data?.currentPage || 1,
-    createNote,
-    updateNote,
-    deleteNote
+    notes: result.notes,
+    isLoading: result.isLoading,
+    error: result.error,
+    totalCount: result.totalCount,
+    totalPages: result.totalPages,
+    currentPage: result.currentPage,
   };
 };
