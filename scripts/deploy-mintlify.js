@@ -58,6 +58,21 @@ function proceedWithDeployment() {
   console.log('⚙️  Подготовка документации к деплою...');
   
   try {
+    // Make sure docs directory exists
+    const docsDir = path.resolve(__dirname, '../docs');
+    if (!fs.existsSync(docsDir)) {
+      fs.mkdirSync(docsDir, { recursive: true });
+      console.log('✅ Создана директория docs');
+    }
+    
+    // Make sure mint.json is copied to docs
+    const mintJsonPath = path.resolve(__dirname, '../mint.json');
+    const docsMintJsonPath = path.resolve(__dirname, '../docs/mint.json');
+    if (fs.existsSync(mintJsonPath)) {
+      fs.copyFileSync(mintJsonPath, docsMintJsonPath);
+      console.log('✅ mint.json скопирован в директорию docs');
+    }
+    
     // Run the documentation generation script
     execSync('node scripts/generate-docs.js --sync --changelog', { stdio: 'inherit' });
     console.log('✅ Документация сгенерирована успешно!');

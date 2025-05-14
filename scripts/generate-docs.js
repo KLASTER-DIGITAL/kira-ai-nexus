@@ -39,6 +39,24 @@ function ensureDirectories() {
   }
 }
 
+// Копирование mint.json в директорию docs
+function copyMintConfig() {
+  try {
+    console.log('Копирование mint.json в директорию docs...');
+    const sourcePath = path.resolve(__dirname, '../mint.json');
+    const targetPath = path.resolve(__dirname, '../docs/mint.json');
+    
+    if (fs.existsSync(sourcePath)) {
+      fs.copyFileSync(sourcePath, targetPath);
+      console.log('mint.json успешно скопирован в директорию docs/');
+    } else {
+      console.error('Файл mint.json не найден в корне проекта');
+    }
+  } catch (error) {
+    console.error('Ошибка при копировании mint.json:', error);
+  }
+}
+
 // Синхронизация содержимого Help страниц с Mintlify документацией
 function syncHelpContent() {
   try {
@@ -220,6 +238,9 @@ function previewDocs() {
 async function main() {
   const args = process.argv.slice(2);
   ensureDirectories();
+  
+  // Всегда копируем mint.json в директорию docs
+  copyMintConfig();
   
   if (args.includes('--changelog')) {
     generateChangelog();
