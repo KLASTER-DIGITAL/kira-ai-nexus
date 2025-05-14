@@ -2,7 +2,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Send, PaperclipIcon, Mic, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useChatMessages, ChatMessage } from "@/hooks/useChatMessages";
+import { useChatMessages } from "@/hooks/chat";
+import { ChatMessage } from "@/types/chat";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth";
