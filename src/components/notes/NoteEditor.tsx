@@ -1,20 +1,21 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Note } from "@/types/notes";
-import { X, Save, Tags, ArrowLeft } from "lucide-react";
+import { X, Save, Tags } from "lucide-react";
 import TipTapEditor from "./TipTapEditor";
-import { Badge } from "@/components/ui/badge";
 import { useNoteLinks } from "@/hooks/notes/useNoteLinks";
 import BacklinksList from "./BacklinksList";
 import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/use-debounce";
 import TagBadge from "./TagBadge";
+import ColorPicker from "./ColorPicker";
 
 interface NoteEditorProps {
   note?: Note;
-  onSave: (note: { title: string; content: string; tags: string[] }) => void;
+  onSave: (note: { title: string; content: string; tags: string[]; color?: string }) => void;
   onCancel: () => void;
   isNew?: boolean;
   onNoteSelect?: (noteId: string) => void;
@@ -30,6 +31,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
   const [title, setTitle] = useState(note?.title || "");
   const [content, setContent] = useState(note?.content || "");
   const [tags, setTags] = useState<string[]>(note?.tags || []);
+  const [color, setColor] = useState<string>(note?.color?.replace('bg-', '')?.replace('-100', '') || '');
   const [tagInput, setTagInput] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
@@ -42,12 +44,14 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
   const debouncedTitle = useDebounce(title, 1500);
   const debouncedContent = useDebounce(content, 1500);
   const debouncedTags = useDebounce(tags, 1500);
+  const debouncedColor = useDebounce(color, 1500);
 
   useEffect(() => {
     if (note) {
       setTitle(note.title);
       setContent(note.content || "");
       setTags(note.tags || []);
+      setColor(note.color?.replace('bg-', '')?.replace('-100', '') || '');
     }
   }, [note]);
 
@@ -57,13 +61,14 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
       const hasChanges = 
         debouncedTitle !== note.title || 
         debouncedContent !== note.content || 
-        JSON.stringify(debouncedTags) !== JSON.stringify(note.tags);
+        JSON.stringify(debouncedTags) !== JSON.stringify(note.tags) ||
+        (debouncedColor ? `bg-${debouncedColor}-100` : '') !== (note.color || '');
         
       if (hasChanges && debouncedTitle.trim()) {
         handleAutosave();
       }
     }
-  }, [debouncedTitle, debouncedContent, debouncedTags]);
+  }, [debouncedTitle, debouncedContent, debouncedTags, debouncedColor]);
 
   const handleAutosave = useCallback(() => {
     if (!title.trim() || isNew) return;
@@ -74,7 +79,8 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
       onSave({
         title,
         content,
-        tags
+        tags,
+        color: color ? `bg-${color}-100` : undefined
       });
       setLastSavedAt(new Date());
     } catch (error) {
@@ -86,7 +92,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
     } finally {
       setIsSaving(false);
     }
-  }, [title, content, tags, isNew, onSave]);
+  }, [title, content, tags, color, isNew, onSave]);
 
   const handleManualSave = () => {
     if (!title.trim()) {
@@ -99,7 +105,8 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
       onSave({
         title,
         content,
-        tags
+        tags,
+        color: color ? `bg-${color}-100` : undefined
       });
       setLastSavedAt(new Date());
       
@@ -166,6 +173,13 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
         </div>
       </CardHeader>
       <CardContent>
+        <div className="mb-2">
+          <ColorPicker 
+            selectedColor={color} 
+            onColorChange={setColor} 
+          />
+        </div>
+        
         <TipTapEditor 
           content={content} 
           onChange={setContent} 

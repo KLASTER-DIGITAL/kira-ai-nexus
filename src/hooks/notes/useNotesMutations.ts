@@ -22,6 +22,7 @@ export const useNotesMutations = () => {
         user_id: user.id,
         type: 'note',
         title: newNote.title,
+        color: newNote.color,
         content: {
           text: newNote.content,
           tags: newNote.tags || []
@@ -35,6 +36,7 @@ export const useNotesMutations = () => {
         title: newNote.title,
         content: newNote.content,
         tags: newNote.tags || [],
+        color: newNote.color,
         type: 'note',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -99,6 +101,7 @@ export const useNotesMutations = () => {
       };
       
       if (updatedNote.title !== undefined) updateData.title = updatedNote.title;
+      if (updatedNote.color !== undefined) updateData.color = updatedNote.color;
       
       // Optimistic update in cache
       queryClient.setQueryData(['notes'], (oldData: any) => {
@@ -111,6 +114,7 @@ export const useNotesMutations = () => {
                 title: updatedNote.title ?? note.title,
                 content: updatedNote.content ?? note.content,
                 tags: updatedNote.tags ?? note.tags,
+                color: updatedNote.color ?? note.color,
                 updated_at: new Date().toISOString()
               }
             : note

@@ -10,6 +10,7 @@ export interface NoteInput {
   title: string;
   content: string;
   tags?: string[];
+  color?: string;
 }
 
 export interface PaginatedNotes {

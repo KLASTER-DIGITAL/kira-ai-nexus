@@ -20,7 +20,11 @@ export type NoteColor =
   | 'bg-blue-100' 
   | 'bg-green-100' 
   | 'bg-red-100' 
-  | 'bg-purple-100';
+  | 'bg-purple-100'
+  | 'bg-orange-100'
+  | 'bg-pink-100'
+  | 'bg-indigo-100'
+  | 'bg-teal-100';
 
 export interface NoteTag {
   id: string;
@@ -40,6 +44,20 @@ export const TAG_COLORS = {
   gray: '#6B7280',
   teal: '#14B8A6',
   orange: '#F97316',
+};
+
+// Note background color options
+export const NOTE_COLORS = {
+  default: { bg: '', label: 'По умолчанию' },
+  yellow: { bg: 'bg-yellow-100', label: 'Жёлтый' },
+  blue: { bg: 'bg-blue-100', label: 'Синий' },
+  green: { bg: 'bg-green-100', label: 'Зелёный' },
+  red: { bg: 'bg-red-100', label: 'Красный' },
+  purple: { bg: 'bg-purple-100', label: 'Фиолетовый' },
+  orange: { bg: 'bg-orange-100', label: 'Оранжевый' },
+  pink: { bg: 'bg-pink-100', label: 'Розовый' },
+  indigo: { bg: 'bg-indigo-100', label: 'Индиго' },
+  teal: { bg: 'bg-teal-100', label: 'Бирюзовый' },
 };
 
 // Map tag names to default colors for consistent coloring
