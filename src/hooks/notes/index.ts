@@ -6,3 +6,4 @@ export * from './useNotesMutations';
 export * from './links'; // Export from links folder
 export * from './useWikiLinks';
 export * from './useEditorConfig';
+export * from './mutations'; // Export new mutations
