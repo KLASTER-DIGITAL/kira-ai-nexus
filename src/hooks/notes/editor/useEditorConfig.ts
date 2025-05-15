@@ -1,24 +1,14 @@
+
 import { useMemo, useCallback } from "react";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
-import { Extensions } from "./types";
+import { Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
-import { Editor } from "@tiptap/react";
 import { WikiLink } from "@/components/notes/extensions/wiki-link/WikiLink";
 import { useWikiLinks } from "../links/useWikiLinks";
 import { TagSuggestion } from "@/components/notes/extensions/tags/TagSuggestion";
 import { useTags } from "../useTags";
-
-interface EditorConfigProps {
-  content: string;
-  onChange: (content: string) => void;
-  placeholder?: string;
-  editable?: boolean;
-  autoFocus?: boolean;
-  noteId?: string;
-  onNoteCreated?: (noteId: string) => void;
-}
+import { EditorConfigProps } from "./types";
 
 export const useEditorConfig = ({
   content,
@@ -29,13 +19,16 @@ export const useEditorConfig = ({
   noteId,
   onNoteCreated
 }: EditorConfigProps) => {
-  const supabase = useSupabaseClient();
+  // Get all available tags
   const { tags } = useTags();
 
   // Define extensions used in the editor
   const extensions = useMemo(() => [
     StarterKit.configure({
-      history: true,
+      history: {
+        depth: 100,
+        newGroupDelay: 500
+      }
     }),
     Placeholder.configure({
       placeholder: placeholder || 'Начните писать...',
@@ -63,7 +56,7 @@ export const useEditorConfig = ({
   ], [placeholder, tags, noteId, onNoteCreated]);
 
   // Get the wiki link functionality
-  const { handleWikiLinkClick, isCreatingLink } = useWikiLinks(noteId, onNoteCreated);
+  const { handleWikiLinkClick } = useWikiLinks(noteId, onNoteCreated);
   
   // Handle link click
   const handleLinkClick = useCallback((href: string) => {
@@ -88,7 +81,7 @@ export const useEditorConfig = ({
     return {
       editable,
       content,
-      onUpdate: ({ editor }) => {
+      onUpdate: ({ editor }: { editor: Editor }) => {
         onChange(editor.getHTML());
       },
       autofocus: autoFocus,
@@ -98,9 +91,7 @@ export const useEditorConfig = ({
         attributes: {
           class: 'focus:outline-none',
         },
-        handleClick: (view, pos, event) => {
-          const { schema } = view.state;
-          const node = schema.nodes.link;
+        handleClick: (view: any, pos: number, event: Event) => {
           if (!(event.target instanceof HTMLAnchorElement)) {
             return false;
           }
@@ -125,4 +116,4 @@ export const useEditorConfig = ({
   };
 };
 
-export type UseEditorConfigReturn = ReturnType<typeof useEditorConfig>
+export type UseEditorConfigReturn = ReturnType<typeof useEditorConfig>;
