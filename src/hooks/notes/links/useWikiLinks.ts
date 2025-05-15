@@ -1,41 +1,29 @@
 
-import { useCallback } from 'react';
-import { Editor } from '@tiptap/react';
-import { useNotesMutations } from '../useNotesMutations';
-import { WikiLinkItem } from '@/components/notes/extensions/wiki-link/types';
-import { useNotes } from "../../useNotes";
-import { useWikiLinkCreation } from './useWikiLinkCreation';
-import { useWikiLinkValidation } from './useWikiLinkValidation';
-import { useWikiLinkNavigation } from './useWikiLinkNavigation';
-import { useWikiLinkSuggestions } from './useWikiLinkSuggestions';
+import { useState, useCallback } from 'react';
+import { useNoteLinks } from '@/hooks/notes/useNoteLinks';
 
-/**
- * Hook for handling wiki links in notes
- */
-export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) => void) => {
-  const { notes } = useNotes({ pageSize: 100 });
-  
-  // Specialized hooks for different wiki link functionalities
-  const { handleCreateNote } = useWikiLinkCreation(onNoteCreated);
-  const { validateWikiLink, validateLinks } = useWikiLinkValidation(notes);
-  const { handleWikiLinkClick } = useWikiLinkNavigation();
-  const { fetchNotesForSuggestion } = useWikiLinkSuggestions(notes);
+export const useWikiLinks = (
+  noteId?: string,
+  onNoteCreated?: (noteId: string) => void
+) => {
+  const [isCreating, setIsCreating] = useState(false);
+  const { allNotes } = useNoteLinks(noteId);
 
-  /**
-   * Process wiki links in the editor and extract them
-   */
-  const processWikiLinks = useCallback((editor: Editor) => {
-    // This would extract and process wiki links from the editor content
-    // Functionality can be extended later if needed
+  // Handle clicking a wiki link
+  const handleWikiLinkClick = useCallback((href: string, onLinkClick?: (noteId: string) => void) => {
+    if (!href) return;
+
+    // Extract the note ID from the href (assuming href format is "note/[id]")
+    const noteId = href.replace('note/', '');
+
+    if (onLinkClick) {
+      onLinkClick(noteId);
+    }
   }, []);
 
   return {
-    handleCreateNote,
-    validateWikiLink,
-    processWikiLinks,
-    handleWikiLinkClick,
-    fetchNotesForSuggestion,
-    validateLinks,
-    notes // Add notes to the return value for TipTapMenuBar
+    allNotes,
+    isCreating,
+    handleWikiLinkClick
   };
 };

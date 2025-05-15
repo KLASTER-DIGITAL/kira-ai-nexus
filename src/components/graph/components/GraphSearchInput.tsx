@@ -1,36 +1,31 @@
 
-import React from 'react';
-import { Search, X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import React from "react";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export interface GraphSearchInputProps {
   searchTerm: string;
   setSearchTerm: (value: string) => void;
 }
 
-export const GraphSearchInput: React.FC<GraphSearchInputProps> = ({
+const GraphSearchInput: React.FC<GraphSearchInputProps> = ({
   searchTerm,
-  setSearchTerm
+  setSearchTerm,
 }) => {
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
   return (
-    <div className="relative">
+    <div className="relative flex-1">
       <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
       <Input
         type="search"
-        placeholder="Поиск узлов..."
-        className="pl-8 pr-8"
+        placeholder="Поиск по заголовку или контенту..."
+        className="pl-8"
         value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
+        onChange={handleSearchChange}
       />
-      {searchTerm && (
-        <button
-          onClick={() => setSearchTerm('')}
-          className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
-          aria-label="Clear search"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      )}
     </div>
   );
 };

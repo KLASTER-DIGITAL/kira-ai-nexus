@@ -1,63 +1,56 @@
 
-import { Note } from "@/types/notes";
+// Define the basic types for note links
 
 export interface NodeBasicInfo {
   id: string;
   title: string;
-  type: 'note' | 'task' | 'event';
+  type: "note" | "task" | "event";
+  tags?: string[];
+  content?: string;
 }
 
-// For backward compatibility
-export type NoteBasicInfo = NodeBasicInfo;
-
-export interface Link {
+export interface LinkInfo {
   id: string;
-  source: string;
-  target: string;
-  label?: string;
+  source_id: string;
+  target_id: string;
+  type: string;
+  source?: NodeBasicInfo;
+  target?: NodeBasicInfo;
+}
+
+export interface LinksData {
+  sourceId: string;
+  targetId: string;
   type?: string;
 }
 
 export interface LinksResult {
-  links: Link[];
-  isLoading: boolean;
-  error: Error | null;
-  allNotes: NoteBasicInfo[];
+  incomingLinks: LinkInfo[];
+  outgoingLinks: LinkInfo[];
 }
 
 export interface CreateLinkParams {
-  source: string;
-  target: string;
-  label?: string;
-  type?: string;
+  source_id: string;
+  target_id: string;
+  type: string;
 }
 
 export interface UpdateLinksParams {
-  noteId: string;
-  links: Array<{
-    targetId: string;
-    label?: string;
-    type?: string;
-  }>;
+  oldTitle: string;
+  newTitle: string;
 }
 
-export interface UseWikiLinkCreationParams {
-  noteId: string;
-  content: string;
+export interface NodeLink {
+  id: string;
+  source_id: string;
+  target_id: string;
+  type?: string;
 }
 
-export interface UseWikiLinksProps {
-  noteId?: string;
-}
-
-export interface UseWikiLinkSuggestionsProps {
-  query: string;
-}
-
-export interface UseWikiLinkNavigationProps {
-  onNavigate: (linkId: string) => void;
-}
-
-export interface UseWikiLinkValidationProps {
-  content: string;
+export interface GraphViewFilters {
+  showNotes: boolean;
+  showTasks: boolean;
+  showEvents: boolean;
+  showIsolatedNodes: boolean;
+  selectedTags: string[];
 }

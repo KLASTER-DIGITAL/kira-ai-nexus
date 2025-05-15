@@ -36,8 +36,10 @@ const GraphViewPage: React.FC = () => {
     nodes: nodes.map(node => ({
       id: node.id,
       type: node.type,
-      position: { x: Math.random() * 800, y: Math.random() * 600 }, // Default random positions
       data: {
+        note: node.type === 'note' ? node : undefined,
+        task: node.type === 'task' ? node : undefined,
+        event: node.type === 'event' ? node : undefined,
         label: node.title,
         content: node.content,
         tags: node.tags || []

@@ -1,49 +1,122 @@
 
-import { useCreateNote } from "./mutations/useCreateNote";
-import { useUpdateNote } from "./mutations/useUpdateNote";
-import { useDeleteNote } from "./mutations/useDeleteNote";
-import { CreateNoteInput, UpdateNoteInput } from "./mutations/types";
-import { useCallback } from "react";
-import { useWikiLinkCreation } from "./links/useWikiLinkCreation";
-
-export type { CreateNoteInput, UpdateNoteInput } from "./mutations/types";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Note } from '@/types/notes';
+import { useToast } from '@/hooks/use-toast';
+import { useNoteLinks } from '@/hooks/notes/useNoteLinks';
 
 export const useNotesMutations = () => {
-  const { createNote: createNoteBase, isCreating } = useCreateNote();
-  const { updateNote: updateNoteBase, isUpdating } = useUpdateNote();
-  const { deleteNote, isDeleting } = useDeleteNote();
-  const { processContentLinks } = useWikiLinkCreation();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   
-  // Extend createNote to process wiki links
-  const createNote = useCallback(async (input: CreateNoteInput) => {
-    const newNote = await createNoteBase(input);
-    
-    if (newNote && newNote.id && input.content) {
-      // Process wiki links in the content and create connections
-      await processContentLinks(newNote.id, input.content);
-    }
-    
-    return newNote;
-  }, [createNoteBase, processContentLinks]);
-  
-  // Extend updateNote to process wiki links
-  const updateNote = useCallback(async (input: UpdateNoteInput) => {
-    const updatedNote = await updateNoteBase(input);
-    
-    if (updatedNote && updatedNote.id && input.content) {
-      // Process wiki links in the content and create connections
-      await processContentLinks(updatedNote.id, input.content);
-    }
-    
-    return updatedNote;
-  }, [updateNoteBase, processContentLinks]);
+  // Create note mutation
+  const createNoteMutation = useMutation({
+    mutationFn: async (data: Omit<Note, 'id' | 'created_at' | 'updated_at'>) => {
+      const { data: result, error } = await supabase
+        .from('nodes')
+        .insert([{
+          ...data,
+          type: 'note'
+        }])
+        .select();
+
+      if (error) {
+        throw error;
+      }
+
+      return result[0];
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      toast({
+        title: "Заметка создана",
+        description: "Новая заметка успешно создана",
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to create note:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось создать заметку",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update note mutation
+  const updateNoteMutation = useMutation({
+    mutationFn: async (data: Partial<Note> & { id: string }) => {
+      const { data: result, error } = await supabase
+        .from('nodes')
+        .update({
+          ...data,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', data.id)
+        .select();
+
+      if (error) {
+        throw error;
+      }
+
+      return result[0];
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      queryClient.invalidateQueries({ queryKey: ['note', variables.id] });
+      toast({
+        title: "Заметка обновлена",
+        description: "Изменения сохранены",
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to update note:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось обновить заметку",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete note mutation
+  const deleteNoteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('nodes')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        throw error;
+      }
+
+      return id;
+    },
+    onSuccess: (id) => {
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      queryClient.invalidateQueries({ queryKey: ['note', id] });
+      toast({
+        title: "Заметка удалена",
+        description: "Заметка была успешно удалена",
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to delete note:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось удалить заметку",
+        variant: "destructive",
+      });
+    },
+  });
 
   return {
-    createNote,
-    updateNote,
-    deleteNote,
-    isCreating,
-    isUpdating,
-    isDeleting
+    createNote: (data: Omit<Note, 'id' | 'created_at' | 'updated_at'>) => createNoteMutation.mutate(data),
+    updateNote: (data: Partial<Note> & { id: string }) => updateNoteMutation.mutate(data),
+    deleteNote: (id: string) => deleteNoteMutation.mutate(id),
+    isCreating: createNoteMutation.isPending,
+    isUpdating: updateNoteMutation.isPending,
+    isDeleting: deleteNoteMutation.isPending,
   };
 };

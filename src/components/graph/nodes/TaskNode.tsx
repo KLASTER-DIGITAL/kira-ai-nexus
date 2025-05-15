@@ -1,88 +1,123 @@
 
 import React, { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { CheckSquare } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 interface TaskNodeProps {
   data: {
-    label: string;
-    dueDate?: string;
-    priority?: 'high' | 'medium' | 'low';
-    status?: 'todo' | 'in_progress' | 'done';
-    tags?: string[];
+    task: {
+      id: string;
+      title: string;
+      description?: string;
+      priority?: 'low' | 'medium' | 'high' | 'urgent';
+      due_date?: string;
+      status?: 'todo' | 'in_progress' | 'done';
+      tags?: string[];
+    };
   };
-  isConnectable: boolean;
+  selected: boolean;
 }
 
-const TaskNode = ({ data, isConnectable }: TaskNodeProps) => {
-  const { label, dueDate, priority, status, tags = [] } = data;
-  
-  const priorityColor = {
-    high: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
-    medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300',
-    low: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
-  };
-  
-  const statusColor = {
-    todo: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
-    in_progress: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
-    done: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
-  };
+const priorityColors = {
+  low: 'bg-slate-200',
+  medium: 'bg-blue-200',
+  high: 'bg-amber-200',
+  urgent: 'bg-red-200'
+};
 
+const statusColors = {
+  todo: 'bg-slate-100 text-slate-800',
+  in_progress: 'bg-blue-100 text-blue-800',
+  done: 'bg-green-100 text-green-800'
+};
+
+const TaskNode: React.FC<TaskNodeProps> = ({ data, selected }) => {
+  const { task } = data;
+  
   return (
-    <Card className="min-w-[200px] max-w-[250px] border-blue-500/40 shadow-md">
-      <CardContent className="p-3">
-        <div className="flex items-center gap-2 mb-2">
-          <CheckSquare className="h-4 w-4 text-blue-500" />
-          <span className="font-medium text-sm truncate">{label}</span>
-        </div>
+    <div
+      className={cn(
+        "px-4 py-2 rounded-lg shadow-md transition-all",
+        "border bg-card w-[220px]",
+        selected ? "border-primary shadow-lg ring-1 ring-primary" : "border-border"
+      )}
+    >
+      <div className="flex items-start justify-between">
+        <div className="font-medium text-sm truncate max-w-[160px]">{task.title}</div>
         
-        <div className="flex flex-wrap gap-1 mt-2">
-          {status && (
-            <Badge variant="outline" className={cn("text-xs px-1.5 py-0", statusColor[status])}>
-              {status === 'todo' ? 'To Do' : status === 'in_progress' ? 'In Progress' : 'Done'}
-            </Badge>
-          )}
-          
-          {priority && (
-            <Badge variant="outline" className={cn("text-xs px-1.5 py-0", priorityColor[priority])}>
-              {priority === 'high' ? 'High' : priority === 'medium' ? 'Medium' : 'Low'}
-            </Badge>
-          )}
-        </div>
-        
-        {tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {tags.slice(0, 2).map(tag => (
-              <Badge key={tag} variant="secondary" className="text-xs px-1.5 py-0">
-                {tag}
-              </Badge>
-            ))}
-            {tags.length > 2 && (
-              <Badge variant="secondary" className="text-xs px-1.5 py-0">
-                +{tags.length - 2}
-              </Badge>
-            )}
-          </div>
+        {task.priority && (
+          <div 
+            className={cn(
+              "h-3 w-3 rounded-full",
+              priorityColors[task.priority]
+            )} 
+          />
         )}
-      </CardContent>
+      </div>
+      
+      {task.description && (
+        <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+          {task.description}
+        </div>
+      )}
+      
+      <div className="flex flex-wrap gap-2 mt-2">
+        {task.status && (
+          <Badge variant="outline" className={cn("text-[10px] font-normal", statusColors[task.status])}>
+            {task.status === 'todo' ? 'К выполнению' : 
+             task.status === 'in_progress' ? 'В процессе' : 'Выполнено'}
+          </Badge>
+        )}
+        
+        {task.due_date && (
+          <Badge variant="outline" className="text-[10px] font-normal bg-slate-50">
+            {new Date(task.due_date).toLocaleDateString()}
+          </Badge>
+        )}
+      </div>
+      
+      {task.tags && task.tags.length > 0 && (
+        <div className="flex flex-wrap mt-2 gap-1">
+          {task.tags.slice(0, 2).map((tag, index) => (
+            <div
+              key={index}
+              className="bg-muted px-1.5 py-0.5 text-[10px] rounded"
+            >
+              {tag}
+            </div>
+          ))}
+          {task.tags.length > 2 && (
+            <div className="bg-muted px-1.5 py-0.5 text-[10px] rounded">
+              +{task.tags.length - 2}
+            </div>
+          )}
+        </div>
+      )}
       
       <Handle
         type="target"
-        position={Position.Top}
-        isConnectable={isConnectable}
-        className="w-2 h-2 bg-blue-500"
+        position={Position.Left}
+        style={{
+          width: 6,
+          height: 6,
+          backgroundColor: "#3b82f6",
+          border: "1px solid white",
+        }}
+        isConnectable={false}
       />
       <Handle
         type="source"
-        position={Position.Bottom}
-        isConnectable={isConnectable}
-        className="w-2 h-2 bg-blue-500"
+        position={Position.Right}
+        style={{
+          width: 6,
+          height: 6,
+          backgroundColor: "#3b82f6",
+          border: "1px solid white",
+        }}
+        isConnectable={false}
       />
-    </Card>
+    </div>
   );
 };
 
