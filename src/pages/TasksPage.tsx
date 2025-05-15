@@ -1,7 +1,7 @@
 
 import React from "react";
 import Layout from "@/components/layout/Layout";
-import TaskList from "@/components/tasks/TaskList";
+import TaskList from "@/components/features/tasks/TaskList";
 import { useAuth } from "@/context/auth";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
