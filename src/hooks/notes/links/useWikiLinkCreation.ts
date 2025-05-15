@@ -21,8 +21,8 @@ export const useWikiLinkCreation = (currentNoteId?: string) => {
   });
 
   // Function to create a link between the current note and another note by title
-  const createWikiLink = async (title: string): Promise<string | null> => {
-    if (!currentNoteId || !title) return null;
+  const createWikiLink = async (title: string): Promise<void> => {
+    if (!currentNoteId || !title) return;
     
     // Find the target note by title
     const targetNote = notes?.find(note => 
@@ -31,14 +31,11 @@ export const useWikiLinkCreation = (currentNoteId?: string) => {
     
     // If the target note exists, create the link
     if (targetNote) {
-      const result = await linkMutation.mutateAsync({
+      await linkMutation.mutateAsync({
         sourceId: currentNoteId,
         targetId: targetNote.id
       });
-      return targetNote.id;
     }
-    
-    return null;
   };
 
   return {
