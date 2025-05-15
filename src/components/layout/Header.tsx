@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
   Bell, 
   Search, 
@@ -12,9 +12,11 @@ import {
   Settings,
   User,
   Shield,
+  LayoutGrid,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
+import { useDashboardStore } from "@/store/dashboardStore";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,17 +33,19 @@ interface HeaderProps {
   sidebarCollapsed: boolean;
   toggleSidebar: () => void;
   pageTitle?: string;
-  actions?: React.ReactNode; // Add this line to accept actions
+  actions?: React.ReactNode;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
   sidebarCollapsed, 
   toggleSidebar, 
   pageTitle = "Дашборд",
-  actions     // Add this parameter
+  actions     
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, profile, isSuperAdmin, signOut } = useAuth();
+  const { setConfigDialogOpen } = useDashboardStore();
 
   const getProfileInitials = (): string => {
     if (profile?.display_name) {
@@ -81,6 +85,14 @@ const Header: React.FC<HeaderProps> = ({
     }
   };
 
+  // Show dashboard settings button only on dashboard pages
+  const isDashboardPage = location.pathname.includes('/dashboard');
+  
+  // Handle opening dashboard settings
+  const handleOpenDashboardSettings = () => {
+    setConfigDialogOpen(true);
+  };
+
   return (
     <header className="h-16 border-b border-border flex items-center justify-between px-4 bg-background">
       <div className="flex items-center gap-3">
@@ -116,7 +128,20 @@ const Header: React.FC<HeaderProps> = ({
       </div>
       
       <div className="flex items-center gap-2">
-        {/* Add the actions before the bell icon */}
+        {/* Dashboard settings button */}
+        {isDashboardPage && (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleOpenDashboardSettings}
+            className="relative"
+            title="Настроить дашборд"
+          >
+            <LayoutGrid size={20} />
+          </Button>
+        )}
+        
+        {/* Add existing actions */}
         {actions}
         
         <Button variant="ghost" size="icon" className="relative">
