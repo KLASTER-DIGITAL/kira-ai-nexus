@@ -51,15 +51,18 @@ export const useGraphData = () => {
       }
       
       // Format data for graph visualization
-      const formattedNodes: GraphNode[] = nodes.map((node: any) => ({
-        id: node.id,
-        title: node.title || "",
-        type: node.type || "note",
-        content: typeof node.content === 'object' ? (node.content as any)?.content : node.content,
-        tags: typeof node.content === 'object' ? (node.content as any)?.tags || [] : [],
-        created_at: node.created_at,
-        updated_at: node.updated_at,
-      }));
+      const formattedNodes: GraphNode[] = nodes.map((node: any) => {
+        const content = node.content as any;
+        return {
+          id: node.id,
+          title: node.title || "",
+          type: node.type || "note",
+          content: typeof content === 'object' ? content?.content : content,
+          tags: typeof content === 'object' ? content?.tags || [] : [],
+          created_at: node.created_at,
+          updated_at: node.updated_at,
+        };
+      });
       
       const formattedLinks: GraphLink[] = links.map((link: any) => ({
         id: link.id,

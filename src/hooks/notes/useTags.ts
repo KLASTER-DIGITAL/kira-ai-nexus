@@ -1,50 +1,39 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
-import { useState, useEffect } from "react";
-
-export interface Tag {
-  id: string;
-  name: string;
-}
+import { supabase } from "@/integrations/supabase/client";
 
 export const useTags = () => {
-  const supabase = useSupabaseClient();
-  const [tags, setTags] = useState<string[]>([]);
-  
-  const { data, isPending, error } = useQuery({
+  const { data: tags, isLoading, error } = useQuery({
     queryKey: ['tags'],
     queryFn: async () => {
-      // Fetch all unique tags from notes
+      // Get all notes with tags
       const { data, error } = await supabase
-        .from('notes')
-        .select('tags')
-        .not('tags', 'is', null);
-      
-      if (error) throw error;
-      
-      // Extract all unique tags from the array of notes
-      const allTags = new Set<string>();
-      data.forEach(item => {
-        if (Array.isArray(item.tags)) {
-          item.tags.forEach((tag: string) => allTags.add(tag));
-        }
-      });
-      
-      return Array.from(allTags);
+        .from('nodes')
+        .select('content')
+        .eq('type', 'note')
+        .not('content', 'is', null);
+
+      if (error) {
+        console.error('Error fetching tags:', error);
+        return [];
+      }
+
+      // Extract unique tags from all notes
+      const allTags = data.reduce((acc: string[], note) => {
+        const content = note.content as any;
+        const tags = Array.isArray(content?.tags) ? content.tags : [];
+        return [...acc, ...tags];
+      }, []);
+
+      // Return unique tags
+      return [...new Set(allTags)];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
-  
-  useEffect(() => {
-    if (data) {
-      setTags(data);
-    }
-  }, [data]);
-  
+
   return {
-    tags,
-    isLoading: isPending,
-    error
+    tags: tags || [],
+    isLoading,
+    error,
   };
 };

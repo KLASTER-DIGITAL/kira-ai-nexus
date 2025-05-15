@@ -48,7 +48,7 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
       try {
         const createdNote = await createNote(newNoteData as any);
         
-        if (createdNote) {
+        if (createdNote && createdNote.id) {
           // Create a link if we have a current note
           if (noteId) {
             await createWikiLink(cleanTitle);
@@ -66,12 +66,12 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
           
           return createdNote.id;
         }
+        return null;
       } catch (error) {
         console.error("Error creating note:", error);
+        return null;
       }
     }
-    
-    return null;
   }, [notes, noteId, createWikiLink, createNote, onNoteCreated]);
   
   return { handleWikiLinkClick, isCreatingLink };

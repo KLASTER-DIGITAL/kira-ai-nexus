@@ -72,7 +72,7 @@ export const WikiLink = Mark.create<WikiLinkOptions>({
   
   addKeyboardShortcuts() {
     return {
-      'Mod-k': () => this.editor.commands.toggleWikiLink(),
+      'Mod-k': () => this.editor.commands.toggleWikiLink({ href: '' }),
     };
   },
 });

@@ -1,28 +1,30 @@
 
 import { Extension } from '@tiptap/core';
-import Suggestion from '@tiptap/suggestion';
+import Suggestion, { SuggestionOptions } from '@tiptap/suggestion';
 
 export interface TagSuggestionOptions {
-  suggestion: {
-    items: (props: { query: string; editor: any }) => string[] | Promise<string[]>;
-    render: () => any;
-  };
+  suggestion: Partial<SuggestionOptions>;
 }
 
 export const TagSuggestion = Extension.create<TagSuggestionOptions>({
   name: 'tagSuggestion',
-  
+
   addOptions() {
     return {
       suggestion: {
-        items: ({ query }: { query: string; editor: any }) => {
-          return [];  // Default empty array, will be overridden by config
+        char: '#',
+        allowSpaces: true,
+        command: ({ editor, range, props }) => {
+          // Default command implementation
+          console.log('Tag selected:', props);
         },
-        render: () => ({}),
+        items: ({ query }) => {
+          return []; // Default empty array, will be overridden by config
+        },
       },
     };
   },
-  
+
   addProseMirrorPlugins() {
     return [
       Suggestion({
