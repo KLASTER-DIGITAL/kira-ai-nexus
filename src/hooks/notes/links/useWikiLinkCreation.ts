@@ -1,63 +1,53 @@
 
-import { useCallback } from 'react';
-import { useNoteLinks } from '@/hooks/notes/useNoteLinks';
-import { useNotesMutations } from '@/hooks/notes/useNotesMutations';
-import { CreateLinkParams } from './types';
+import { useCallback } from "react";
+import { useNotesMutations } from "@/hooks/notes/useNotesMutations";
+import { useNoteLinks } from "../useNoteLinks";
 
-export const useWikiLinkCreation = (noteId?: string) => {
-  const { createLink, allNotes } = useNoteLinks(noteId);
+/**
+ * Hook for creating new wiki links and associated notes
+ */
+export const useWikiLinkCreation = (
+  noteId?: string,
+  onNoteCreated?: (noteId: string) => void
+) => {
   const { createNote } = useNotesMutations();
+  const { createLink } = useNoteLinks(noteId);
 
-  // Create a note from a wiki link
+  /**
+   * Create a new note with the given title and link it to the current note
+   */
   const createNoteFromWikiLink = useCallback(
     async (title: string) => {
-      if (!title) return null;
-
       try {
         // Create the new note
-        const newNoteData = {
+        const newNote = await createNote({
           title,
-          content: '',
+          content: "",
           tags: [],
-          type: 'note' as const,
-        };
+          type: "note",
+          user_id: "", // This will be filled by the backend
+        });
 
-        // Using the createNote function from useNotesMutations
-        const newNote = await createNote(newNoteData);
-        
-        // If the current note exists, create a link between them
-        if (noteId && newNote.id) {
-          const linkData: CreateLinkParams = {
-            source_id: noteId,
-            target_id: newNote.id,
-            type: 'wikilink',
-          };
-          createLink(linkData);
+        // Link the new note to the current note if we have a noteId
+        if (noteId && newNote) {
+          await createLink(noteId, newNote.id);
+        }
+
+        // Notify parent component that a note was created
+        if (onNoteCreated && newNote) {
+          onNoteCreated(newNote.id);
         }
 
         return newNote;
       } catch (error) {
-        console.error('Failed to create note from wiki link:', error);
-        return null;
+        console.error("Error creating note from wiki link:", error);
+        throw error;
       }
     },
-    [noteId, createLink, createNote]
-  );
-
-  // Find note by title
-  const findNoteByTitle = useCallback(
-    (title: string) => {
-      if (!allNotes) return null;
-      return allNotes.find(
-        (note) => note.title.toLowerCase() === title.toLowerCase()
-      );
-    },
-    [allNotes]
+    [noteId, createNote, createLink, onNoteCreated]
   );
 
   return {
-    createNoteFromWikiLink,
-    findNoteByTitle,
-    existingNotes: allNotes || [],
+    createNoteFromWikiLink
   };
 };

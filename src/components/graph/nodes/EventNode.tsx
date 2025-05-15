@@ -1,61 +1,75 @@
 
-import React from "react";
-import { Handle, Position } from "@xyflow/react";
-import { getNodeColor, getNodeBorderColor } from "../utils/graphUtils";
-import { format } from "date-fns";
-import { ru } from "date-fns/locale";
-import { Calendar } from "lucide-react";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { Handle, Position } from '@xyflow/react';
+import { Calendar, Clock } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface EventNodeProps {
   data: {
-    event: any;
     label: string;
-    type: string;
+    color: string;
+    date?: string;
+    time?: string;
+    tags?: string[];
   };
   selected: boolean;
 }
 
-const EventNode: React.FC<EventNodeProps> = ({ data, selected }) => {
-  const { event } = data;
-  const nodeColor = getNodeColor('event');
-  const nodeBorderColor = getNodeBorderColor('event');
-  
-  // Format the date if available
-  const formattedStartDate = event?.startDate ? format(
-    new Date(event.startDate), 
-    "d MMM yyyy HH:mm", 
-    { locale: ru }
-  ) : null;
-  
+export const EventNode: React.FC<EventNodeProps> = ({ data, selected }) => {
+  const { label, color, date, time, tags = [] } = data;
+
+  const formattedDate = date ? format(new Date(date), 'MMM d') : null;
+
   return (
-    <div 
-      className={cn(
-        "px-3 py-2 rounded-md shadow-md bg-white dark:bg-slate-800 border-2",
-        selected ? `border-orange-400` : `border-[${nodeBorderColor}]`,
-        "min-w-[150px] max-w-[220px] transition-all"
-      )}
+    <div
+      className={`px-4 py-2 rounded-md shadow-md transition-all ${
+        selected ? 'ring-2 ring-blue-500' : ''
+      }`}
+      style={{ 
+        backgroundColor: color,
+        minWidth: '180px',
+        maxWidth: '250px'
+      }}
     >
-      <Handle type="target" position={Position.Top} className="w-2 h-2" />
+      <Handle type="target" position={Position.Top} style={{ background: '#555' }} />
       
-      <div className="flex items-center gap-1 mb-1">
-        <Calendar className="w-4 h-4 text-blue-500" />
-        <div className="text-xs font-medium text-blue-500">
-          EVENT
-        </div>
+      <div className="font-bold truncate mb-1">{label}</div>
+      
+      <div className="flex flex-wrap gap-2 text-xs text-gray-700">
+        {formattedDate && (
+          <div className="flex items-center">
+            <Calendar className="w-3 h-3 mr-1" />
+            <span>{formattedDate}</span>
+          </div>
+        )}
+        
+        {time && (
+          <div className="flex items-center">
+            <Clock className="w-3 h-3 mr-1" />
+            <span>{time}</span>
+          </div>
+        )}
       </div>
       
-      <div className="font-medium text-sm mb-1 line-clamp-2">
-        {data.label}
-      </div>
-      
-      {formattedStartDate && (
-        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          {formattedStartDate}
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-1">
+          {tags.slice(0, 2).map((tag, i) => (
+            <span 
+              key={i}
+              className="px-1.5 py-0.5 bg-white/30 rounded text-xs"
+            >
+              {tag}
+            </span>
+          ))}
+          {tags.length > 2 && (
+            <span className="px-1.5 py-0.5 bg-white/30 rounded text-xs">
+              +{tags.length - 2}
+            </span>
+          )}
         </div>
       )}
       
-      <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
+      <Handle type="source" position={Position.Bottom} style={{ background: '#555' }} />
     </div>
   );
 };

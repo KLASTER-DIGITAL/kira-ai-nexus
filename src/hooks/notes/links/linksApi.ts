@@ -1,142 +1,137 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { LinksResult, NoteBasicInfo } from "./types";
+import { LinkData } from "./types";
+import { NodeBasicInfo } from "./types";
 
 /**
- * Fetch links for a specific note
+ * Fetch links for a specific node
  */
-export const fetchLinks = async (noteId?: string): Promise<LinksResult> => {
-  if (!noteId) {
-    return { incomingLinks: [], outgoingLinks: [] };
+export const fetchNodeLinks = async (nodeId: string) => {
+  try {
+    // Fetch incoming links (where this note is the target)
+    const { data: incomingLinks, error: incomingError } = await supabase
+      .from("links")
+      .select("*, source:nodes!links_source_id_fkey(id, title, type)")
+      .eq("target_id", nodeId);
+
+    if (incomingError) throw incomingError;
+
+    // Fetch outgoing links (where this note is the source)
+    const { data: outgoingLinks, error: outgoingError } = await supabase
+      .from("links")
+      .select("*, target:nodes!links_target_id_fkey(id, title, type)")
+      .eq("source_id", nodeId);
+
+    if (outgoingError) throw outgoingError;
+
+    // Transform the data to a more usable format
+    const formattedIncomingLinks = incomingLinks.map((link) => ({
+      id: link.id,
+      source_id: link.source_id,
+      target_id: link.target_id,
+      type: link.type,
+      source: link.source as NodeBasicInfo
+    }));
+
+    const formattedOutgoingLinks = outgoingLinks.map((link) => ({
+      id: link.id,
+      source_id: link.source_id,
+      target_id: link.target_id,
+      type: link.type,
+      target: link.target as NodeBasicInfo
+    }));
+
+    return {
+      incomingLinks: formattedIncomingLinks as unknown as LinkData[],
+      outgoingLinks: formattedOutgoingLinks as unknown as LinkData[]
+    };
+  } catch (error) {
+    console.error("Error fetching node links:", error);
+    return {
+      incomingLinks: [],
+      outgoingLinks: []
+    };
   }
-  
-  // Fetch incoming links (notes that link to this note)
-  const { data: incomingLinks, error: incomingError } = await supabase
-    .from('links')
-    .select('id, nodes!links_target_id_fkey(id, title)')
-    .eq('target_id', noteId);
-    
-  if (incomingError) {
-    console.error("Error fetching incoming links:", incomingError);
-    throw incomingError;
-  }
-  
-  // Fetch outgoing links (notes that this note links to)
-  const { data: outgoingLinks, error: outgoingError } = await supabase
-    .from('links')
-    .select('id, nodes!links_target_id_fkey(id, title)')
-    .eq('source_id', noteId);
-    
-  if (outgoingError) {
-    console.error("Error fetching outgoing links:", outgoingError);
-    throw outgoingError;
-  }
-  
-  return {
-    incomingLinks: incomingLinks || [],
-    outgoingLinks: outgoingLinks || []
-  };
 };
 
 /**
- * Fetch all notes that can be linked
+ * Create a new link between nodes
  */
-export const fetchAllNotes = async (): Promise<NoteBasicInfo[]> => {
-  const { data, error } = await supabase
-    .from('nodes')
-    .select('id, title, type')
-    .eq('type', 'note');
-    
-  if (error) {
-    console.error("Error fetching all notes:", error);
+export const createLink = async (sourceId: string, targetId: string, type = "reference") => {
+  try {
+    const { data, error } = await supabase
+      .from("links")
+      .insert([
+        {
+          source_id: sourceId,
+          target_id: targetId,
+          type
+        }
+      ])
+      .select();
+
+    if (error) throw error;
+    return data[0];
+  } catch (error) {
+    console.error("Error creating link:", error);
     throw error;
   }
-  
-  return data || [];
 };
 
 /**
- * Check if a note exists by title
+ * Delete a link by ID
  */
-export const checkNoteExists = async (title: string): Promise<{ id: string; title: string } | null> => {
-  const { data, error } = await supabase
-    .from('nodes')
-    .select('id, title')
-    .ilike('title', title)
-    .eq('type', 'note')
-    .maybeSingle();
-    
-  if (error) {
-    console.error("Error checking note existence:", error);
-    return null;
+export const deleteLink = async (linkId: string) => {
+  try {
+    const { error } = await supabase
+      .from("links")
+      .delete()
+      .eq("id", linkId);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error("Error deleting link:", error);
+    throw error;
   }
-  
-  return data as { id: string; title: string } | null;
 };
 
 /**
- * Search notes by partial title match
+ * Update links for a node
  */
-export const searchNotesByTitle = async (query: string): Promise<Array<NoteBasicInfo>> => {
-  if (!query || query.length < 2) {
-    return [];
-  }
-  
-  const { data, error } = await supabase
-    .from('nodes')
-    .select('id, title, type')
-    .ilike('title', `%${query}%`)
-    .eq('type', 'note')
-    .limit(10);
-    
-  if (error) {
-    console.error("Error searching notes:", error);
-    return [];
-  }
-  
-  return data.map((item, index) => ({
-    index,
-    id: item.id,
-    title: item.title,
-    type: item.type
-  }));
-};
+export interface UpdateLinksParams {
+  nodeId: string;
+  addLinks: { targetId: string; type?: string }[];
+  removeLinks: string[];
+}
 
-/**
- * Create a link between two notes
- */
-export const createLink = async (sourceId: string, targetId: string) => {
-  // Check if link already exists to avoid duplicates
-  const { data: existingLinks, error: checkError } = await supabase
-    .from('links')
-    .select('id')
-    .eq('source_id', sourceId)
-    .eq('target_id', targetId)
-    .maybeSingle();
-    
-  if (checkError) {
-    console.error("Error checking existing links:", checkError);
-    throw checkError;
-  }
-  
-  // If link doesn't exist, create it
-  if (!existingLinks) {
-    const { data, error } = await supabase
-      .from('links')
-      .insert({
-        source_id: sourceId,
-        target_id: targetId,
-        type: 'note_link'
-      })
-      .select('id');
-      
-    if (error) {
-      console.error("Error creating link:", error);
-      throw error;
+export const updateLinks = async ({ nodeId, addLinks, removeLinks }: UpdateLinksParams) => {
+  try {
+    // Add new links
+    if (addLinks.length > 0) {
+      const linksToAdd = addLinks.map(link => ({
+        source_id: nodeId,
+        target_id: link.targetId,
+        type: link.type || "reference"
+      }));
+
+      const { error: addError } = await supabase
+        .from("links")
+        .insert(linksToAdd);
+
+      if (addError) throw addError;
     }
-    
-    return data[0];
+
+    // Remove specified links
+    if (removeLinks.length > 0) {
+      const { error: deleteError } = await supabase
+        .from("links")
+        .delete()
+        .in("id", removeLinks);
+
+      if (deleteError) throw deleteError;
+    }
+  } catch (error) {
+    console.error("Error updating links:", error);
+    throw error;
   }
-  
-  return existingLinks;
 };

@@ -1,6 +1,4 @@
 
-import { Note } from "@/types/notes";
-
 export interface NodeBasicInfo {
   id: string;
   title: string;
@@ -24,20 +22,5 @@ export interface LinksResult {
 export interface CreateLinkParams {
   sourceId: string;
   targetId: string;
-  type: string;
-}
-
-export interface UpdateLinksParams {
-  noteId: string;
-  oldTitle: string;
-  newTitle: string;
-  content: string;
-}
-
-export interface NodeLink {
-  id: string;
-  source: string;
-  target: string;
   type?: string;
 }
-

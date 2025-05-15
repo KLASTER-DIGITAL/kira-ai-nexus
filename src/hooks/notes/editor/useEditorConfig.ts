@@ -1,6 +1,6 @@
 
 import { useCallback } from "react";
-import { Editor } from "@tiptap/react";
+import { Editor, Extensions } from "@tiptap/react";
 import { useEditorExtensions } from "./useEditorExtensions";
 import { useWikiLinkExtensions } from "./useWikiLinkExtensions";
 import { useWikiLinks } from "../links/useWikiLinks";
@@ -27,26 +27,28 @@ export const useEditorConfig = (options: UseEditorConfigOptions = {}) => {
   } = options;
 
   // Get wiki links functionality
-  const wikiLinks = useWikiLinks(noteId);
+  const { validateWikiLink, fetchNotesForSuggestion, handleCreateNote, allNotes } = useWikiLinks(noteId);
   
   // Get base extensions for the editor
-  const baseExtensions = useEditorExtensions(placeholder);
+  const { getExtensions } = useEditorExtensions(placeholder, validateWikiLink);
   
   // Get wiki link specific extensions
-  const wikiLinkExtensions = useWikiLinkExtensions({
-    noteId,
-    onNoteCreated,
-    allNotes: wikiLinks.allNotes
-  });
-
-  // Combine all extensions
-  const extensions = [
-    ...baseExtensions,
-    ...wikiLinkExtensions,
-  ];
+  const { createWikiLinkSuggestionExtension } = useWikiLinkExtensions(
+    fetchNotesForSuggestion,
+    handleCreateNote
+  );
 
   // Configure editor
   const getEditorConfig = useCallback(() => {
+    // Create wiki link suggestion extension
+    const WikiLinkSuggestionExtension = createWikiLinkSuggestionExtension();
+    
+    // Define extensions array with all needed extensions
+    const extensions = [
+      ...getExtensions(),
+      WikiLinkSuggestionExtension,
+    ];
+
     return {
       extensions,
       content,
@@ -56,13 +58,14 @@ export const useEditorConfig = (options: UseEditorConfigOptions = {}) => {
         onChange(editor.getHTML());
       },
     };
-  }, [content, extensions, editable, autoFocus, onChange]);
+  }, [content, editable, autoFocus, onChange, getExtensions, createWikiLinkSuggestionExtension]);
 
   // Validate links in the editor
   const validateLinks = useCallback((editor: Editor) => {
-    // The logic would be handled by wikiLinks
+    // This function would validate wiki links in the editor
+    // by checking if they correspond to existing notes
     console.log("Validating links in editor");
-    // This function would be implemented in the wiki link extensions
+    // Implementation would be part of wiki link functionality
   }, []);
 
   return {

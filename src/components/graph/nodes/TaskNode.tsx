@@ -1,83 +1,88 @@
 
-import React from "react";
-import { Handle, Position } from "@xyflow/react";
-import { Task } from "@/types/tasks";
-import { getNodeColor, getNodeBorderColor } from "../utils/graphUtils";
-import { format } from "date-fns";
-import { ru } from "date-fns/locale";
-import { ArrowRight, Check, Clock } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { Handle, Position } from '@xyflow/react';
+import { Task } from '@/types/tasks';
+import { Calendar, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface TaskNodeProps {
   data: {
-    task: Task;
     label: string;
-    type: string;
+    color: string;
+    due_date?: string;
+    priority?: 'high' | 'medium' | 'low';
+    status?: 'todo' | 'in_progress' | 'done';
+    tags?: string[];
   };
   selected: boolean;
 }
 
-const TaskNode: React.FC<TaskNodeProps> = ({ data, selected }) => {
-  const { task } = data;
-  const nodeColor = getNodeColor('task');
-  const nodeBorderColor = getNodeBorderColor('task');
-  
-  // Format the date
-  const formattedDueDate = task.dueDate ? format(
-    new Date(task.dueDate), 
-    "d MMM yyyy", 
-    { locale: ru }
-  ) : null;
-  
-  // Check if task is completed
-  const isCompleted = task.status === "completed";
-  
-  // Color based on priority
-  const getPriorityColor = () => {
-    switch (task.priority) {
-      case "high":
-        return "text-red-500";
-      case "medium":
-        return "text-yellow-500";
-      case "low":
-        return "text-blue-500";
-      default:
-        return "text-gray-500";
-    }
+export const TaskNode: React.FC<TaskNodeProps> = ({ data, selected }) => {
+  const { label, color, due_date, priority, tags = [] } = data;
+
+  // Map priority to style
+  const priorityColors = {
+    high: 'bg-red-500',
+    medium: 'bg-yellow-500',
+    low: 'bg-blue-500',
   };
-  
+
+  // Map status to icon
+  const StatusIcon = data.status === 'done' 
+    ? CheckCircle 
+    : data.status === 'in_progress' 
+      ? Clock
+      : XCircle;
+
   return (
-    <div 
-      className={cn(
-        "px-3 py-2 rounded-md shadow-md bg-white dark:bg-slate-800 border-2",
-        selected ? `border-orange-400` : `border-[${nodeBorderColor}]`,
-        "min-w-[150px] max-w-[220px] transition-all"
-      )}
+    <div
+      className={`px-4 py-2 rounded-md shadow-md transition-all ${
+        selected ? 'ring-2 ring-blue-500' : ''
+      }`}
+      style={{ 
+        backgroundColor: color,
+        minWidth: '180px',
+        maxWidth: '250px'
+      }}
     >
-      <Handle type="target" position={Position.Top} className="w-2 h-2" />
+      <Handle type="target" position={Position.Top} style={{ background: '#555' }} />
       
       <div className="flex items-center justify-between mb-1">
-        <div className={cn("text-xs font-bold", getPriorityColor())}>
-          {task.priority?.toUpperCase()}
+        <div className="flex items-center">
+          {priority && (
+            <div className={`w-2 h-2 rounded-full mr-2 ${priorityColors[priority]}`} />
+          )}
+          <StatusIcon className="w-4 h-4 mr-2 text-gray-700" />
+          <div className="font-bold truncate">{label}</div>
         </div>
-        {isCompleted && (
-          <Check className="w-4 h-4 text-green-500" />
-        )}
       </div>
       
-      <div className="font-medium text-sm mb-1 line-clamp-2">
-        {task.title}
-      </div>
-      
-      {formattedDueDate && (
-        <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
-          <Clock className="w-3 h-3 mr-1" />
-          {formattedDueDate}
+      {due_date && (
+        <div className="flex items-center text-xs text-gray-700 mt-1">
+          <Calendar className="w-3 h-3 mr-1" />
+          <span>{format(new Date(due_date), 'MMM d')}</span>
         </div>
       )}
       
-      <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-1">
+          {tags.slice(0, 2).map((tag, i) => (
+            <span 
+              key={i}
+              className="px-1.5 py-0.5 bg-white/30 rounded text-xs"
+            >
+              {tag}
+            </span>
+          ))}
+          {tags.length > 2 && (
+            <span className="px-1.5 py-0.5 bg-white/30 rounded text-xs">
+              +{tags.length - 2}
+            </span>
+          )}
+        </div>
+      )}
+      
+      <Handle type="source" position={Position.Bottom} style={{ background: '#555' }} />
     </div>
   );
 };

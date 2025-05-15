@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Note } from "@/types/notes";
 import { useNoteLinks } from "@/hooks/notes/useNoteLinks";
 import { useNoteAutosave } from "@/hooks/notes/useNoteAutosave";
-import NoteMetadata from "./editor/NoteMetadata";
+import NoteMetadataComponent from "./editor/NoteMetadata";
 import NoteContent from "./editor/NoteContent";
 import NoteEditorActions from "./editor/NoteEditorActions";
 import { LocalGraphView } from "@/components/graph";
@@ -24,7 +24,9 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
   onSave, 
   onCancel, 
   isNew = false,
-  onNoteSelect 
+  onNoteSelect,
+  onUpdateNote,
+  onDeleteNote
 }) => {
   const defaultNote: Note = {
     id: "",
@@ -38,6 +40,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
   const [title, setTitle] = useState(note?.title || "");
   const [content, setContent] = useState(note?.content || "");
   const [tags, setTags] = useState(note?.tags || []);
+  const [color, setColor] = useState(note?.color || "");
   
   const { links } = useNoteLinks(note?.id);
 
@@ -46,6 +49,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
       setTitle(note.title);
       setContent(note.content || "");
       setTags(note.tags || []);
+      setColor(note.color || "");
     }
   }, [note]);
 
@@ -61,6 +65,10 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
     setTags(newTags);
   };
 
+  const handleColorChange = (newColor: string) => {
+    setColor(newColor);
+  };
+
   const handleSave = () => {
     onSave({
       title,
@@ -72,30 +80,33 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
   return (
     <Card className="flex flex-col h-full">
       <CardHeader className="pb-2">
-        <NoteMetadata
+        <NoteMetadataComponent
           title={title}
           onTitleChange={handleTitleChange}
-          tags={tags}
-          onTagsChange={handleTagsChange}
-          color=""
-          onColorChange={() => {}}
+          color={color}
+          onColorChange={handleColorChange}
         />
       </CardHeader>
       <CardContent className="flex-grow">
         <NoteContent
           content={content}
           onContentChange={handleContentChange}
+          noteId={note?.id}
+          onNoteSelect={onNoteSelect}
           tags={tags}
           onTagsChange={handleTagsChange}
-          color=""
-          onColorChange={() => {}}
+          color={color}
+          onColorChange={handleColorChange}
+          links={links}
         />
       </CardContent>
       <CardFooter className="flex justify-between">
         <NoteEditorActions
           isNew={isNew}
           onSave={handleSave}
-          onCancelClick={onCancel}
+          onCancel={onCancel || (() => {})}
+          isSaving={false}
+          hasTitle={title.trim().length > 0}
         />
       </CardFooter>
       {note?.id && <LocalGraphView nodeId={note.id} />}

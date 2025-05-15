@@ -16,7 +16,10 @@ export const useWikiLinkExtensions = (
    */
   const createWikiLinkSuggestionExtension = useCallback(() => {
     // Create suggestion configuration for wiki links
-    const wikiLinkSuggestionConfig = createWikiLinkSuggestion(fetchNotesForSuggestion, handleCreateNote);
+    const wikiLinkSuggestionConfig = createWikiLinkSuggestion(
+      fetchNotesForSuggestion, 
+      handleCreateNote
+    );
     
     // This wraps the suggestion as a proper TipTap extension
     return Extension.create({
@@ -35,4 +38,3 @@ export const useWikiLinkExtensions = (
 
   return { createWikiLinkSuggestionExtension };
 };
-

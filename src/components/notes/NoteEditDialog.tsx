@@ -24,6 +24,17 @@ const NoteEditDialog: React.FC<NoteEditDialogProps> = ({
   onSaveNote,
   onNoteSelect,
 }) => {
+  // These are placeholder implementations for required props
+  const handleUpdateNote = async (note: Note) => {
+    console.log("Update note:", note);
+    return Promise.resolve();
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    console.log("Delete note:", noteId);
+    return Promise.resolve();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
@@ -38,6 +49,8 @@ const NoteEditDialog: React.FC<NoteEditDialogProps> = ({
           onCancel={() => onOpenChange(false)}
           isNew={!activeNote}
           onNoteSelect={onNoteSelect}
+          onUpdateNote={handleUpdateNote}
+          onDeleteNote={handleDeleteNote}
         />
       </DialogContent>
     </Dialog>

@@ -69,6 +69,8 @@ export const useNotesListState = () => {
         title: noteData.title,
         content: noteData.content,
         tags: noteData.tags,
+        user_id: activeNote.user_id,
+        type: activeNote.type
       });
     } else {
       // Create new note
@@ -76,6 +78,8 @@ export const useNotesListState = () => {
         title: noteData.title,
         content: noteData.content,
         tags: noteData.tags,
+        user_id: "", // Will be filled by backend
+        type: "note"
       });
     }
     setIsEditorOpen(false);
