@@ -1,65 +1,82 @@
 
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { NodeBasicInfo } from './notes/links/types';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { LinkData } from "./notes/links/types";
+
+export interface GraphNode {
+  id: string;
+  title: string;
+  type: string;
+  content?: string;
+  tags: string[];
+  created_at?: string;
+  updated_at?: string;
+}
 
 export interface GraphLink {
   id: string;
-  source_id: string;
-  target_id: string;
-  type?: string;
+  source: string;
+  target: string;
+  label?: string;
 }
 
-export function useGraphData() {
-  const [isFiltering, setIsFiltering] = useState(false);
-  
-  // Fetch all nodes (notes, tasks, events)
-  const { data: nodes = [], isLoading: isLoadingNodes } = useQuery({
-    queryKey: ['graph-nodes'],
+export interface GraphData {
+  nodes: GraphNode[];
+  links: GraphLink[];
+}
+
+export const useGraphData = () => {
+  const { data, isPending, error } = useQuery({
+    queryKey: ['graphData'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('nodes')
-        .select('id, title, content, tags, type, created_at, updated_at');
-        
-      if (error) {
-        throw error;
+      // Fetch all notes
+      const { data: nodes, error: nodesError } = await supabase
+        .from('notes')
+        .select('id, title, type, content, tags, created_at, updated_at');
+      
+      if (nodesError) {
+        console.error('Error fetching nodes:', nodesError);
+        throw nodesError;
       }
       
-      // Convert to NodeBasicInfo with optional fields
-      return data.map(node => ({
-        id: node.id,
-        title: node.title,
-        type: node.type as "note" | "task" | "event",
-        content: node.content,
-        tags: node.tags,
-        created_at: node.created_at,
-        updated_at: node.updated_at
-      }));
-    }
-  });
-  
-  // Fetch all links between nodes
-  const { data: links = [], isLoading: isLoadingLinks } = useQuery({
-    queryKey: ['graph-links'],
-    queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch all links
+      const { data: links, error: linksError } = await supabase
         .from('links')
-        .select('id, source_id, target_id, type');
-        
-      if (error) {
-        throw error;
+        .select('id, source_id, target_id');
+      
+      if (linksError) {
+        console.error('Error fetching links:', linksError);
+        throw linksError;
       }
       
-      return data as GraphLink[];
-    }
+      // Format data for graph visualization
+      const formattedNodes: GraphNode[] = nodes.map((node: any) => ({
+        id: node.id,
+        title: node.title || "",
+        type: node.type || "note",
+        content: node.content,
+        tags: node.tags || [],
+        created_at: node.created_at,
+        updated_at: node.updated_at,
+      }));
+      
+      const formattedLinks: GraphLink[] = links.map((link: any) => ({
+        id: link.id,
+        source: link.source_id,
+        target: link.target_id,
+      }));
+      
+      return {
+        nodes: formattedNodes,
+        links: formattedLinks,
+      };
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
-  
-  const isLoading = isLoadingNodes || isLoadingLinks || isFiltering;
   
   return {
-    nodes,
-    links,
-    isLoading,
+    graphData: data,
+    isLoading: isPending,
+    error,
   };
-}
+};

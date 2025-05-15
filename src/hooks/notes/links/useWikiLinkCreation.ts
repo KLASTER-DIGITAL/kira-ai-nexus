@@ -1,54 +1,48 @@
 
-import { useCallback } from "react";
-import { useNotesMutations } from "@/hooks/notes/useNotesMutations";
-import { useNoteLinks } from "./useNoteLinks";
-import { Note } from "@/types/notes";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createLink } from "./linksApi";
+import { useNotes } from "@/hooks/useNotes";
 
-/**
- * Hook for creating new wiki links and associated notes
- */
-export const useWikiLinkCreation = (
-  noteId?: string,
-  onNoteCreated?: (noteId: string) => void
-) => {
-  const { createNote } = useNotesMutations();
-  const { createLink } = useNoteLinks(noteId);
+export const useWikiLinkCreation = (currentNoteId?: string) => {
+  const queryClient = useQueryClient();
+  const { notes } = useNotes({ pageSize: 100 });
 
-  /**
-   * Create a new note with the given title and link it to the current note
-   */
-  const createNoteFromWikiLink = useCallback(
-    async (title: string) => {
-      try {
-        // Create the new note
-        const newNote = await createNote({
-          title,
-          content: "",
-          tags: [],
-          type: "note",
-          user_id: "", // This will be filled by the backend
-        });
-
-        // Link the new note to the current note if we have a noteId and the note was created
-        if (noteId && newNote) {
-          createLink(noteId, newNote.id);
-        }
-
-        // Notify parent component that a note was created
-        if (onNoteCreated && newNote) {
-          onNoteCreated(newNote.id);
-        }
-
-        return newNote;
-      } catch (error) {
-        console.error("Error creating note from wiki link:", error);
-        throw error;
-      }
+  // Mutation for creating a new link
+  const linkMutation = useMutation({
+    mutationFn: async ({ sourceId, targetId }: { sourceId: string; targetId: string }) => {
+      return await createLink(sourceId, targetId);
     },
-    [noteId, createNote, createLink, onNoteCreated]
-  );
+    onSuccess: () => {
+      // Invalidate the links cache for the current note
+      if (currentNoteId) {
+        queryClient.invalidateQueries({ queryKey: ['noteLinks', currentNoteId] });
+      }
+    }
+  });
+
+  // Function to create a link between the current note and another note by title
+  const createWikiLink = async (title: string): Promise<string | null> => {
+    if (!currentNoteId || !title) return null;
+    
+    // Find the target note by title
+    const targetNote = notes?.find(note => 
+      note.title.toLowerCase() === title.toLowerCase()
+    );
+    
+    // If the target note exists, create the link
+    if (targetNote) {
+      const result = await linkMutation.mutateAsync({
+        sourceId: currentNoteId,
+        targetId: targetNote.id
+      });
+      return targetNote.id;
+    }
+    
+    return null;
+  };
 
   return {
-    createNoteFromWikiLink
+    createWikiLink,
+    isCreatingLink: linkMutation.isPending
   };
 };

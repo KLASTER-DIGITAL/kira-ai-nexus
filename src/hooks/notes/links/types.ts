@@ -3,6 +3,8 @@ import { Note } from "@/types/notes";
 
 export interface LinkData {
   id: string;
+  source_id: string;
+  target_id: string;
   source: {
     id: string;
     title: string;
@@ -15,26 +17,10 @@ export interface LinkData {
   };
 }
 
-export interface LinksResult {
+export interface NoteLinks {
   incomingLinks: LinkData[];
   outgoingLinks: LinkData[];
-}
-
-export interface NodeBasicInfo {
-  id: string;
-  title: string;
-  type?: string;
-}
-
-export interface CreateLinkParams {
-  sourceId: string;
-  targetId: string;
-  type?: string;
-}
-
-export interface UpdateLinksParams {
-  oldTitle: string;
-  newTitle: string;
+  allLinkedNotes: Note[];
 }
 
 export interface NoteLink {
@@ -43,8 +29,25 @@ export interface NoteLink {
     id: string;
     title: string;
   };
-  target?: {
+  target: {
     id: string;
     title: string;
+  };
+}
+
+// Updated the shape of the link data for backend response
+export interface LinkQueryResult {
+  id: string;
+  source_id: string;
+  target_id: string;
+  source: {
+    id: string;
+    title: string;
+    type?: string;
+  };
+  target: {
+    id: string;
+    title: string;
+    type?: string;
   };
 }
