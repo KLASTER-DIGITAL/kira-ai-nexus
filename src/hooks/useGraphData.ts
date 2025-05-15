@@ -56,7 +56,7 @@ export const useGraphData = (filters?: GraphViewFilters) => {
         throw error;
       }
 
-      return data as NodeBasicInfo[];
+      return data as unknown as NodeBasicInfo[];
     },
     enabled: !!user,
   });

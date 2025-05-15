@@ -55,7 +55,7 @@ export const useGraphSettings = (nodeId?: string) => {
 
   // Toggle visibility for different node types
   const toggleNodeTypeVisibility = (type: 'notes' | 'tasks' | 'events') => {
-    setSettings(prev => ({
+    setSettings((prev: GraphViewSettings) => ({
       ...prev,
       [`show${type.charAt(0).toUpperCase() + type.slice(1)}`]: !prev[`show${type.charAt(0).toUpperCase() + type.slice(1)}` as keyof GraphViewSettings]
     }));
@@ -63,7 +63,7 @@ export const useGraphSettings = (nodeId?: string) => {
 
   // Toggle showing isolated nodes
   const toggleIsolatedNodes = () => {
-    setSettings(prev => ({
+    setSettings((prev: GraphViewSettings) => ({
       ...prev,
       showIsolatedNodes: !prev.showIsolatedNodes
     }));
@@ -71,7 +71,7 @@ export const useGraphSettings = (nodeId?: string) => {
 
   // Update selected tags
   const updateSelectedTags = (tags: string[]) => {
-    setSettings(prev => ({
+    setSettings((prev: GraphViewSettings) => ({
       ...prev,
       selectedTags: tags
     }));
@@ -84,7 +84,7 @@ export const useGraphSettings = (nodeId?: string) => {
 
   // Change graph layout type
   const changeLayout = (layout: 'force' | 'radial' | 'hierarchical') => {
-    setSettings(prev => ({
+    setSettings((prev: GraphViewSettings) => ({
       ...prev,
       layout
     }));
