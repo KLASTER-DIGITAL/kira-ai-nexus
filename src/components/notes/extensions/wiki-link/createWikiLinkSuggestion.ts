@@ -13,6 +13,7 @@ export const createWikiLinkSuggestion = (
     allowSpaces: true,
     startOfLine: false,
     isolating: true,
+    editor: null, // Add editor property to fix the type error
     pluginKey: wikiLinkPluginKey,
     
     items: async ({ query }: { query: string }) => {

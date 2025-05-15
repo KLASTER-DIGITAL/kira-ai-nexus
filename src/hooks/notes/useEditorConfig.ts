@@ -53,7 +53,10 @@ export const useEditorConfig = ({
       addProseMirrorPlugins() {
         return [
           // Use the suggestion extension function directly
-          Suggestion(wikiLinkSuggestionConfig)
+          Suggestion({
+            ...wikiLinkSuggestionConfig,
+            editor: this.editor, // Add editor to fix the type error
+          })
         ]
       }
     });
