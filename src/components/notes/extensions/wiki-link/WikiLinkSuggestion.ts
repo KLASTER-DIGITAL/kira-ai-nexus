@@ -20,13 +20,10 @@ export const createWikiLinkSuggestion = (
   createNoteCallback: CreateWikiLink
 ) => {
   // Return the configured Suggestion extension directly
-  return Suggestion({
-    char: '[[',
-    allowSpaces: true,
-    allowedPrefixes: [' ', '\n', null],
-    startOfLine: false,
-    
-    async items({ query }) {
+  return {
+    type: 'suggestion',
+    // Create the extension when it's imported by TipTap
+    items: async ({ query }) => {
       if (query.length === 0) return [];
       
       try {
@@ -142,7 +139,7 @@ export const createWikiLinkSuggestion = (
         ])
         .run();
     }
-  });
+  };
 };
 
 // Export named component
