@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Sheet,
@@ -13,8 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/context/auth";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
-import { Notes, CheckSquare, Calendar, MessageSquare, BarChart3, Network, GitFork } from "lucide-react";
+import { LogOut, FileText, CheckSquare, Calendar, MessageSquare, BarChart3, Network, GitFork } from "lucide-react";
 
 interface NavItemProps {
   title: string;
@@ -47,7 +47,7 @@ const navItems = [
   {
     title: "Заметки",
     href: "/notes",
-    icon: <Notes className="h-5 w-5" />,
+    icon: <FileText className="h-5 w-5" />,
     color: "text-emerald-500",
   },
   {
@@ -77,11 +77,11 @@ const navItems = [
 ];
 
 const Sidebar: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     navigate("/auth");
   };
 

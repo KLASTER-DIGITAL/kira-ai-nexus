@@ -1,225 +1,202 @@
 
-import React, { useState, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  ReactFlow,
-  MiniMap,
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import ReactFlow, { 
+  Node, 
+  Edge,
   Controls,
-  Background,
+  Background, 
   useNodesState,
   useEdgesState,
-  Node,
-  NodeTypes,
-  useReactFlow,
-} from "@xyflow/react";
-import "reactflow/dist/style.css";
+  ConnectionLineType,
+  Panel
+} from 'reactflow';
+import 'reactflow/dist/style.css';
 
-// Components
-import GraphToolbar from "./components/GraphToolbar";
-import GraphControlPanel from "./components/GraphControlPanel";
-import NoteNode from "../notes/graph/NoteNode";
-import TaskNode from "./nodes/TaskNode";
-import EventNode from "./nodes/EventNode";
+import { GraphSearchInput } from './components/GraphSearchInput';
+import { GraphFilterPanel } from './components/GraphFilterPanel';
+import { GraphControlPanel } from './components/GraphControlPanel';
+import { GraphToolbar } from './components/GraphToolbar';
+import { EventNode } from './nodes/EventNode';
+import { TaskNode } from './nodes/TaskNode';
+import { useGraphSettings } from '@/hooks/useGraphSettings';
+import { useGraphHotkeys } from './hooks/useGraphHotkeys';
 
-// Hooks
-import { useGraphData } from "@/hooks/useGraphData";
-import { useGraphSettings } from "@/hooks/useGraphSettings";
-import { useGraphHotkeys } from "./hooks/useGraphHotkeys";
-
-// Utils
-import { generateGraphElements } from "./utils/graphUtils";
-
-// Define node types for the graph
-const nodeTypes: NodeTypes = {
-  noteNode: NoteNode,
-  taskNode: TaskNode,
-  eventNode: EventNode,
+const nodeTypes = {
+  task: TaskNode,
+  event: EventNode,
+  // We'll add note node when it's available
 };
 
 interface GraphViewProps {
-  nodeId?: string; // If provided, will show a local graph around this node
-  onNodeClick?: (nodeId: string, nodeType: string) => void;
+  data: {
+    nodes: Node[];
+    edges: Edge[];
+  };
+  availableTags: string[];
 }
 
-const GraphView: React.FC<GraphViewProps> = ({ nodeId, onNodeClick }) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const navigate = useNavigate();
-  const reactFlowInstance = useReactFlow();
-  const { settings, toggleNodeTypeVisibility, toggleIsolatedNodes, savedPositions, resetPositions } = useGraphSettings(nodeId);
+export default function GraphView({ data, availableTags }: GraphViewProps) {
+  const { 
+    settings, 
+    saveNodePositions, 
+    toggleNotesVisibility, 
+    toggleTasksVisibility, 
+    toggleEventsVisibility, 
+    toggleIsolatedNodesVisibility,
+    updateSelectedTags,
+    changeLayout
+  } = useGraphSettings();
 
-  // Define hot key actions
-  const hotKeyActions = useMemo(() => ({
-    zoomIn: () => reactFlowInstance.zoomIn({ duration: 300 }),
-    zoomOut: () => reactFlowInstance.zoomOut({ duration: 300 }),
-    fitView: () => reactFlowInstance.fitView({ duration: 500 }),
-    reset: () => {
-      setNodes(initialNodes);
-      setEdges(initialEdges);
-      resetPositions();
-      setTimeout(() => reactFlowInstance.fitView({ duration: 500 }), 50);
-    }
-  }), [reactFlowInstance, resetPositions]);
-
-  // Set up keyboard shortcuts
-  useGraphHotkeys(hotKeyActions);
-
-  // Calculate which node types to show based on settings
-  const nodeTypesToShow = useMemo(() => {
-    const types: string[] = [];
-    if (settings.showNotes) types.push("note");
-    if (settings.showTasks) types.push("task");
-    if (settings.showEvents) types.push("event");
-    return types;
-  }, [settings.showNotes, settings.showTasks, settings.showEvents]);
-
-  // Create filters object for data fetching
-  const filters = useMemo(() => ({
-    nodeTypes: nodeTypesToShow,
-    searchTerm,
-    tags: selectedTags,
-    showIsolatedNodes: settings.showIsolatedNodes
-  }), [nodeTypesToShow, searchTerm, selectedTags, settings.showIsolatedNodes]);
-
-  // Fetch graph data
-  const { nodes: graphNodes, links: graphLinks, isLoading } = useGraphData(filters);
+  // Set up nodes and edges
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   
-  // Toggle tag selection
-  const toggleTag = (tag: string) => {
-    if (selectedTags.includes(tag)) {
-      setSelectedTags(selectedTags.filter(t => t !== tag));
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [highlightedNodes, setHighlightedNodes] = useState<string[]>([]);
+  
+  // Filter the graph based on settings
+  useEffect(() => {
+    if (!data) return;
+    
+    let filteredNodes = [...data.nodes];
+
+    // Apply node type filters
+    if (!settings.showNotes) {
+      filteredNodes = filteredNodes.filter(node => node.type !== 'note');
+    }
+    
+    if (!settings.showTasks) {
+      filteredNodes = filteredNodes.filter(node => node.type !== 'task');
+    }
+    
+    if (!settings.showEvents) {
+      filteredNodes = filteredNodes.filter(node => node.type !== 'event');
+    }
+
+    // Apply tag filters if any are selected
+    if (settings.selectedTags.length > 0) {
+      filteredNodes = filteredNodes.filter(node => {
+        const nodeTags = node.data?.tags || [];
+        return settings.selectedTags.some(tag => nodeTags.includes(tag));
+      });
+    }
+
+    // Get all node IDs that are connected
+    const connectedNodeIds = new Set<string>();
+    data.edges.forEach(edge => {
+      connectedNodeIds.add(edge.source);
+      connectedNodeIds.add(edge.target);
+    });
+
+    // Filter out isolated nodes if needed
+    if (!settings.showIsolatedNodes) {
+      filteredNodes = filteredNodes.filter(node => connectedNodeIds.has(node.id));
+    }
+
+    // Apply positions from saved settings if available
+    filteredNodes = filteredNodes.map(node => {
+      if (settings.savedPositions[node.id]) {
+        return {
+          ...node,
+          position: settings.savedPositions[node.id]
+        };
+      }
+      return node;
+    });
+
+    // Filter edges to only include edges between visible nodes
+    const visibleNodeIds = new Set(filteredNodes.map(node => node.id));
+    const filteredEdges = data.edges.filter(
+      edge => visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target)
+    );
+
+    // Apply search highlighting if search is active
+    if (searchQuery) {
+      const lowerQuery = searchQuery.toLowerCase();
+      const matchingNodeIds = filteredNodes
+        .filter(node => 
+          node.data.label.toLowerCase().includes(lowerQuery) ||
+          (node.data.content && node.data.content.toLowerCase().includes(lowerQuery))
+        )
+        .map(node => node.id);
+      
+      setHighlightedNodes(matchingNodeIds);
     } else {
-      setSelectedTags([...selectedTags, tag]);
+      setHighlightedNodes([]);
     }
-  };
-  
-  // Extract all unique tags from nodes
-  const allTags = useMemo(() => {
-    if (!graphNodes) return [];
-    const tagSet = new Set<string>();
-    graphNodes.forEach(node => {
-      if (node.tags) {
-        node.tags.forEach(tag => tagSet.add(tag));
-      }
-    });
-    return Array.from(tagSet);
-  }, [graphNodes]);
 
-  // If nodeId is provided, filter data for local graph
-  const { filteredNodes, filteredLinks } = useMemo(() => {
-    if (!nodeId || !graphNodes || !graphLinks) {
-      return { filteredNodes: graphNodes || [], filteredLinks: graphLinks || [] };
-    }
+    // Update graph state
+    setNodes(filteredNodes);
+    setEdges(filteredEdges);
+  }, [data, settings, searchQuery, setNodes, setEdges]);
+
+  // Save node positions when they move
+  const onNodeDragStop = useCallback((_, nodes) => {
+    const positions = nodes.reduce((acc, node) => {
+      acc[node.id] = node.position;
+      return acc;
+    }, {} as Record<string, { x: number, y: number }>);
     
-    // Find direct connections (depth 1)
-    const connectedNodeIds = new Set<string>([nodeId]);
-    graphLinks.forEach(link => {
-      if (link.source_id === nodeId) connectedNodeIds.add(link.target_id);
-      if (link.target_id === nodeId) connectedNodeIds.add(link.source_id);
-    });
+    saveNodePositions(positions);
+  }, [saveNodePositions]);
 
-    const relevantLinks = graphLinks.filter(
-      link => connectedNodeIds.has(link.source_id) && connectedNodeIds.has(link.target_id)
-    );
-    
-    const relevantNodes = graphNodes.filter(node => connectedNodeIds.has(node.id));
-    
-    return {
-      filteredNodes: relevantNodes,
-      filteredLinks: relevantLinks
-    };
-  }, [nodeId, graphNodes, graphLinks]);
-
-  // Generate nodes and edges for ReactFlow
-  const { initialNodes, initialEdges } = useMemo(() => {
-    return generateGraphElements(filteredNodes, filteredLinks, savedPositions);
-  }, [filteredNodes, filteredLinks, savedPositions]);
-
-  // Setup ReactFlow state
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-
-  // Handle node click to navigate to appropriate page
-  const handleNodeClick = useCallback(
-    (_: React.MouseEvent, node: Node) => {
-      const nodeId = node.id;
-      const nodeType = node.data.node.type;
-      
-      if (onNodeClick) {
-        onNodeClick(nodeId, nodeType);
-        return;
-      }
-      
-      // Navigate based on node type
-      switch (nodeType) {
-        case 'note':
-          navigate(`/notes?note=${nodeId}`);
-          break;
-        case 'task':
-          navigate(`/tasks?task=${nodeId}`);
-          break;
-        case 'event':
-          navigate(`/calendar?event=${nodeId}`);
-          break;
-        default:
-          navigate(`/notes?note=${nodeId}`);
-      }
-    },
-    [navigate, onNodeClick]
-  );
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <p>Загрузка графа связей...</p>
-      </div>
-    );
-  }
+  // Hook up hotkeys
+  useGraphHotkeys({
+    onToggleNotes: toggleNotesVisibility,
+    onToggleTasks: toggleTasksVisibility,
+    onToggleEvents: toggleEventsVisibility,
+    onToggleIsolated: toggleIsolatedNodesVisibility,
+    onSearch: () => document.querySelector<HTMLInputElement>('input[name="graph-search"]')?.focus(),
+  });
 
   return (
-    <div className={nodeId ? "h-[400px] w-full" : "h-[calc(100vh-150px)] w-full"}>
-      <GraphToolbar
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedTags={selectedTags}
-        toggleTag={toggleTag}
-        allTags={allTags}
-        settings={settings}
-        toggleNodeTypeVisibility={toggleNodeTypeVisibility}
-        toggleIsolatedNodes={toggleIsolatedNodes}
-        setSelectedTags={setSelectedTags}
-        nodeId={nodeId}
-      />
+    <ReactFlow
+      nodes={nodes}
+      edges={edges}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
+      onNodeDragStop={onNodeDragStop}
+      nodeTypes={nodeTypes}
+      connectionLineType={ConnectionLineType.SmoothStep}
+      fitView
+    >
+      <Panel position="top-left" className="bg-background/80 backdrop-blur p-2 rounded-lg shadow-md">
+        <GraphSearchInput 
+          onSearch={setSearchQuery} 
+          placeholder="Поиск по графу..."
+        />
+      </Panel>
 
-      <div className="h-full w-full rounded-md border bg-background relative">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          nodeTypes={nodeTypes}
-          onNodeClick={handleNodeClick}
-          fitView
-          attributionPosition="bottom-right"
-        >
-          <Background />
-          <Controls />
-          <MiniMap
-            nodeStrokeWidth={3}
-            zoomable
-            pannable
-          />
-          
-          <GraphControlPanel
-            onZoomIn={hotKeyActions.zoomIn}
-            onZoomOut={hotKeyActions.zoomOut}
-            onFitView={hotKeyActions.fitView}
-            onReset={hotKeyActions.reset}
-          />
-        </ReactFlow>
-      </div>
-    </div>
+      <Panel position="top-right" className="bg-background/80 backdrop-blur p-2 rounded-lg shadow-md">
+        <GraphFilterPanel
+          showNotes={settings.showNotes}
+          showTasks={settings.showTasks}
+          showEvents={settings.showEvents}
+          showIsolatedNodes={settings.showIsolatedNodes}
+          availableTags={availableTags}
+          selectedTags={settings.selectedTags}
+          onToggleNotes={toggleNotesVisibility}
+          onToggleTasks={toggleTasksVisibility}
+          onToggleEvents={toggleEventsVisibility}
+          onToggleIsolatedNodes={toggleIsolatedNodesVisibility}
+          onUpdateSelectedTags={updateSelectedTags}
+        />
+      </Panel>
+
+      <Panel position="bottom-left" className="bg-background/80 backdrop-blur p-2 rounded-lg shadow-md">
+        <GraphControlPanel 
+          currentLayout={settings.layout} 
+          onLayoutChange={changeLayout} 
+        />
+      </Panel>
+
+      <Panel position="bottom-center" className="bg-background/80 backdrop-blur p-2 rounded-lg shadow-md">
+        <GraphToolbar highlightedNodes={highlightedNodes} />
+      </Panel>
+
+      <Controls />
+      <Background />
+    </ReactFlow>
   );
-};
-
-export default GraphView;
+}

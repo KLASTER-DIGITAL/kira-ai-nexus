@@ -1,105 +1,113 @@
 
-import { useState, useEffect } from "react";
-import { GraphViewSettings } from "@/hooks/notes/links/types";
-import { useLocalStorage } from "@/hooks/use-local-storage";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/context/auth";
+import { useState, useEffect } from 'react';
+import { useLocalStorage } from './use-local-storage';
+
+export type LayoutType = "force" | "radial" | "hierarchical";
+
+export interface NodePosition {
+  x: number;
+  y: number;
+}
+
+export interface GraphViewSettings {
+  showNotes: boolean;
+  showTasks: boolean;
+  showEvents: boolean;
+  showIsolatedNodes: boolean;
+  selectedTags: string[];
+  layout: LayoutType;
+  savedPositions: Record<string, NodePosition>;
+}
 
 const DEFAULT_SETTINGS: GraphViewSettings = {
   showNotes: true,
   showTasks: true,
   showEvents: true,
-  showIsolatedNodes: true,
+  showIsolatedNodes: false,
   selectedTags: [],
   layout: 'force',
-  savedPositions: {}
+  savedPositions: {},
 };
 
-export const useGraphSettings = (nodeId?: string) => {
-  const { user } = useAuth();
-  const [isLocalGraph, setIsLocalGraph] = useState(!!nodeId);
-  
-  // Use local storage for settings persistence between sessions
+export function useGraphSettings() {
+  // Load settings from localStorage or use defaults
   const [settings, setSettings] = useLocalStorage<GraphViewSettings>(
-    "graph-view-settings",
+    'graph-view-settings',
     DEFAULT_SETTINGS
   );
 
-  // State for node positions that can be saved
-  const [savedPositions, setSavedPositions] = useState<Record<string, {x: number, y: number}>>(
-    settings.savedPositions || {}
-  );
+  // Local state for current view settings that mirrors the persisted settings
+  const [viewSettings, setViewSettings] = useState<GraphViewSettings>(settings);
 
-  // Update saved positions in settings when they change
+  // Update local state when persisted settings change
   useEffect(() => {
-    if (Object.keys(savedPositions).length > 0) {
-      setSettings({
-        ...settings,
-        savedPositions
-      });
-    }
-  }, [savedPositions]);
+    setViewSettings(settings);
+  }, [settings]);
 
-  // Save node position
-  const saveNodePosition = (nodeId: string, position: {x: number, y: number}) => {
-    setSavedPositions(prev => ({
-      ...prev,
-      [nodeId]: position
-    }));
+  // Save node positions
+  const saveNodePositions = (positions: Record<string, NodePosition>) => {
+    setSettings({
+      ...settings,
+      savedPositions: {
+        ...settings.savedPositions,
+        ...positions,
+      },
+    });
   };
 
-  // Reset all saved positions
-  const resetPositions = () => {
-    setSavedPositions({});
+  // Toggle node type visibility
+  const toggleNotesVisibility = () => {
+    setSettings({
+      ...settings,
+      showNotes: !settings.showNotes,
+    });
   };
 
-  // Toggle visibility for different node types
-  const toggleNodeTypeVisibility = (type: 'notes' | 'tasks' | 'events') => {
-    setSettings((prev: GraphViewSettings) => ({
-      ...prev,
-      [`show${type.charAt(0).toUpperCase() + type.slice(1)}`]: !prev[`show${type.charAt(0).toUpperCase() + type.slice(1)}` as keyof GraphViewSettings]
-    }));
+  const toggleTasksVisibility = () => {
+    setSettings({
+      ...settings,
+      showTasks: !settings.showTasks,
+    });
   };
 
-  // Toggle showing isolated nodes
-  const toggleIsolatedNodes = () => {
-    setSettings((prev: GraphViewSettings) => ({
-      ...prev,
-      showIsolatedNodes: !prev.showIsolatedNodes
-    }));
+  const toggleEventsVisibility = () => {
+    setSettings({
+      ...settings,
+      showEvents: !settings.showEvents,
+    });
+  };
+
+  const toggleIsolatedNodesVisibility = () => {
+    setSettings({
+      ...settings,
+      showIsolatedNodes: !settings.showIsolatedNodes,
+    });
   };
 
   // Update selected tags
   const updateSelectedTags = (tags: string[]) => {
-    setSettings((prev: GraphViewSettings) => ({
-      ...prev,
-      selectedTags: tags
-    }));
+    setSettings({
+      ...settings,
+      selectedTags: tags,
+    });
   };
 
-  // Toggle between global and local graph view
-  const toggleGraphMode = () => {
-    setIsLocalGraph(prev => !prev);
-  };
-
-  // Change graph layout type
-  const changeLayout = (layout: 'force' | 'radial' | 'hierarchical') => {
-    setSettings((prev: GraphViewSettings) => ({
-      ...prev,
-      layout
-    }));
+  // Change layout type
+  const changeLayout = (layout: LayoutType) => {
+    setSettings({
+      ...settings,
+      layout,
+    });
   };
 
   return {
-    settings,
-    isLocalGraph,
-    savedPositions,
-    saveNodePosition,
-    resetPositions,
-    toggleNodeTypeVisibility,
-    toggleIsolatedNodes,
+    settings: viewSettings,
+    saveNodePositions,
+    toggleNotesVisibility,
+    toggleTasksVisibility,
+    toggleEventsVisibility,
+    toggleIsolatedNodesVisibility,
     updateSelectedTags,
-    toggleGraphMode,
-    changeLayout
+    changeLayout,
   };
-};
+}
