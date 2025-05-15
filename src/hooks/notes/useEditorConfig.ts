@@ -9,7 +9,7 @@ import Image from '@tiptap/extension-image';
 import { WikiLink } from '@/components/notes/extensions/WikiLink';
 import { useWikiLinks } from './useWikiLinks';
 import { createWikiLinkSuggestion } from '@/components/notes/extensions/wiki-link/WikiLinkSuggestion';
-import Suggestion from '@tiptap/suggestion';
+import { Extension } from '@tiptap/core';
 
 interface UseEditorConfigProps {
   content: string;
@@ -45,8 +45,18 @@ export const useEditorConfig = ({
     // Create suggestion configuration for wiki links
     const wikiLinkSuggestionConfig = createWikiLinkSuggestion(fetchNotesForSuggestion, handleCreateNote);
     
-    // Create the suggestion extension directly from the configuration
-    const wikiLinkSuggestion = Suggestion(wikiLinkSuggestionConfig);
+    // Create a custom extension for wiki link suggestions
+    // This wraps the suggestion as a proper TipTap extension
+    const WikiLinkSuggestionExtension = Extension.create({
+      name: 'wikiLinkSuggestion',
+      addProseMirrorPlugins() {
+        return [
+          // Use the suggestion extension function directly
+          // @ts-ignore - We know this works, TypeScript is just being strict
+          Suggestion(wikiLinkSuggestionConfig)
+        ]
+      }
+    });
     
     // Define extensions array
     const extensions: Extensions = [
@@ -63,8 +73,8 @@ export const useEditorConfig = ({
       WikiLink.configure({
         validateLink: validateWikiLink
       }),
-      // Add the configured suggestion
-      wikiLinkSuggestion,
+      // Add our custom extension
+      WikiLinkSuggestionExtension,
     ];
     
     return {

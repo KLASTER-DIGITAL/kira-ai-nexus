@@ -9,6 +9,8 @@ export interface WikiLinkItem {
   id: string;
   title: string;
   index: number;
+  type?: string;
+  isNew?: boolean;
 }
 
 type FetchWikiLinkSuggestions = (query: string) => Promise<WikiLinkItem[]>;
@@ -19,15 +21,15 @@ export const createWikiLinkSuggestion = (
   fetchSuggestions: FetchWikiLinkSuggestions,
   createNoteCallback: CreateWikiLink
 ) => {
-  // Return an object compatible with the Suggestion function
   return {
+    editor: undefined, // Will be set by TipTap when the extension is used
     char: '[[',
     allowSpaces: true,
     allowedPrefixes: [' ', '\n', null],
     startOfLine: false,
     
     // Create the extension when it's imported by TipTap
-    items: async ({ query }) => {
+    items: async ({ query, editor }) => {
       if (query.length === 0) return [];
       
       try {
