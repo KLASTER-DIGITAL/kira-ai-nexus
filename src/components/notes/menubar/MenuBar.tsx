@@ -9,7 +9,7 @@ import {
   HeadingsGroup, 
   MediaGroup, 
   HistoryGroup 
-} from "./MenuGroups";
+} from "./groups";
 
 const MenuBar: React.FC<MenuBarProps> = ({ editor, noteId }) => {
   if (!editor) {
