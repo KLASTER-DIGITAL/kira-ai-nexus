@@ -2,7 +2,7 @@
 import React from 'react';
 import { ReactRenderer } from '@tiptap/react';
 import tippy from 'tippy.js';
-import { SuggestionOptions } from '@tiptap/suggestion';
+import Suggestion from '@tiptap/suggestion';
 import WikiLinkSuggestList from './WikiLinkSuggestList';
 
 export interface WikiLinkItem {
@@ -18,9 +18,9 @@ type CreateWikiLink = (title: string) => Promise<{ id: string; title: string; ty
 export const createWikiLinkSuggestion = (
   fetchSuggestions: FetchWikiLinkSuggestions,
   createNoteCallback: CreateWikiLink
-): SuggestionOptions => {
-  return {
-    editor: null, // This will be populated by TipTap
+) => {
+  // Return the configured Suggestion extension directly
+  return Suggestion({
     char: '[[',
     allowSpaces: true,
     allowedPrefixes: [' ', '\n', null],
@@ -142,7 +142,7 @@ export const createWikiLinkSuggestion = (
         ])
         .run();
     }
-  };
+  });
 };
 
 // Export named component
