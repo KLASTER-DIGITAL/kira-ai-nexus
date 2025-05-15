@@ -2,13 +2,17 @@
 // Types related to note links and relationships
 
 /**
- * Represents a link between notes
+ * Represents a link between nodes (notes, tasks, events)
  */
-export interface NoteLink {
+export interface NodeLink {
   id: string;
-  nodes: {
+  source_id: string;
+  target_id: string;
+  type: string;
+  nodes?: {
     id: string;
     title: string;
+    type: string;
   };
 }
 
@@ -16,32 +20,69 @@ export interface NoteLink {
  * Result of a links query containing incoming and outgoing links
  */
 export interface LinksResult {
-  incomingLinks: NoteLink[];
-  outgoingLinks: NoteLink[];
+  incomingLinks: NodeLink[];
+  outgoingLinks: NodeLink[];
 }
 
 /**
- * Basic note information used for linking
+ * Basic node information used for linking
  */
-export interface NoteBasicInfo {
+export interface NodeBasicInfo {
   id: string;
   title: string;
   type: string;
   index?: number;
+  tags?: string[];
+  color?: string;
+  content?: string;
 }
 
 /**
- * Parameters for creating links between notes
+ * Parameters for creating links between nodes
  */
 export interface CreateLinkParams {
   sourceId: string;
   targetId: string;
+  type?: string;
 }
 
 /**
- * Parameters for updating links when notes are renamed
+ * Parameters for updating links when nodes are renamed
  */
 export interface UpdateLinksParams {
   oldTitle: string;
   newTitle: string;
+}
+
+/**
+ * Graph node shape for visualization
+ */
+export enum NodeShape {
+  NOTE = 'circle',
+  TASK = 'square',
+  EVENT = 'triangle',
+  DEFAULT = 'circle'
+}
+
+/**
+ * Graph view settings
+ */
+export interface GraphViewSettings {
+  showNotes: boolean;
+  showTasks: boolean;
+  showEvents: boolean;
+  showIsolatedNodes: boolean;
+  selectedTags: string[];
+  layout: 'force' | 'radial' | 'hierarchical';
+  savedPositions?: Record<string, {x: number, y: number}>;
+}
+
+/**
+ * Graph view filter options
+ */
+export interface GraphViewFilters {
+  nodeTypes: string[];
+  searchTerm: string;
+  tags: string[];
+  showIsolatedNodes: boolean;
 }

@@ -1,121 +1,144 @@
-
 import React from "react";
-import { NavLink, useLocation } from "react-router-dom";
-import { 
-  LayoutDashboard,
-  MessageCircle, 
-  CheckSquare, 
-  FileText, 
-  Calendar,
-  Settings,
-  User,
-  Shield,
-  Bot,
-  HelpCircle
-} from "lucide-react";
-import { useAuth } from '@/context/auth';
-import { cn } from "@/lib/utils";
-import { USER_ROLES } from "@/constants";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import { ModeToggle } from "@/components/ModeToggle";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/context/auth";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
+import { Notes, CheckSquare, Calendar, MessageSquare, BarChart3, Network, GitFork } from "lucide-react";
 
-interface MenuItem {
-  icon: React.ElementType;
-  label: string;
-  path: string;
-  role?: 'user' | 'superadmin' | 'any';
+interface NavItemProps {
+  title: string;
+  href: string;
+  icon: React.ReactNode;
+  color: string;
 }
 
-const menuItems: MenuItem[] = [
-  { icon: LayoutDashboard, label: "Дашборд", path: "/dashboard/user", role: USER_ROLES.USER as 'user' },
-  { icon: Shield, label: "Админ панель", path: "/dashboard/admin", role: USER_ROLES.SUPER_ADMIN as 'superadmin' },
-  { icon: Bot, label: "Настройки AI", path: "/ai-settings", role: USER_ROLES.SUPER_ADMIN as 'superadmin' },
-  { icon: MessageCircle, label: "Чат", path: "/chat", role: 'any' },
-  { icon: CheckSquare, label: "Задачи", path: "/tasks", role: 'any' },
-  { icon: FileText, label: "Заметки", path: "/notes", role: 'any' },
-  { icon: Calendar, label: "Календарь", path: "/calendar", role: 'any' },
-  { icon: HelpCircle, label: "Помощь", path: "/help", role: 'any' },
+const NavItem: React.FC<NavItemProps> = ({ title, href, icon, color }) => {
+  return (
+    <li>
+      <Link
+        to={href}
+        className="flex items-center space-x-2 p-2 text-sm font-medium hover:underline"
+      >
+        <span className={color}>{icon}</span>
+        <span>{title}</span>
+      </Link>
+    </li>
+  );
+};
+
+const navItems = [
+  {
+    title: "Дашборд",
+    href: "/dashboard",
+    icon: <BarChart3 className="h-5 w-5" />,
+    color: "text-violet-500",
+  },
+  {
+    title: "Заметки",
+    href: "/notes",
+    icon: <Notes className="h-5 w-5" />,
+    color: "text-emerald-500",
+  },
+  {
+    title: "Задачи",
+    href: "/tasks",
+    icon: <CheckSquare className="h-5 w-5" />,
+    color: "text-blue-500",
+  },
+  {
+    title: "Календарь",
+    href: "/calendar",
+    icon: <Calendar className="h-5 w-5" />,
+    color: "text-amber-500",
+  },
+  {
+    title: "Чат",
+    href: "/chat",
+    icon: <MessageSquare className="h-5 w-5" />,
+    color: "text-pink-500",
+  },
+  {
+    title: "Граф связей",
+    href: "/graph",
+    icon: <Network className="h-5 w-5" />,
+    color: "text-purple-500",
+  },
 ];
 
-interface SidebarProps {
-  collapsed?: boolean;
-}
+const Sidebar: React.FC = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
-const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
-  const location = useLocation();
-  const { isSuperAdmin } = useAuth();
-  
-  // Filter menu items based on user role
-  const filteredMenuItems = menuItems.filter(item => {
-    if (item.role === 'superadmin' && !isSuperAdmin()) {
-      return false;
-    }
-    return true;
-  });
+  const handleLogout = async () => {
+    await logout();
+    navigate("/auth");
+  };
 
   return (
-    <div
-      className={`
-        h-screen bg-sidebar flex flex-col text-sidebar-foreground
-        ${collapsed ? "w-[70px]" : "w-[240px]"}
-        transition-all duration-300 border-r border-sidebar-border
-      `}
-    >
-      <div className="p-4 border-b border-sidebar-border flex items-center justify-center">
-        <NavLink to="/" className="flex items-center gap-2">
-          <div className="bg-kira-purple w-10 h-10 rounded-md flex items-center justify-center text-white font-bold text-xl">
-            K
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <GitFork className="h-[1.2rem] w-[1.2rem] rotate-90" />
+          <span className="sr-only">Открыть боковое меню</span>
+        </Button>
+      </SheetTrigger>
+      <SheetContent className="w-full sm:w-64">
+        <SheetHeader className="text-left">
+          <SheetTitle>Меню</SheetTitle>
+          <SheetDescription>
+            Здесь вы можете управлять своей учетной записью и настройками.
+          </SheetDescription>
+        </SheetHeader>
+        <Separator />
+        <div className="mt-4">
+          <div className="mb-4 flex items-center space-x-4">
+            <Avatar>
+              <AvatarImage src="https://github.com/shadcn.png" />
+              <AvatarFallback>SC</AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="text-sm font-medium leading-none">{user?.email}</p>
+              <p className="text-sm text-muted-foreground">
+                {user?.email ? "Подключен" : "Не подключен"}
+              </p>
+            </div>
           </div>
-          {!collapsed && (
-            <span className="text-xl font-bold text-sidebar-foreground">KIRA AI</span>
-          )}
-        </NavLink>
-      </div>
-
-      <div className="mt-6 px-2 flex-1">
-        {filteredMenuItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) => cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-md mb-1 transition-colors",
-              isActive 
-                ? "bg-sidebar-accent text-sidebar-foreground" 
-                : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-            )}
-            end
-          >
-            <item.icon size={20} />
-            {!collapsed && <span>{item.label}</span>}
-          </NavLink>
-        ))}
-      </div>
-
-      <div className="mt-auto px-2 mb-4">
-        <NavLink
-          to="/settings"
-          className={({ isActive }) => cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-md mb-1 transition-colors",
-            isActive 
-              ? "bg-sidebar-accent text-sidebar-foreground" 
-              : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-          )}
-        >
-          <Settings size={20} />
-          {!collapsed && <span>Настройки</span>}
-        </NavLink>
-        <NavLink
-          to="/profile"
-          className={({ isActive }) => cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors",
-            isActive 
-              ? "bg-sidebar-accent text-sidebar-foreground" 
-              : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-          )}
-        >
-          <User size={20} />
-          {!collapsed && <span>Профиль</span>}
-        </NavLink>
-      </div>
-    </div>
+          <Separator />
+          <nav className="grid gap-6">
+            <ul className="grid gap-1">
+              {navItems.map((item) => (
+                <NavItem
+                  key={item.title}
+                  title={item.title}
+                  href={item.href}
+                  icon={item.icon}
+                  color={item.color}
+                />
+              ))}
+            </ul>
+          </nav>
+          <Separator />
+          <div className="mt-4 flex flex-col space-y-2">
+            <ModeToggle />
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Выйти
+            </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 };
 
