@@ -40,7 +40,7 @@ export const useAuthProvider = (): AuthContextProps => {
     // Auth methods
     signUp,
     signIn,
-    signOut,
+    signOut, // The type is now correctly matched in the interface
     requestPasswordReset,
     resetPassword: async (newPassword: string) => {
       const { error } = await resetPassword(newPassword);

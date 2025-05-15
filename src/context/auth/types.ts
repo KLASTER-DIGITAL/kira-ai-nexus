@@ -1,26 +1,29 @@
 
-import { Session, User } from '@supabase/supabase-js';
-import { UserProfile, UserRole } from '@/types/auth';
+import { Session, User } from "@supabase/supabase-js";
+import { UserProfile } from "@/types/auth";
 
-/**
- * Authentication state interface
- */
 export interface AuthState {
+  session: Session | null;
+  user: User | null;
+  profile: UserProfile | null;
+  loading: boolean;
+}
+
+export interface AuthContextProps {
+  // Auth state
   session: Session | null;
   user: User | null;
   profile: UserProfile | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-}
 
-/**
- * Props for the authentication context
- */
-export interface AuthContextProps extends AuthState {
-  signUp: (email: string, password: string) => Promise<{ error: any | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: any | null }>;
-  signOut: () => Promise<void>;
-  requestPasswordReset: (email: string) => Promise<{ error: any | null }>;
-  resetPassword: (newPassword: string) => Promise<{ error: any | null }>;
+  // Auth methods
+  signUp: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
+  signOut: () => Promise<{ error: any }>; // Updated to match implementation
+  requestPasswordReset: (email: string) => Promise<{ error: any }>;
+  resetPassword: (newPassword: string) => Promise<{ error: any }>;
+  
+  // Role checks
   isSuperAdmin: () => boolean;
 }
