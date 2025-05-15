@@ -1,21 +1,18 @@
 
+/**
+ * @deprecated This file is maintained for backward compatibility.
+ * Please import directly from '@/hooks/notes' for future development.
+ */
+
 import { Note } from "@/types/notes";
 import { 
   useNotes as useNotesHook, 
   useNotesQuery, 
-  PaginatedNotesResult 
-} from "./notes/useNotesQuery";
-import { useNotesMutations } from "./notes/useNotesMutations";
-import { NoteFilter, SortOption } from "./notes/types";
+  NotesQueryOptions,
+  useNotesMutations
+} from "./notes";
 
-export interface NotesQueryOptions {
-  filter?: NoteFilter;
-  page?: number;
-  pageSize?: number;
-  sort?: SortOption;
-}
-
-// Re-export the notes hook functionality
+// Re-export the notes hook functionality with a simplified interface
 export const useNotes = (options: NotesQueryOptions = {}) => {
   const result = useNotesHook(options);
   const { createNote, updateNote, deleteNote } = useNotesMutations();
@@ -32,3 +29,6 @@ export const useNotes = (options: NotesQueryOptions = {}) => {
     deleteNote
   };
 };
+
+// Re-export needed types
+export type { NotesQueryOptions } from "./notes";

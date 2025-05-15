@@ -1,6 +1,7 @@
 
 import { UserProfile } from '@/types/auth';
 import { supabase } from "@/integrations/supabase/client";
+import { Location } from 'react-router-dom';
 
 /**
  * Cleans up all authentication-related data from browser storage
@@ -68,18 +69,37 @@ export const isSuperAdmin = (profile: UserProfile | null): boolean => {
 
 /**
  * Determines the appropriate redirect path based on user role
+ * @param profile User profile data
+ * @param location Current location from react-router
+ * @param isAuthenticated Authentication state flag
+ * @returns Redirect path or null if no redirection needed
  */
-export const getRedirectPath = (profile: UserProfile | null): string => {
-  if (!profile) {
-    console.log("getRedirectPath: No profile, redirecting to /auth");
+export const getRedirectPath = (
+  profile: UserProfile | null, 
+  location: Location,
+  isAuthenticated: boolean
+): string | null => {
+  // If user is not authenticated, redirect to auth page
+  if (!isAuthenticated) {
     return '/auth';
   }
-  
-  if (profile.role === 'superadmin') {
-    console.log("getRedirectPath: User is superadmin, redirecting to /dashboard/admin");
+
+  // SPECIAL CASE: Never redirect superadmins from AI Settings page
+  if (profile?.role === 'superadmin' && location.pathname === '/ai-settings') {
+    return null; // Don't redirect from this page
+  }
+
+  // Redirect superadmin from user dashboard to admin dashboard
+  if (profile?.role === 'superadmin' && location.pathname === '/dashboard/user') {
     return '/dashboard/admin';
-  } else {
-    console.log("getRedirectPath: User is regular user, redirecting to /dashboard/user");
+  }
+
+  // Redirect non-superadmin from admin areas
+  if (profile?.role !== 'superadmin' && 
+      (location.pathname.includes('/dashboard/admin') || location.pathname === '/ai-settings')) {
     return '/dashboard/user';
   }
+
+  // No redirection needed
+  return null;
 };

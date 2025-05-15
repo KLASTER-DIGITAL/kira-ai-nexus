@@ -1,5 +1,4 @@
 
-// Re-export wiki link suggestion functionality from the refactored modules
-export { wikiLinkPluginKey } from './wiki-link/types';
-export { createWikiLinkSuggestion } from './wiki-link/createWikiLinkSuggestion';
-export { default as WikiLinkSuggestList } from './wiki-link/WikiLinkSuggestList';
+// This file is kept for backward compatibility
+// It re-exports the functionality from the restructured wiki-link directory
+export * from './wiki-link';

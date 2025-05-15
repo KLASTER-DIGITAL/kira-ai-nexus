@@ -10,6 +10,9 @@ import {
 } from './authActions';
 import { isSuperAdmin as checkIsSuperAdmin } from './utils';
 
+/**
+ * Hook that provides authentication functionality to the AuthContext
+ */
 export const useAuthProvider = () => {
   const authState = useAuthState();
   const navigate = useNavigate();

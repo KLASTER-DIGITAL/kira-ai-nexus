@@ -2,6 +2,9 @@
 import { Session, User } from '@supabase/supabase-js';
 import { UserProfile, UserRole } from '@/types/auth';
 
+/**
+ * Authentication state interface
+ */
 export interface AuthState {
   session: Session | null;
   user: User | null;
@@ -10,6 +13,9 @@ export interface AuthState {
   isAuthenticated: boolean;
 }
 
+/**
+ * Props for the authentication context
+ */
 export interface AuthContextProps extends AuthState {
   signUp: (email: string, password: string) => Promise<{ error: any | null }>;
   signIn: (email: string, password: string) => Promise<{ error: any | null }>;
