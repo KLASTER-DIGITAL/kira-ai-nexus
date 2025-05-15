@@ -1,7 +1,5 @@
 
-import React from 'react';
-
-// Re-export from the separate files
+// Re-export from the separate files for backward compatibility
 export * from './types';
 export * from './createWikiLinkSuggestion';
 export { default as WikiLinkSuggestList } from './WikiLinkSuggestList';

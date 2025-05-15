@@ -1,7 +1,8 @@
 
-/**
- * Types for wiki link suggestions
- */
+import { PluginKey } from '@tiptap/pm/state';
+
+// Create a suggestion plugin key
+export const wikiLinkPluginKey = new PluginKey('wiki-link-suggestion');
 
 export interface WikiLinkItem {
   id: string;
@@ -11,6 +12,7 @@ export interface WikiLinkItem {
   isNew?: boolean;
 }
 
-export type FetchWikiLinkSuggestions = (query: string) => Promise<WikiLinkItem[]>;
-export type CreateWikiLink = (title: string) => Promise<{ id: string; title: string; type: string }>;
-
+export interface WikiLinkSuggestionListProps {
+  items: WikiLinkItem[];
+  command: (item: WikiLinkItem) => void;
+}

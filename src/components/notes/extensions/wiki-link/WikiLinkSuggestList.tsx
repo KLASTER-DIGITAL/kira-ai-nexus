@@ -1,67 +1,59 @@
 
-import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
-import { WikiLinkItem } from './WikiLinkSuggestion';
+import { useEffect, useState } from 'react';
+import { WikiLinkItem } from './types';
 
 interface WikiLinkSuggestListProps {
   items: WikiLinkItem[];
   command: (item: WikiLinkItem) => void;
 }
 
-export default forwardRef((props: WikiLinkSuggestListProps, ref) => {
-  const [selectedIndex, setSelectedIndex] = useState(0);
+class WikiLinkSuggestionList {
+  element: HTMLElement;
+  items: WikiLinkItem[];
+  command: (item: WikiLinkItem) => void;
 
-  const selectItem = (index: number) => {
-    const item = props.items[index];
-    if (item) {
-      props.command(item);
-    }
-  };
-
-  const onKeyUp = () => {
-    setSelectedIndex((selectedIndex + props.items.length - 1) % props.items.length);
-  };
-
-  const onKeyDown = () => {
-    setSelectedIndex((selectedIndex + 1) % props.items.length);
-  };
-
-  const onEnter = () => {
-    selectItem(selectedIndex);
-  };
-
-  useImperativeHandle(ref, () => ({
-    onKeyUp,
-    onKeyDown,
-    onEnter,
-  }));
-
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [props.items]);
-
-  if (props.items.length === 0) {
-    return (
-      <div className="wiki-suggestion">
-        <div className="wiki-suggestion-item">
-          <div className="wiki-suggestion-no-results">
-            Нет результатов. Нажмите Enter, чтобы создать новую заметку.
-          </div>
-        </div>
-      </div>
-    );
+  constructor({ items, command }: WikiLinkSuggestListProps) {
+    this.items = items;
+    this.command = command;
+    this.element = document.createElement('div');
+    this.element.className = 'tippy-box wiki-links-dropdown';
+    this.updateItems(items);
   }
 
-  return (
-    <div className="wiki-suggestion">
-      {props.items.map((item, index) => (
-        <div
-          key={item.id}
-          className={`wiki-suggestion-item ${index === selectedIndex ? 'is-selected' : ''}`}
-          onClick={() => selectItem(index)}
-        >
-          <div className="wiki-suggestion-title">{item.title}</div>
+  selectItem(index: number) {
+    const item = this.items[index];
+    if (item) {
+      this.command(item);
+    }
+  }
+
+  updateItems(items: WikiLinkItem[]) {
+    this.items = items;
+    // Update the DOM to reflect new items
+    this.element.innerHTML = `
+      <div class="tippy-content">
+        <div class="items">
+          ${items.length > 0 ? items.map(item => `
+            <button class="item ${item.isNew ? 'new-item' : ''}" data-index="${item.index}">
+              ${item.isNew ? '+ Create' : ''} ${item.title}
+            </button>
+          `).join('') : '<div class="no-results">No matching notes found</div>'}
         </div>
-      ))}
-    </div>
-  );
-});
+      </div>
+    `;
+
+    // Add click event listeners
+    const buttons = this.element.querySelectorAll('button');
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const index = parseInt(button.dataset.index || '0', 10);
+        const item = this.items[index];
+        if (item) {
+          this.command(item);
+        }
+      });
+    });
+  }
+}
+
+export default WikiLinkSuggestionList;

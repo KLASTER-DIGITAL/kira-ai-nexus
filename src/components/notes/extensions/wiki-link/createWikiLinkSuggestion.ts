@@ -1,51 +1,71 @@
 
-import { ReactRenderer } from '@tiptap/react';
 import tippy from 'tippy.js';
-import WikiLinkSuggestList from './WikiLinkSuggestList';
-import { FetchWikiLinkSuggestions, CreateWikiLink } from './types';
+import { wikiLinkPluginKey } from './types';
+import WikiLinkSuggestionList from './WikiLinkSuggestList';
+import { WikiLinkItem } from './types';
 
-/**
- * Creates a wiki link suggestion configuration for TipTap
- */
 export const createWikiLinkSuggestion = (
-  fetchSuggestions: FetchWikiLinkSuggestions,
-  createNoteCallback: CreateWikiLink
+  fetchNotes: (query: string) => Promise<WikiLinkItem[]>,
+  onCreateNote?: (title: string) => Promise<WikiLinkItem>
 ) => {
   return {
-    editor: undefined, // Will be set by TipTap when the extension is used
     char: '[[',
     allowSpaces: true,
-    allowedPrefixes: [' ', '\n', null],
     startOfLine: false,
+    isolating: true,
+    pluginKey: wikiLinkPluginKey,
     
-    // Fetch suggestions based on query
-    items: async ({ query, editor }) => {
-      if (query.length === 0) return [];
-      
+    items: async ({ query }: { query: string }) => {
+      if (!query) {
+        return [];
+      }
+
       try {
-        const items = await fetchSuggestions(query);
-        return items;
+        // Fetch existing notes matching the query
+        const items = await fetchNotes(query);
+        
+        // Map items with indices
+        const mappedItems = items.map((item, index) => ({
+          ...item,
+          index,
+        }));
+        
+        // If we have no exact match and we can create notes, add a "create new" option
+        if (onCreateNote && 
+            query.length >= 2 && 
+            !items.some(note => note.title.toLowerCase() === query.toLowerCase())) {
+          mappedItems.push({
+            id: `new-${query}`,
+            title: query,
+            index: mappedItems.length,
+            type: 'note',
+            isNew: true,
+          });
+        }
+        
+        return mappedItems;
       } catch (error) {
         console.error('Error fetching wiki link suggestions:', error);
         return [];
       }
     },
-    
-    // Render the suggestion dropdown
-    render() {
-      let component: ReactRenderer;
-      let popup: any;
-      
+
+    render: () => {
+      let component: WikiLinkSuggestionList | null = null;
+      let popup: any = null;
+
       return {
-        onStart: (props) => {
-          component = new ReactRenderer(WikiLinkSuggestList, {
-            props: {
-              ...props,
-              createNoteCallback
-            },
-            editor: props.editor,
+        onStart: (props: any) => {
+          component = new WikiLinkSuggestionList({
+            items: props.items,
+            command: props.command,
           });
-          
+
+          // Create tippy instance
+          if (!props.clientRect) {
+            return;
+          }
+
           popup = tippy('body', {
             getReferenceClientRect: props.clientRect,
             appendTo: () => document.body,
@@ -54,88 +74,90 @@ export const createWikiLinkSuggestion = (
             interactive: true,
             trigger: 'manual',
             placement: 'bottom-start',
+            theme: 'wiki-link-suggestion',
           });
         },
-        
-        onUpdate(props) {
-          component.updateProps({
-            ...props,
-            createNoteCallback
-          });
+
+        onUpdate: (props: any) => {
+          if (!component) return;
           
-          popup[0].setProps({
-            getReferenceClientRect: props.clientRect,
-          });
+          component.updateItems(props.items);
+
+          if (!props.clientRect) {
+            return;
+          }
+
+          if (popup && popup[0]) {
+            popup[0].setProps({
+              getReferenceClientRect: props.clientRect,
+            });
+          }
         },
-        
-        onKeyDown(props) {
+
+        onKeyDown: (props: { event: KeyboardEvent }) => {
           if (props.event.key === 'Escape') {
-            popup[0].hide();
+            if (popup && popup[0]) {
+              popup[0].hide();
+            }
             return true;
           }
-          
-          // Type-safe reference access
-          const ref = component.ref as any;
-          if (ref && typeof ref.onKeyDown === 'function') {
-            return ref.onKeyDown(props);
-          }
-          
-          return false;
-        },
-        
-        onKeyUp(props) {
-          // Type-safe reference access
-          const ref = component.ref as any;
-          if (ref && typeof ref.onKeyUp === 'function') {
-            return ref.onKeyUp(props);
-          }
-          
+
           return false;
         },
 
-        onExit() {
+        onExit: () => {
           if (popup && popup[0]) {
             popup[0].destroy();
           }
-          if (component) {
-            component.destroy();
-          }
+          component = null;
         },
       };
     },
-    
-    // Execute command when a suggestion is selected
-    command: ({ editor, range, props }) => {
-      const nodeAfter = editor.view.state.selection.$to.nodeAfter;
-      const text = nodeAfter?.text ?? '';
-      
-      let to = range.to;
-      let removeText = ']]';
-      
-      if (text && text.startsWith(']]')) {
-        to += 2;
-        removeText = '';
+
+    command: async ({ editor, range, props }: any) => {
+      // Check if this is a new note to be created
+      if (props.isNew && onCreateNote) {
+        try {
+          // Create the new note and get its ID
+          const newNote = await onCreateNote(props.title);
+          
+          // Delete the suggestion placeholder
+          editor
+            .chain()
+            .deleteRange(range)
+            .setWikiLink({
+              href: newNote.id,
+              label: newNote.title,
+              isValid: true
+            })
+            .run();
+        } catch (error) {
+          console.error('Error creating new note:', error);
+          
+          // If creation fails, insert as invalid link
+          editor
+            .chain()
+            .deleteRange(range)
+            .setWikiLink({
+              href: props.title,
+              label: props.title,
+              isValid: false
+            })
+            .run();
+        }
+      } else {
+        // Regular link to existing note
+        // Delete the suggestion placeholder
+        editor
+          .chain()
+          .deleteRange(range)
+          .setWikiLink({
+            href: props.id,
+            label: props.title,
+            isValid: true
+          })
+          .run();
       }
-      
-      // Replace the suggestion with actual wiki link
-      editor
-        .chain()
-        .focus()
-        .deleteRange({ from: range.from, to })
-        .insertContent([
-          {
-            type: 'wikiLink',
-            attrs: {
-              href: props.id,
-              title: props.title
-            }
-          },
-          {
-            type: 'text',
-            text: removeText
-          }
-        ])
-        .run();
-    }
+    },
   };
 };

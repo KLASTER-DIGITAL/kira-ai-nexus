@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { Editor, Extensions } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -9,6 +10,7 @@ import { WikiLink } from '@/components/notes/extensions/WikiLink';
 import { useWikiLinks } from './useWikiLinks';
 import { createWikiLinkSuggestion } from '@/components/notes/extensions/wiki-link/createWikiLinkSuggestion';
 import { Extension } from '@tiptap/core';
+import { Suggestion } from '@tiptap/suggestion';
 
 interface UseEditorConfigProps {
   content: string;
@@ -51,7 +53,6 @@ export const useEditorConfig = ({
       addProseMirrorPlugins() {
         return [
           // Use the suggestion extension function directly
-          // @ts-ignore - We know this works, TypeScript is just being strict
           Suggestion(wikiLinkSuggestionConfig)
         ]
       }
