@@ -1,8 +1,7 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-interface NoteLink {
+export interface NoteLink {
   id: string;
   nodes: {
     id: string;
@@ -10,7 +9,7 @@ interface NoteLink {
   };
 }
 
-interface LinksResult {
+export interface LinksResult {
   incomingLinks: NoteLink[];
   outgoingLinks: NoteLink[];
 }
