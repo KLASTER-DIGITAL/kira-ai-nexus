@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { Editor, Extensions } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -8,7 +7,7 @@ import Underline from '@tiptap/extension-underline';
 import Image from '@tiptap/extension-image';
 import { WikiLink } from '@/components/notes/extensions/WikiLink';
 import { useWikiLinks } from './useWikiLinks';
-import { createWikiLinkSuggestion } from '@/components/notes/extensions/wiki-link/WikiLinkSuggestion';
+import { createWikiLinkSuggestion } from '@/components/notes/extensions/wiki-link/createWikiLinkSuggestion';
 import { Extension } from '@tiptap/core';
 
 interface UseEditorConfigProps {

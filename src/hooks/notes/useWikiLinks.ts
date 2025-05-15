@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import { Editor } from '@tiptap/react';
 import { useNotesMutations } from './useNotesMutations';
-import { WikiLinkItem } from '@/components/notes/extensions/wiki-link/WikiLinkSuggestion';
+import { WikiLinkItem } from '@/components/notes/extensions/wiki-link/types';
 import { useNotes } from "../useNotes";
 
 /**
