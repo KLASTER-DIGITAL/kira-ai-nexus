@@ -1,6 +1,7 @@
 
 import { useNavigate } from 'react-router-dom';
 import { useAuthState } from './useAuthState';
+import { AuthContextProps } from './types';
 import { 
   signUp,
   signIn,
@@ -13,7 +14,7 @@ import { isSuperAdmin as checkIsSuperAdmin } from './utils';
 /**
  * Hook that provides authentication functionality to the AuthContext
  */
-export const useAuthProvider = () => {
+export const useAuthProvider = (): AuthContextProps => {
   const authState = useAuthState();
   const navigate = useNavigate();
 
@@ -29,7 +30,14 @@ export const useAuthProvider = () => {
   };
 
   return {
-    ...authState,
+    // Auth state
+    session: authState.session,
+    user: authState.user,
+    profile: authState.profile,
+    isLoading: authState.loading,
+    isAuthenticated: !!authState.user,
+    
+    // Auth methods
     signUp,
     signIn,
     signOut,

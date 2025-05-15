@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
-import ProtectedRoute from './components/auth/ProtectedRoute';
+import { ProtectedRoute } from './components/features/auth';
 
 // Import pages from the new structure
 import {

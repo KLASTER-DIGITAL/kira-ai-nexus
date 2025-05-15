@@ -25,9 +25,9 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  { icon: LayoutDashboard, label: "Дашборд", path: "/dashboard/user", role: USER_ROLES.USER },
-  { icon: Shield, label: "Админ панель", path: "/dashboard/admin", role: USER_ROLES.SUPER_ADMIN },
-  { icon: Bot, label: "Настройки AI", path: "/ai-settings", role: USER_ROLES.SUPER_ADMIN },
+  { icon: LayoutDashboard, label: "Дашборд", path: "/dashboard/user", role: USER_ROLES.USER as 'user' },
+  { icon: Shield, label: "Админ панель", path: "/dashboard/admin", role: USER_ROLES.SUPER_ADMIN as 'superadmin' },
+  { icon: Bot, label: "Настройки AI", path: "/ai-settings", role: USER_ROLES.SUPER_ADMIN as 'superadmin' },
   { icon: MessageCircle, label: "Чат", path: "/chat", role: 'any' },
   { icon: CheckSquare, label: "Задачи", path: "/tasks", role: 'any' },
   { icon: FileText, label: "Заметки", path: "/notes", role: 'any' },
