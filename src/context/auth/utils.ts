@@ -79,14 +79,19 @@ export const getRedirectPath = (
   location: Location,
   isAuthenticated: boolean
 ): string | null => {
-  // If user is not authenticated, redirect to auth page
+  // If user is not authenticated and not on auth or reset password page, redirect to auth
   if (!isAuthenticated) {
-    return '/auth';
+    if (location.pathname !== '/auth' && location.pathname !== '/reset-password' && location.pathname !== '/') {
+      return '/auth';
+    }
+    return null; // Don't redirect if already on auth page, reset password page or home page
   }
+
+  // Handle authenticated user redirections
 
   // SPECIAL CASE: Never redirect superadmins from AI Settings page
   if (profile?.role === 'superadmin' && location.pathname === '/ai-settings') {
-    return null; // Don't redirect from this page
+    return null;
   }
 
   // Redirect superadmin from user dashboard to admin dashboard
@@ -100,6 +105,5 @@ export const getRedirectPath = (
     return '/dashboard/user';
   }
 
-  // No redirection needed
-  return null;
+  return null; // No redirection needed
 };

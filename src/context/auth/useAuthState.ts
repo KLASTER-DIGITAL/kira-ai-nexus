@@ -18,6 +18,7 @@ export const useAuthState = () => {
   // Get user profile from database
   const fetchProfile = async (userId: string) => {
     try {
+      console.log("Fetching profile for user:", userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -28,7 +29,8 @@ export const useAuthState = () => {
         console.error('Error fetching profile:', error);
         return null;
       }
-
+      
+      console.log("Profile fetched successfully:", data);
       return data;
     } catch (error) {
       console.error('Exception fetching profile:', error);
@@ -116,25 +118,41 @@ export const useAuthState = () => {
 
   // Initialize auth state and set up listener
   useEffect(() => {
-    // Setting up auth state change listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      // Fetch profile on auth change if user is logged in
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
-        setProfile(profile);
-      } else {
-        setProfile(null);
-      }
-      
-      setLoading(false);
-    });
-
+    console.log("Setting up auth state listeners");
+    let authListenerUnsubscribe: (() => void) | undefined;
+    
     // Get initial session
     const initializeAuth = async () => {
       try {
+        console.log("Initializing auth state");
+        setLoading(true);
+        
+        // Setting up auth state change listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          console.log("Auth state changed:", event, session?.user?.email);
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          // Fetch profile on auth change if user is logged in
+          if (session?.user) {
+            // Use setTimeout to avoid potential deadlocks
+            setTimeout(async () => {
+              const profile = await fetchProfile(session.user.id);
+              console.log("Setting profile after auth change:", profile);
+              setProfile(profile);
+            }, 0);
+          } else {
+            setProfile(null);
+          }
+          
+          setLoading(false);
+        });
+        
+        authListenerUnsubscribe = () => {
+          subscription.unsubscribe();
+        };
+
+        // Get current session
         const { data: { session } } = await supabase.auth.getSession();
         
         setSession(session);
@@ -142,6 +160,7 @@ export const useAuthState = () => {
         
         if (session?.user) {
           const profile = await fetchProfile(session.user.id);
+          console.log("Setting profile on init:", profile);
           setProfile(profile);
         }
       } catch (error) {
@@ -154,13 +173,16 @@ export const useAuthState = () => {
       } finally {
         setLoading(false);
         setInitialized(true);
+        console.log("Auth initialization complete");
       }
     };
 
     initializeAuth();
 
     return () => {
-      authListener.subscription.unsubscribe();
+      if (authListenerUnsubscribe) {
+        authListenerUnsubscribe();
+      }
     };
   }, []);
 

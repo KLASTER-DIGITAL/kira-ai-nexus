@@ -3,6 +3,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
 import { LoadingScreen } from '@/components/features/auth';
+import { getRedirectPath } from '@/context/auth/utils';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -21,26 +22,27 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Show loading screen while auth state is being determined
   if (isLoading) {
+    console.log("Auth is loading, showing LoadingScreen");
     return <LoadingScreen />;
   }
 
-  // Redirect to auth page if not authenticated
-  if (!isAuthenticated) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
-  }
+  // Check for redirection based on auth state and role
+  const redirectPath = getRedirectPath(profile, location, isAuthenticated);
   
-  // Special case: Allow superadmins to access AI Settings without redirection
-  if (profile?.role === 'superadmin' && location.pathname === '/ai-settings') {
-    return <>{children}</>;
+  if (redirectPath) {
+    console.log(`Redirecting to ${redirectPath} from ${location.pathname}`);
+    return <Navigate to={redirectPath} state={{ from: location }} replace />;
   }
   
   // Role-based access check (if a specific role is required)
   if (requiredRole && profile?.role !== requiredRole) {
     const fallbackPath = profile?.role === 'superadmin' ? '/dashboard/admin' : '/dashboard/user';
+    console.log(`Role check failed. Required: ${requiredRole}, User has: ${profile?.role}, redirecting to ${fallbackPath}`);
     return <Navigate to={fallbackPath} replace />;
   }
 
   // Default authorization - allow access
+  console.log(`Access granted to ${location.pathname}`);
   return <>{children}</>;
 };
 

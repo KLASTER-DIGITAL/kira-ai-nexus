@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
 import {
   Form,
   FormControl,
@@ -48,12 +47,28 @@ const AuthPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { signIn, signUp, requestPasswordReset, isAuthenticated } = useAuth();
-
+  const { signIn, signUp, requestPasswordReset, isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
   // Reset error when changing tabs
   useEffect(() => {
     setError(null);
   }, [activeTab]);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      console.log("User is authenticated, redirecting from auth page");
+      const from = location.state?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, location.state, isLoading]);
+
+  // Don't render anything while checking auth
+  if (isLoading) {
+    return null;
+  }
 
   // Login form
   const loginForm = useForm<LoginFormValues>({
@@ -115,7 +130,7 @@ const AuthPage: React.FC = () => {
         setActiveTab('login');
       }
     } catch (err) {
-      setError('Неизвестная ошибка при регистрации');
+      setError('Неизвестная ош��бка при регистрации');
     } finally {
       setIsSubmitting(false);
     }
@@ -138,11 +153,6 @@ const AuthPage: React.FC = () => {
       setIsSubmitting(false);
     }
   };
-
-  // Redirect if already authenticated
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 p-4">

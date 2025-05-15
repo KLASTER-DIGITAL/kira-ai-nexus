@@ -1,4 +1,3 @@
-
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { cleanupAuthState } from './utils';
@@ -8,6 +7,7 @@ import { cleanupAuthState } from './utils';
  */
 export const signUp = async (email: string, password: string) => {
   try {
+    console.log("Starting sign up process");
     // Clean up existing auth state
     cleanupAuthState();
     
@@ -18,6 +18,9 @@ export const signUp = async (email: string, password: string) => {
         title: "Регистрация успешна",
         description: "Проверьте почту для подтверждения"
       });
+      console.log("Sign up successful");
+    } else {
+      console.error("Sign up error:", error);
     }
     
     return { error };
@@ -32,34 +35,41 @@ export const signUp = async (email: string, password: string) => {
  */
 export const signIn = async (email: string, password: string) => {
   try {
+    console.log("Starting sign in process");
     // Clean up existing auth state
     cleanupAuthState();
     
     // Attempt global sign out first
     try {
+      console.log("Performing global sign out before sign in");
       await supabase.auth.signOut({ scope: 'global' });
     } catch (err) {
+      console.warn("Global sign out failed, continuing anyway:", err);
       // Continue even if this fails
     }
     
-    const { error } = await supabase.auth.signInWithPassword({
+    console.log("Signing in with email and password");
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     
     if (!error) {
       // Successfully signed in
+      console.log("Sign in successful:", data.user?.email);
       toast({
         title: "Вход выполнен",
         description: "Добро пожаловать в KIRA AI"
       });
       // Перенаправление будет выполнено в onAuthStateChange
+    } else {
+      console.error("Sign in error:", error);
     }
     
-    return { error };
+    return { data, error };
   } catch (error) {
     console.error('Error signing in:', error);
-    return { error };
+    return { data: null, error };
   }
 };
 
@@ -68,16 +78,22 @@ export const signIn = async (email: string, password: string) => {
  */
 export const signOut = async () => {
   try {
+    console.log("Starting sign out process");
     // Clean up auth state
     cleanupAuthState();
     
     // Attempt global sign out
+    console.log("Performing global sign out");
     await supabase.auth.signOut({ scope: 'global' });
     
+    console.log("Sign out complete, redirecting to auth page");
     // Force page reload for a clean state
     window.location.href = '/auth';
+    
+    return { error: null };
   } catch (error) {
     console.error('Error signing out:', error);
+    return { error };
   }
 };
 

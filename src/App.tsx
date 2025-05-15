@@ -1,8 +1,9 @@
 
 import React, { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
 import { ProtectedRoute } from './components/features/auth';
+import { useAuth } from './context/auth';
 
 // Import pages from the new structure
 import {
@@ -28,7 +29,23 @@ import CalendarPage from './pages/CalendarPage';
 import ChatPage from './pages/ChatPage';
 
 function App() {
-  // Установка favicon программно
+  const { isAuthenticated, profile, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Handle root path redirects
+  useEffect(() => {
+    // If user visits the base path "/"
+    if (location.pathname === "/" && !isLoading) {
+      if (isAuthenticated && profile) {
+        // If authenticated, redirect to appropriate dashboard
+        const dashboardPath = profile.role === 'superadmin' ? '/dashboard/admin' : '/dashboard/user';
+        navigate(dashboardPath, { replace: true });
+      }
+    }
+  }, [isAuthenticated, profile, isLoading, location.pathname, navigate]);
+  
+  // Set favicon programmatically
   useEffect(() => {
     const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
     if (!link) {
@@ -55,7 +72,7 @@ function App() {
         <Route path="/tasks" element={<ProtectedRoute><TasksPage /></ProtectedRoute>} />
         <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
         <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
-        <Route path="/ai-settings" element={<ProtectedRoute><AISettingsPage /></ProtectedRoute>} />
+        <Route path="/ai-settings" element={<ProtectedRoute requiredRole="superadmin"><AISettingsPage /></ProtectedRoute>} />
         
         {/* Help pages */}
         <Route path="/help" element={<ProtectedRoute><HelpPage /></ProtectedRoute>} />

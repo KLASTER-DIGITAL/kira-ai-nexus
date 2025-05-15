@@ -6,15 +6,21 @@ import { useAuth } from "@/context/auth";
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, profile } = useAuth();
+  const { isAuthenticated, profile, isLoading } = useAuth();
 
   // Redirect authenticated users to appropriate dashboard
   React.useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !isLoading && profile) {
       const dashboardPath = profile?.role === 'superadmin' ? '/dashboard/admin' : '/dashboard/user';
+      console.log(`User authenticated, redirecting to ${dashboardPath}`);
       navigate(dashboardPath, { replace: true });
     }
-  }, [isAuthenticated, profile, navigate]);
+  }, [isAuthenticated, profile, navigate, isLoading]);
+
+  // Don't render anything while checking auth state
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 p-4">
