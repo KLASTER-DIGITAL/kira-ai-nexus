@@ -45,25 +45,29 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
         user_id: "" // Will be filled by the backend
       };
       
-      const createdNote = await createNote(newNoteData as any);
-      
-      if (createdNote) {
-        // Create a link if we have a current note
-        if (noteId) {
-          await createWikiLink(cleanTitle);
-        }
+      try {
+        const createdNote = await createNote(newNoteData as any);
         
-        // Notify parent component
-        if (onNoteCreated) {
-          onNoteCreated(createdNote.id);
+        if (createdNote) {
+          // Create a link if we have a current note
+          if (noteId) {
+            await createWikiLink(cleanTitle);
+          }
+          
+          // Notify parent component
+          if (onNoteCreated) {
+            onNoteCreated(createdNote.id);
+          }
+          
+          // Navigate to the new note
+          if (onLinkClick) {
+            onLinkClick(createdNote.id);
+          }
+          
+          return createdNote.id;
         }
-        
-        // Navigate to the new note
-        if (onLinkClick) {
-          onLinkClick(createdNote.id);
-        }
-        
-        return createdNote.id;
+      } catch (error) {
+        console.error("Error creating note:", error);
       }
     }
     

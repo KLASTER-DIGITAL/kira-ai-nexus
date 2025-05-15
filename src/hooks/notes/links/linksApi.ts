@@ -95,8 +95,8 @@ export const getNoteLinks = async (noteId: string): Promise<NoteLinks> => {
       // Ensure each note has at least an empty tags array
       allLinkedNotes = notesData.map(note => ({
         ...note,
-        tags: note.content?.tags || [],
-        content: note.content?.content || "",
+        tags: Array.isArray(note.content) ? note.content.tags || [] : [],
+        content: typeof note.content === 'object' ? (note.content as any)?.content || "" : note.content || "",
         title: note.title,
         user_id: note.user_id,
         type: note.type
@@ -182,7 +182,7 @@ export const deleteAllLinksForNote = async (noteId: string): Promise<boolean> =>
   return true;
 };
 
-// Add the missing functions that are being imported in useNoteLinks.ts
+// Fetch links for a note
 export const fetchLinks = async (noteId?: string) => {
   if (!noteId) return { incomingLinks: [], outgoingLinks: [] };
   
@@ -193,6 +193,7 @@ export const fetchLinks = async (noteId?: string) => {
   };
 };
 
+// Fetch all notes for linking
 export const fetchAllNotes = async () => {
   const { data, error } = await supabase
     .from("nodes")

@@ -55,8 +55,8 @@ export const useGraphData = () => {
         id: node.id,
         title: node.title || "",
         type: node.type || "note",
-        content: node.content?.content,
-        tags: node.content?.tags || [],
+        content: typeof node.content === 'object' ? (node.content as any)?.content : node.content,
+        tags: typeof node.content === 'object' ? (node.content as any)?.tags || [] : [],
         created_at: node.created_at,
         updated_at: node.updated_at,
       }));

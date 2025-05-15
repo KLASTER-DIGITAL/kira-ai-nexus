@@ -4,7 +4,7 @@ import Suggestion from '@tiptap/suggestion';
 
 export interface TagSuggestionOptions {
   suggestion: {
-    items: string[];
+    items: (props: { query: string; editor: any }) => string[] | Promise<string[]>;
     render: () => any;
   };
 }
@@ -15,7 +15,9 @@ export const TagSuggestion = Extension.create<TagSuggestionOptions>({
   addOptions() {
     return {
       suggestion: {
-        items: [],
+        items: ({ query }: { query: string; editor: any }) => {
+          return [];  // Default empty array, will be overridden by config
+        },
         render: () => ({}),
       },
     };

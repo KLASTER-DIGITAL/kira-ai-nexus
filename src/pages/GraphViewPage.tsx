@@ -32,11 +32,23 @@ const GraphViewPage: React.FC = () => {
     );
   }
 
+  // Transform data to match GraphView expectations
+  const formattedData = graphData 
+    ? { 
+        nodes: graphData.nodes,
+        edges: graphData.links?.map(link => ({
+          id: link.id,
+          source: link.source,
+          target: link.target
+        })) || []
+      } 
+    : { nodes: [], edges: [] };
+
   return (
     <Layout title="Граф связей">
       <div className="container mx-auto">
         <ReactFlowProvider>
-          <GraphView data={graphData || {nodes: [], edges: []}} availableTags={availableTags} />
+          <GraphView data={formattedData} availableTags={availableTags} />
         </ReactFlowProvider>
       </div>
     </Layout>
