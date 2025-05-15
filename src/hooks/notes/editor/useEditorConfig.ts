@@ -1,13 +1,18 @@
-
-import { useCallback } from "react";
-import { Editor, Extensions } from "@tiptap/react";
-import { useEditorExtensions } from "./useEditorExtensions";
-import { useWikiLinkExtensions } from "./useWikiLinkExtensions";
+import { useMemo, useCallback } from "react";
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { Extensions } from "./types";
+import StarterKit from "@tiptap/starter-kit";
+import Placeholder from "@tiptap/extension-placeholder";
+import Link from "@tiptap/extension-link";
+import { Editor } from "@tiptap/react";
+import { WikiLink } from "@/components/notes/extensions/wiki-link/WikiLink";
 import { useWikiLinks } from "../links/useWikiLinks";
+import { TagSuggestion } from "@/components/notes/extensions/tags/TagSuggestion";
+import { useTags } from "../useTags";
 
-interface UseEditorConfigOptions {
-  content?: string;
-  onChange?: (content: string) => void;
+interface EditorConfigProps {
+  content: string;
+  onChange: (content: string) => void;
   placeholder?: string;
   editable?: boolean;
   autoFocus?: boolean;
@@ -15,61 +20,109 @@ interface UseEditorConfigOptions {
   onNoteCreated?: (noteId: string) => void;
 }
 
-export const useEditorConfig = (options: UseEditorConfigOptions = {}) => {
-  const {
-    content = "",
-    onChange = () => {},
-    placeholder = "Начните писать...",
-    editable = true,
-    autoFocus = false,
-    noteId,
-    onNoteCreated,
-  } = options;
+export const useEditorConfig = ({
+  content,
+  onChange,
+  placeholder,
+  editable = true,
+  autoFocus = false,
+  noteId,
+  onNoteCreated
+}: EditorConfigProps) => {
+  const supabase = useSupabaseClient();
+  const { tags } = useTags();
 
-  // Get wiki links functionality
-  const { validateWikiLink, fetchNotesForSuggestion, handleCreateNote, allNotes } = useWikiLinks(noteId);
-  
-  // Get base extensions for the editor
-  const { getExtensions } = useEditorExtensions(placeholder, validateWikiLink);
-  
-  // Get wiki link specific extensions
-  const { createWikiLinkSuggestionExtension } = useWikiLinkExtensions(
-    fetchNotesForSuggestion,
-    handleCreateNote
-  );
+  // Define extensions used in the editor
+  const extensions = useMemo(() => [
+    StarterKit.configure({
+      history: true,
+    }),
+    Placeholder.configure({
+      placeholder: placeholder || 'Начните писать...',
+    }),
+    Link.configure({
+      openOnClick: false,
+    }),
+    WikiLink.configure({
+      noteId: noteId || '',
+      onNoteCreated: onNoteCreated
+    }),
+    TagSuggestion.configure({
+      suggestion: {
+        items: tags || [],
+        render: () => {
+          return {
+            onStart: () => { },
+            onUpdate: () => { },
+            onKeyDown: () => { },
+            onExit: () => { },
+          };
+        },
+      },
+    }),
+  ], [placeholder, tags, noteId, onNoteCreated]);
 
-  // Configure editor
-  const getEditorConfig = useCallback(() => {
-    // Create wiki link suggestion extension
-    const WikiLinkSuggestionExtension = createWikiLinkSuggestionExtension();
+  // Get the wiki link functionality
+  const { handleWikiLinkClick, isCreatingLink } = useWikiLinks(noteId, onNoteCreated);
+  
+  // Handle link click
+  const handleLinkClick = useCallback((href: string) => {
+    if (href.startsWith("[[")) {
+      handleWikiLinkClick(href);
+    } else {
+      window.open(href, '_blank');
+    }
+  }, [handleWikiLinkClick]);
+  
+  // Only validate links when we have a note ID
+  const validateLinks = useCallback((editor: Editor) => {
+    if (!noteId) return;
     
-    // Define extensions array with all needed extensions
-    const extensions = [
-      ...getExtensions(),
-      WikiLinkSuggestionExtension,
-    ];
+    // This functionality is currently handled separately by the wiki link extension
+    // or can be implemented here if needed
+    
+  }, [noteId]);
 
+  // Prepare editor configuration with all extensions
+  const getEditorConfig = useCallback(() => {
     return {
-      extensions,
-      content,
       editable,
-      autofocus: autoFocus,
-      onUpdate: ({ editor }: { editor: Editor }) => {
+      content,
+      onUpdate: ({ editor }) => {
         onChange(editor.getHTML());
       },
+      autofocus: autoFocus,
+      extensions,
+      
+      editorProps: {
+        attributes: {
+          class: 'focus:outline-none',
+        },
+        handleClick: (view, pos, event) => {
+          const { schema } = view.state;
+          const node = schema.nodes.link;
+          if (!(event.target instanceof HTMLAnchorElement)) {
+            return false;
+          }
+          
+          const element = event.target as HTMLAnchorElement;
+          const href = element.getAttribute('href');
+          
+          if (href) {
+            handleLinkClick(href);
+            return true;
+          }
+          
+          return false;
+        }
+      }
     };
-  }, [content, editable, autoFocus, onChange, getExtensions, createWikiLinkSuggestionExtension]);
-
-  // Validate links in the editor
-  const validateLinks = useCallback((editor: Editor) => {
-    // This function would validate wiki links in the editor
-    // by checking if they correspond to existing notes
-    console.log("Validating links in editor");
-    // Implementation would be part of wiki link functionality
-  }, []);
+  }, [content, extensions, editable, autoFocus, onChange, handleLinkClick]);
 
   return {
     getEditorConfig,
-    validateLinks,
+    validateLinks
   };
 };
+
+export type UseEditorConfigReturn = ReturnType<typeof useEditorConfig>

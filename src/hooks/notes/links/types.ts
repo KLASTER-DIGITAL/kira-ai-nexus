@@ -40,14 +40,38 @@ export interface LinkQueryResult {
   id: string;
   source_id: string;
   target_id: string;
-  source: {
+  source?: {
     id: string;
     title: string;
     type?: string;
   };
-  target: {
+  target?: {
     id: string;
     title: string;
     type?: string;
   };
+}
+
+// Additional types needed for the hooks
+export interface NodeBasicInfo {
+  id: string;
+  title: string;
+  type?: string;
+}
+
+export interface LinksResult {
+  incomingLinks: LinkData[];
+  outgoingLinks: LinkData[];
+  allNotes: NodeBasicInfo[];
+}
+
+export interface CreateLinkParams {
+  sourceId: string;
+  targetId: string;
+  type?: string;
+}
+
+export interface UpdateLinksParams {
+  oldTitle: string;
+  newTitle: string;
 }

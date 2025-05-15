@@ -31,8 +31,9 @@ export const useGraphData = () => {
     queryFn: async () => {
       // Fetch all notes
       const { data: nodes, error: nodesError } = await supabase
-        .from('notes')
-        .select('id, title, type, content, tags, created_at, updated_at');
+        .from('nodes')
+        .select('id, title, type, content, created_at, updated_at')
+        .eq("type", "note");
       
       if (nodesError) {
         console.error('Error fetching nodes:', nodesError);
@@ -54,8 +55,8 @@ export const useGraphData = () => {
         id: node.id,
         title: node.title || "",
         type: node.type || "note",
-        content: node.content,
-        tags: node.tags || [],
+        content: node.content?.content,
+        tags: node.content?.tags || [],
         created_at: node.created_at,
         updated_at: node.updated_at,
       }));

@@ -6,21 +6,21 @@ import GraphView from "@/components/graph/GraphView";
 import { useGraphData } from "@/hooks/useGraphData";
 
 const GraphViewPage: React.FC = () => {
-  const { nodes, links, isLoading } = useGraphData();
+  const { graphData, isLoading } = useGraphData();
   const [availableTags, setAvailableTags] = useState<string[]>([]);
 
   useEffect(() => {
     // Extract all unique tags from nodes
-    if (nodes && nodes.length > 0) {
+    if (graphData && graphData.nodes && graphData.nodes.length > 0) {
       const tagsSet = new Set<string>();
-      nodes.forEach(node => {
+      graphData.nodes.forEach(node => {
         if (node.tags && Array.isArray(node.tags)) {
           node.tags.forEach(tag => tagsSet.add(tag));
         }
       });
       setAvailableTags(Array.from(tagsSet));
     }
-  }, [nodes]);
+  }, [graphData]);
 
   if (isLoading) {
     return (
@@ -32,17 +32,11 @@ const GraphViewPage: React.FC = () => {
     );
   }
 
-  // Prepare data for GraphView
-  const graphData = {
-    nodes,
-    edges: links
-  };
-
   return (
     <Layout title="Граф связей">
       <div className="container mx-auto">
         <ReactFlowProvider>
-          <GraphView data={graphData} availableTags={availableTags} />
+          <GraphView data={graphData || {nodes: [], edges: []}} availableTags={availableTags} />
         </ReactFlowProvider>
       </div>
     </Layout>

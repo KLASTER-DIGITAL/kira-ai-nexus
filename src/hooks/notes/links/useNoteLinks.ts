@@ -1,6 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { LinksResult, NodeBasicInfo, CreateLinkParams, UpdateLinksParams } from "./types";
+import { LinkData, NodeBasicInfo, CreateLinkParams, UpdateLinksParams } from "./types";
 import { fetchLinks, fetchAllNotes, createLink } from "./linksApi";
 
 /**
@@ -25,7 +25,7 @@ export const useNoteLinks = (noteId?: string) => {
   // Mutation to create a link between notes
   const createLinkMutation = useMutation({
     mutationFn: async (params: CreateLinkParams) => {
-      return await createLink(params.sourceId, params.targetId, params.type);
+      return await createLink(params.sourceId, params.targetId, params.type || 'note');
     },
     onSuccess: () => {
       // Invalidate queries to refresh data
@@ -49,7 +49,7 @@ export const useNoteLinks = (noteId?: string) => {
   
   // Format links for compatibility with existing components
   const formattedLinks = linksData ? {
-    incomingLinks: linksData.incomingLinks.map(link => ({
+    incomingLinks: linksData.incomingLinks.map((link: LinkData) => ({
       id: link.id,
       nodes: {
         id: link.source.id,

@@ -16,7 +16,7 @@ export const getNoteLinks = async (noteId: string): Promise<NoteLinks> => {
       id, 
       source_id, 
       target_id,
-      source:source_id(id, title, type)
+      source:nodes!source_id(id, title, type)
     `)
     .eq("target_id", noteId);
 
@@ -32,7 +32,7 @@ export const getNoteLinks = async (noteId: string): Promise<NoteLinks> => {
       id, 
       source_id, 
       target_id,
-      target:target_id(id, title, type)
+      target:nodes!target_id(id, title, type)
     `)
     .eq("source_id", noteId);
 
@@ -42,7 +42,7 @@ export const getNoteLinks = async (noteId: string): Promise<NoteLinks> => {
   }
 
   // Transform the data to ensure it matches the LinkData type
-  const incomingLinks: LinkData[] = (incomingData as LinkQueryResult[]).map((link) => ({
+  const incomingLinks: LinkData[] = (incomingData as any[]).map((link) => ({
     id: link.id,
     source_id: link.source_id,
     target_id: link.target_id,
@@ -58,7 +58,7 @@ export const getNoteLinks = async (noteId: string): Promise<NoteLinks> => {
     }
   }));
 
-  const outgoingLinks: LinkData[] = (outgoingData as LinkQueryResult[]).map((link) => ({
+  const outgoingLinks: LinkData[] = (outgoingData as any[]).map((link) => ({
     id: link.id,
     source_id: link.source_id,
     target_id: link.target_id,
@@ -86,15 +86,20 @@ export const getNoteLinks = async (noteId: string): Promise<NoteLinks> => {
   
   if (uniqueLinkedNoteIds.length > 0) {
     const { data: notesData } = await supabase
-      .from("notes")
+      .from("nodes")
       .select("*")
-      .in("id", uniqueLinkedNoteIds);
+      .in("id", uniqueLinkedNoteIds)
+      .eq("type", "note");
     
     if (notesData) {
       // Ensure each note has at least an empty tags array
       allLinkedNotes = notesData.map(note => ({
         ...note,
-        tags: note.tags || []
+        tags: note.content?.tags || [],
+        content: note.content?.content || "",
+        title: note.title,
+        user_id: note.user_id,
+        type: note.type
       })) as Note[];
     }
   }
@@ -107,7 +112,7 @@ export const getNoteLinks = async (noteId: string): Promise<NoteLinks> => {
 };
 
 // Create a link between two notes
-export const createLink = async (sourceId: string, targetId: string): Promise<string | null> => {
+export const createLink = async (sourceId: string, targetId: string, type: string = "note"): Promise<string | null> => {
   // Check if link already exists to prevent duplicates
   const { data: existingLinks } = await supabase
     .from("links")
@@ -122,7 +127,7 @@ export const createLink = async (sourceId: string, targetId: string): Promise<st
   const { data, error } = await supabase
     .from("links")
     .insert([
-      { source_id: sourceId, target_id: targetId }
+      { source_id: sourceId, target_id: targetId, type }
     ])
     .select("id")
     .single();
@@ -175,4 +180,33 @@ export const deleteAllLinksForNote = async (noteId: string): Promise<boolean> =>
   }
 
   return true;
+};
+
+// Add the missing functions that are being imported in useNoteLinks.ts
+export const fetchLinks = async (noteId?: string) => {
+  if (!noteId) return { incomingLinks: [], outgoingLinks: [] };
+  
+  const links = await getNoteLinks(noteId);
+  return {
+    incomingLinks: links.incomingLinks,
+    outgoingLinks: links.outgoingLinks
+  };
+};
+
+export const fetchAllNotes = async () => {
+  const { data, error } = await supabase
+    .from("nodes")
+    .select("id, title, type, content")
+    .eq("type", "note");
+  
+  if (error) {
+    console.error("Error fetching all notes:", error);
+    return [];
+  }
+  
+  return data.map(note => ({
+    id: note.id,
+    title: note.title || "",
+    type: note.type || "note"
+  }));
 };

@@ -13,7 +13,7 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
     title: string, 
     onLinkClick?: (noteId: string) => void
   ) => {
-    if (!notes) return;
+    if (!notes) return null;
     
     // Clean the title (remove brackets if present)
     const cleanTitle = title.replace(/^\[\[|\]\]$/g, "");
@@ -37,16 +37,16 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
       return targetNote.id;
     } else {
       // If note doesn't exist, create a new one
-      const newNote: Partial<Note> = {
+      const newNoteData = {
         title: cleanTitle,
         content: "",
         tags: [],
-        type: "note"
+        type: "note" as const,
+        user_id: "" // Will be filled by the backend
       };
       
-      const createdNote = await createNote(newNote);
+      const createdNote = await createNote(newNoteData as any);
       
-      // If the note was created successfully
       if (createdNote) {
         // Create a link if we have a current note
         if (noteId) {
