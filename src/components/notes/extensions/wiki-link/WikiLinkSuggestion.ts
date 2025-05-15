@@ -19,7 +19,7 @@ export const createWikiLinkSuggestion = (
   fetchSuggestions: FetchWikiLinkSuggestions,
   createNoteCallback: CreateWikiLink
 ) => {
-  return Suggestion.configure({
+  return Suggestion({
     char: '[[',
     allowSpaces: true,
     allowedPrefixes: [' ', '\n', null],
@@ -144,5 +144,5 @@ export const createWikiLinkSuggestion = (
   });
 };
 
-// Export a named component for compatibility with existing imports
-export const WikiLinkSuggestionList = WikiLinkSuggestList;
+// Export named component
+export { default as WikiLinkSuggestionList } from './WikiLinkSuggestList';

@@ -56,21 +56,8 @@ export const useNotesMutations = () => {
         throw error;
       }
 
-      // Safely access potentially nested properties
-      const contentObj = typeof data.content === 'object' ? data.content : {};
-      
       // Format the note with proper types before returning
-      return {
-        id: data.id,
-        title: data.title,
-        content: contentObj && 'text' in contentObj ? String(contentObj.text || '') : '',
-        tags: contentObj && 'tags' in contentObj ? 
-          (Array.isArray(contentObj.tags) ? 
-            contentObj.tags.map(tag => String(tag)) : []) : [],
-        color: contentObj && 'color' in contentObj ? String(contentObj.color || '') : undefined,
-        type: data.type,
-        user_id: data.user_id
-      };
+      return formatNoteFromDb(data);
     },
     onSuccess: () => {
       // Invalidate relevant queries to refresh data
@@ -110,12 +97,12 @@ export const useNotesMutations = () => {
         // If we have content, tags or color updates, update the content field
         updateData.content = {
           text: noteData.content !== undefined ? noteData.content : 
-            (currentContentObj && 'text' in currentContentObj ? currentContentObj.text : ''),
+            (currentContentObj.text || ''),
           tags: noteData.tags !== undefined ? noteData.tags : 
-            (currentContentObj && 'tags' in currentContentObj ? 
-              currentContentObj.tags.map((tag: any) => String(tag)) : []),
+            (Array.isArray(currentContentObj.tags) ? 
+              currentContentObj.tags : []),
           color: noteData.color !== undefined ? noteData.color : 
-            (currentContentObj && 'color' in currentContentObj ? currentContentObj.color : '')
+            (currentContentObj.color || '')
         };
         
         // Perform the update
@@ -130,21 +117,8 @@ export const useNotesMutations = () => {
           throw error;
         }
 
-        // Safely access potentially nested properties
-        const contentObj = typeof data.content === 'object' ? data.content : {};
-        
-        // Format the note with proper types before returning
-        return {
-          id: data.id,
-          title: data.title,
-          content: contentObj && 'text' in contentObj ? String(contentObj.text || '') : '',
-          tags: contentObj && 'tags' in contentObj ? 
-            (Array.isArray(contentObj.tags) ? 
-              contentObj.tags.map(tag => String(tag)) : []) : [],
-          color: contentObj && 'color' in contentObj ? String(contentObj.color || '') : undefined,
-          type: data.type,
-          user_id: data.user_id
-        };
+        // Format note before returning
+        return formatNoteFromDb(data);
       } catch (error) {
         console.error("Error updating note:", error);
         throw error;
@@ -181,6 +155,22 @@ export const useNotesMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['allNotes'] });
     }
   });
+
+  // Helper function to format notes from DB
+  const formatNoteFromDb = (data: any): Note => {
+    const contentObj = typeof data.content === 'object' ? data.content : {};
+    
+    return {
+      id: data.id,
+      title: data.title,
+      content: contentObj && 'text' in contentObj ? String(contentObj.text || '') : '',
+      tags: contentObj && 'tags' in contentObj && Array.isArray(contentObj.tags) ? 
+        contentObj.tags.map((tag: any) => String(tag)) : [],
+      color: contentObj && 'color' in contentObj ? String(contentObj.color || '') : undefined,
+      type: data.type,
+      user_id: data.user_id
+    };
+  };
 
   return {
     createNote: createNoteMutation.mutateAsync,

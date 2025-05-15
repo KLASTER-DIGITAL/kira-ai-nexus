@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from "react";
 import { useEditor, EditorContent, Editor } from "@tiptap/react";
 import { MenuBar } from "./TipTapMenuBar";
@@ -28,7 +27,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
   onNoteCreated,
 }) => {
   // Hooks for editor configuration and wiki links
-  const { getEditorConfig } = useEditorConfig({
+  const { getEditorConfig, validateLinks } = useEditorConfig({
     content,
     onChange,
     placeholder,
@@ -38,7 +37,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     onNoteCreated
   });
 
-  const { handleWikiLinkClick, validateLinks } = useWikiLinks(noteId, onNoteCreated);
+  const { handleWikiLinkClick } = useWikiLinks(noteId, onNoteCreated);
   
   // Initialize the editor with our configuration
   const editor = useEditor(getEditorConfig());

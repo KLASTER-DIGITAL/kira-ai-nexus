@@ -30,6 +30,7 @@ import {
   CommandItem, 
   CommandList 
 } from "@/components/ui/command";
+import { useNotes } from "@/hooks/useNotes";
 
 interface MenuBarProps {
   editor: Editor;
@@ -39,7 +40,7 @@ interface MenuBarProps {
 export const MenuBar: React.FC<MenuBarProps> = ({ editor, noteId }) => {
   const [wikiLinkPopoverOpen, setWikiLinkPopoverOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { notes } = useWikiLinks(noteId);
+  const { notes } = useNotes({ pageSize: 100 });
   
   if (!editor) {
     return null;

@@ -75,11 +75,12 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
         // Update link validity if needed
         if (node.attrs.isValid !== isValid) {
           // Use a transaction to update the node attributes
-          const { tr } = editor.view.state;
-          tr.setNodeMarkup(pos, undefined, { ...node.attrs, isValid });
-          editor.view.dispatch(tr);
+          editor.commands.updateAttributes('wikiLink', { 
+            href: href,
+            isValid: isValid
+          });
         }
-        return true;
+        return false; // continue traversing
       }
       return false;
     });
