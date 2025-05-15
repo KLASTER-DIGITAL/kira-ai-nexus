@@ -9,6 +9,7 @@ import Image from '@tiptap/extension-image';
 import { WikiLink } from '@/components/notes/extensions/WikiLink';
 import { useWikiLinks } from './useWikiLinks';
 import { createWikiLinkSuggestion } from '@/components/notes/extensions/wiki-link/WikiLinkSuggestion';
+import Suggestion from '@tiptap/suggestion';
 
 interface UseEditorConfigProps {
   content: string;
@@ -42,9 +43,11 @@ export const useEditorConfig = ({
 
   const getEditorConfig = useCallback(() => {
     // Create suggestion configuration for wiki links
-    const suggestionConfig = createWikiLinkSuggestion(fetchNotesForSuggestion, handleCreateNote);
+    const suggestionOptions = createWikiLinkSuggestion(fetchNotesForSuggestion, handleCreateNote);
     
-    // Create an array of extensions that conforms to the required type
+    // Use Extension.configure properly
+    const wikiLinkSuggestion = Suggestion.configure(suggestionOptions);
+    
     const extensions: Extensions = [
       StarterKit,
       Placeholder.configure({
@@ -59,7 +62,7 @@ export const useEditorConfig = ({
       WikiLink.configure({
         validateLink: validateWikiLink
       }),
-      suggestionConfig,
+      wikiLinkSuggestion,
     ];
     
     return {

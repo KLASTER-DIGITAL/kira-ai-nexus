@@ -19,6 +19,12 @@ export interface UpdateNoteInput {
   color?: string;
 }
 
+interface NoteContent {
+  text: string;
+  tags: string[];
+  color: string;
+}
+
 export const useNotesMutations = () => {
   const queryClient = useQueryClient();
   
@@ -89,20 +95,28 @@ export const useNotesMutations = () => {
           throw fetchError;
         }
         
-        // Safely handle the content field which could be a string or object
-        const currentContentObj = typeof currentNote.content === 'object' ? 
-          currentNote.content : 
-          { text: '', tags: [], color: '' };
+        // Safely handle the content field
+        let currentContent: NoteContent = {
+          text: '',
+          tags: [],
+          color: ''
+        };
+        
+        if (currentNote.content && typeof currentNote.content === 'object') {
+          // Safely extract values using typecasting when we know it's an object
+          const contentObj = currentNote.content as Record<string, any>;
+          currentContent = {
+            text: typeof contentObj.text === 'string' ? contentObj.text : '',
+            tags: Array.isArray(contentObj.tags) ? contentObj.tags : [],
+            color: typeof contentObj.color === 'string' ? contentObj.color : ''
+          };
+        }
         
         // If we have content, tags or color updates, update the content field
         updateData.content = {
-          text: noteData.content !== undefined ? noteData.content : 
-            (currentContentObj.text || ''),
-          tags: noteData.tags !== undefined ? noteData.tags : 
-            (Array.isArray(currentContentObj.tags) ? 
-              currentContentObj.tags : []),
-          color: noteData.color !== undefined ? noteData.color : 
-            (currentContentObj.color || '')
+          text: noteData.content !== undefined ? noteData.content : currentContent.text,
+          tags: noteData.tags !== undefined ? noteData.tags : currentContent.tags,
+          color: noteData.color !== undefined ? noteData.color : currentContent.color
         };
         
         // Perform the update
@@ -158,15 +172,33 @@ export const useNotesMutations = () => {
 
   // Helper function to format notes from DB
   const formatNoteFromDb = (data: any): Note => {
-    const contentObj = typeof data.content === 'object' ? data.content : {};
+    let content = '';
+    let tags: string[] = [];
+    let color: string | undefined = undefined;
+    
+    if (data.content) {
+      // Handle content being potentially a string or object
+      if (typeof data.content === 'object') {
+        const contentObj = data.content as Record<string, any>;
+        content = typeof contentObj.text === 'string' ? contentObj.text : '';
+        
+        // Ensure tags is always an array of strings
+        if (Array.isArray(contentObj.tags)) {
+          tags = contentObj.tags.map((tag: any) => String(tag));
+        }
+        
+        color = typeof contentObj.color === 'string' ? contentObj.color : undefined;
+      } else if (typeof data.content === 'string') {
+        content = data.content;
+      }
+    }
     
     return {
       id: data.id,
       title: data.title,
-      content: contentObj && 'text' in contentObj ? String(contentObj.text || '') : '',
-      tags: contentObj && 'tags' in contentObj && Array.isArray(contentObj.tags) ? 
-        contentObj.tags.map((tag: any) => String(tag)) : [],
-      color: contentObj && 'color' in contentObj ? String(contentObj.color || '') : undefined,
+      content,
+      tags,
+      color,
       type: data.type,
       user_id: data.user_id
     };
