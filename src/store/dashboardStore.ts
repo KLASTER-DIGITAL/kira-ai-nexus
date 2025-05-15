@@ -116,7 +116,9 @@ export const useDashboardStore = create<DashboardState>()(
           }
           
           if (data && data.layout) {
-            set({ widgets: data.layout as DashboardWidget[] });
+            // Add type assertion to handle the conversion safely
+            const layoutData = data.layout as unknown;
+            set({ widgets: layoutData as DashboardWidget[] });
           }
         } catch (err) {
           console.error('Failed to load dashboard layout:', err);
@@ -133,7 +135,7 @@ export const useDashboardStore = create<DashboardState>()(
             .from('dashboard_layouts')
             .upsert({
               user_id: userId,
-              layout: widgets,
+              layout: widgets as any, // Use type assertion to handle JSON serialization
               updated_at: new Date().toISOString()
             }, { onConflict: 'user_id' });
             
