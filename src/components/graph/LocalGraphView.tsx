@@ -1,5 +1,6 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
+import { ReactFlowProvider } from '@xyflow/react';
 import { Card } from '@/components/ui/card';
 import NotesGraph from '@/components/notes/graph/NotesGraph';
 

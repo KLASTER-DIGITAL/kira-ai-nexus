@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import { ReactFlowProvider } from '@xyflow/react';
 import Layout from "@/components/layout/Layout";
 import GraphView from "@/components/graph/GraphView";
 import { useGraphData } from "@/hooks/useGraphData";
@@ -31,32 +32,18 @@ const GraphViewPage: React.FC = () => {
     );
   }
 
-  // Convert data to the format expected by GraphView
+  // Prepare data for GraphView
   const graphData = {
-    nodes: nodes.map(node => ({
-      id: node.id,
-      type: node.type,
-      data: {
-        note: node.type === 'note' ? node : undefined,
-        task: node.type === 'task' ? node : undefined,
-        event: node.type === 'event' ? node : undefined,
-        label: node.title,
-        content: node.content,
-        tags: node.tags || []
-      }
-    })),
-    edges: links.map(link => ({
-      id: link.id || `${link.source_id}-${link.target_id}`,
-      source: link.source_id,
-      target: link.target_id,
-      type: link.type || 'default'
-    }))
+    nodes,
+    edges: links
   };
 
   return (
     <Layout title="Граф связей">
       <div className="container mx-auto">
-        <GraphView data={graphData} availableTags={availableTags} />
+        <ReactFlowProvider>
+          <GraphView data={graphData} availableTags={availableTags} />
+        </ReactFlowProvider>
       </div>
     </Layout>
   );

@@ -11,8 +11,9 @@ import {
   Node,
   NodeTypes,
   useReactFlow,
+  ReactFlowProvider
 } from "@xyflow/react";
-import "reactflow/dist/style.css";
+import "@xyflow/react/dist/style.css";
 import { useNotes } from "@/hooks/useNotes";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +29,7 @@ const nodeTypes: NodeTypes = {
   noteNode: NoteNode,
 };
 
-const NotesGraph: React.FC<NotesGraphProps> = ({ nodeId, onNodeClick: externalOnNodeClick }) => {
+const NotesGraphContent: React.FC<NotesGraphProps> = ({ nodeId, onNodeClick: externalOnNodeClick }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showIsolatedNodes, setShowIsolatedNodes] = useState(true);
@@ -242,6 +243,15 @@ const NotesGraph: React.FC<NotesGraphProps> = ({ nodeId, onNodeClick: externalOn
         </ReactFlow>
       </div>
     </div>
+  );
+};
+
+// Wrapper component to provide ReactFlow context
+const NotesGraph: React.FC<NotesGraphProps> = (props) => {
+  return (
+    <ReactFlowProvider>
+      <NotesGraphContent {...props} />
+    </ReactFlowProvider>
   );
 };
 

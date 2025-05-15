@@ -1,15 +1,16 @@
 
-import React from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CheckSquare, Filter, Calendar, StickyNote, Eye, EyeOff } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import React from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover';
+import { Filter, Bookmark, Calendar, CheckSquare, NetworkIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export interface GraphFilterPanelProps {
+interface GraphFilterPanelProps {
   selectedTags: string[];
   toggleTag: (tag: string) => void;
   allTags: string[];
@@ -35,114 +36,110 @@ export const GraphFilterPanel: React.FC<GraphFilterPanelProps> = ({
     <Popover>
       <PopoverTrigger asChild>
         <Button 
-          variant="outline"
-          size="sm"
-          className={`gap-1 h-9 ${selectedTags.length > 0 ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
+          variant="outline" 
+          size="sm" 
+          className={cn("flex items-center gap-1", 
+            (selectedTags.length > 0 || 
+            !settings.showNotes || 
+            !settings.showTasks || 
+            !settings.showEvents || 
+            settings.showIsolatedNodes) && "border-primary"
+          )}
         >
           <Filter className="h-4 w-4" />
           <span>Фильтры</span>
-          {selectedTags.length > 0 && (
-            <Badge variant="secondary" className="ml-1 bg-primary-foreground text-primary">
-              {selectedTags.length}
+          {(selectedTags.length > 0 || 
+            !settings.showNotes || 
+            !settings.showTasks || 
+            !settings.showEvents || 
+            settings.showIsolatedNodes) && (
+            <Badge variant="secondary" className="ml-1 h-5 w-5 p-0 flex items-center justify-center">
+              {selectedTags.length + 
+                (!settings.showNotes ? 1 : 0) + 
+                (!settings.showTasks ? 1 : 0) + 
+                (!settings.showEvents ? 1 : 0) +
+                (settings.showIsolatedNodes ? 1 : 0)
+              }
             </Badge>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80">
+      <PopoverContent className="w-72">
         <div className="space-y-4">
-          <h4 className="font-medium">Типы узлов</h4>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="show-notes" 
-                checked={settings.showNotes}
-                onCheckedChange={() => toggleNodeTypeVisibility('notes')}
-              />
-              <Label htmlFor="show-notes" className="flex items-center gap-1">
-                <StickyNote className="h-4 w-4 text-emerald-500" />
+          <div>
+            <h3 className="font-medium mb-2">Типы узлов</h3>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={settings.showNotes ? "default" : "outline"}
+                size="sm"
+                className="flex items-center gap-1"
+                onClick={() => toggleNodeTypeVisibility('notes')}
+              >
+                <Bookmark className="h-4 w-4" />
                 <span>Заметки</span>
-              </Label>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="show-tasks" 
-                checked={settings.showTasks}
-                onCheckedChange={() => toggleNodeTypeVisibility('tasks')}
-              />
-              <Label htmlFor="show-tasks" className="flex items-center gap-1">
-                <CheckSquare className="h-4 w-4 text-blue-500" />
+              </Button>
+              <Button
+                variant={settings.showTasks ? "default" : "outline"}
+                size="sm"
+                className="flex items-center gap-1"
+                onClick={() => toggleNodeTypeVisibility('tasks')}
+              >
+                <CheckSquare className="h-4 w-4" />
                 <span>Задачи</span>
-              </Label>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="show-events" 
-                checked={settings.showEvents}
-                onCheckedChange={() => toggleNodeTypeVisibility('events')}
-              />
-              <Label htmlFor="show-events" className="flex items-center gap-1">
-                <Calendar className="h-4 w-4 text-amber-500" />
+              </Button>
+              <Button
+                variant={settings.showEvents ? "default" : "outline"}
+                size="sm"
+                className="flex items-center gap-1"
+                onClick={() => toggleNodeTypeVisibility('events')}
+              >
+                <Calendar className="h-4 w-4" />
                 <span>События</span>
-              </Label>
+              </Button>
             </div>
           </div>
-          
-          <Separator />
-          
-          <h4 className="font-medium">Отображение</h4>
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="show-isolated" 
-              checked={settings.showIsolatedNodes}
-              onCheckedChange={toggleIsolatedNodes}
-            />
-            <Label htmlFor="show-isolated" className="flex items-center gap-1">
-              {settings.showIsolatedNodes ? (
-                <Eye className="h-4 w-4 text-slate-500" />
-              ) : (
-                <EyeOff className="h-4 w-4 text-slate-500" />
-              )}
-              <span>Показывать изолированные узлы</span>
-            </Label>
+
+          <div>
+            <h3 className="font-medium mb-2">Дополнительно</h3>
+            <Button
+              variant={settings.showIsolatedNodes ? "default" : "outline"}
+              size="sm"
+              className="flex items-center gap-1"
+              onClick={toggleIsolatedNodes}
+            >
+              <NetworkIcon className="h-4 w-4" />
+              <span>Изолированные узлы</span>
+            </Button>
           </div>
-          
-          <Separator />
-          
+
           {allTags.length > 0 && (
-            <>
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium">Теги</h4>
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-medium">Теги</h3>
                 {selectedTags.length > 0 && (
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="sm"
+                    className="h-6 px-2"
                     onClick={() => toggleTag("")}
-                    className="h-8 px-2 text-xs"
                   >
                     Сбросить
                   </Button>
                 )}
               </div>
-              <ScrollArea className="h-44">
-                <div className="flex flex-wrap gap-1">
-                  {allTags.map((tag) => (
-                    <Badge
-                      key={tag}
-                      className={`cursor-pointer ${
-                        selectedTags.includes(tag)
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-secondary"
-                      }`}
-                      onClick={() => toggleTag(tag)}
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </ScrollArea>
-            </>
+              <div className="flex flex-wrap gap-1">
+                {allTags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant={selectedTags.includes(tag) ? "default" : "outline"}
+                    className="cursor-pointer"
+                    onClick={() => toggleTag(tag)}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </PopoverContent>

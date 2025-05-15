@@ -1,6 +1,7 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import ReactFlow, {
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import {
+  ReactFlow,
   MiniMap,
   Controls,
   Background,
@@ -11,18 +12,17 @@ import ReactFlow, {
   NodeTypes,
   EdgeTypes,
   Panel,
+  useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import { useGraphSettings } from '@/hooks/useGraphSettings';
-import { useGraphHotkeys } from './hooks/useGraphHotkeys';
 import GraphSearchInput from './components/GraphSearchInput';
 import { GraphFilterPanel } from './components/GraphFilterPanel';
 import GraphControlPanel from './components/GraphControlPanel';
 import NoteNode from '../notes/graph/NoteNode';
 import TaskNode from './nodes/TaskNode';
 import EventNode from './nodes/EventNode';
-import { generateNodesAndEdges } from './utils/graphUtils';
 import { NodeBasicInfo } from '@/hooks/notes/links/types';
 
 interface GraphViewProps {
@@ -42,6 +42,10 @@ const nodeTypes: NodeTypes = {
 
 const GraphView: React.FC<GraphViewProps> = ({ data, availableTags = [] }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const reactFlowInstance = useReactFlow();
+  
   const {
     settings,
     toggleNotesVisibility,
@@ -52,29 +56,104 @@ const GraphView: React.FC<GraphViewProps> = ({ data, availableTags = [] }) => {
     changeLayout,
     saveNodePositions,
   } = useGraphSettings();
-  
-  // Generate initial nodes and edges
-  const { nodes: initialNodes, edges: initialEdges } = generateNodesAndEdges(
-    data.nodes,
-    data.edges,
-    settings
-  );
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  // Function to generate nodes and edges from the data
+  const generateNodesAndEdges = useCallback((
+    nodeData: any[],
+    edgeData: any[],
+    settings: any,
+    searchFilter?: string
+  ) => {
+    // Filter nodes based on settings and search term
+    let filteredNodes = [...nodeData];
+    
+    // Filter by node type
+    filteredNodes = filteredNodes.filter(node => {
+      if (node.type === 'note' && !settings.showNotes) return false;
+      if (node.type === 'task' && !settings.showTasks) return false;
+      if (node.type === 'event' && !settings.showEvents) return false;
+      return true;
+    });
+    
+    // Filter by search term
+    if (searchFilter && searchFilter.trim() !== '') {
+      const term = searchFilter.toLowerCase();
+      filteredNodes = filteredNodes.filter(node => 
+        node.title?.toLowerCase().includes(term) || 
+        node.content?.toLowerCase().includes(term)
+      );
+    }
+    
+    // Filter by tags
+    if (settings.selectedTags.length > 0) {
+      filteredNodes = filteredNodes.filter(node => 
+        node.tags && settings.selectedTags.some(tag => node.tags.includes(tag))
+      );
+    }
+    
+    // Find connected node IDs
+    const connectedNodeIds = new Set<string>();
+    edgeData.forEach(edge => {
+      const sourceExists = filteredNodes.some(n => n.id === edge.source_id);
+      const targetExists = filteredNodes.some(n => n.id === edge.target_id);
+      
+      if (sourceExists) connectedNodeIds.add(edge.source_id);
+      if (targetExists) connectedNodeIds.add(edge.target_id);
+    });
+    
+    // Filter out isolated nodes if setting is off
+    if (!settings.showIsolatedNodes) {
+      filteredNodes = filteredNodes.filter(node => connectedNodeIds.has(node.id));
+    }
+    
+    // Create React Flow nodes
+    const flowNodes: Node[] = filteredNodes.map(node => ({
+      id: node.id,
+      type: `${node.type}Node`,
+      data: {
+        note: node.type === 'note' ? node : undefined,
+        task: node.type === 'task' ? node : undefined,
+        event: node.type === 'event' ? node : undefined,
+        label: node.title,
+        content: node.content,
+        tags: node.tags || []
+      },
+      position: settings.savedPositions[node.id] || { 
+        x: Math.random() * 500, 
+        y: Math.random() * 500 
+      }
+    }));
+    
+    // Create React Flow edges
+    const flowEdges: Edge[] = edgeData
+      .filter(edge => {
+        const sourceExists = filteredNodes.some(n => n.id === edge.source_id);
+        const targetExists = filteredNodes.some(n => n.id === edge.target_id);
+        return sourceExists && targetExists;
+      })
+      .map(edge => ({
+        id: edge.id || `${edge.source_id}-${edge.target_id}`,
+        source: edge.source_id,
+        target: edge.target_id,
+        type: edge.type || 'default',
+        animated: true
+      }));
+      
+    return { nodes: flowNodes, edges: flowEdges };
+  }, []);
 
-  // Filter nodes and edges when search or filters change
+  // Update nodes and edges when data or filters change
   useEffect(() => {
-    const { nodes: filteredNodes, edges: filteredEdges } = generateNodesAndEdges(
+    const { nodes: flowNodes, edges: flowEdges } = generateNodesAndEdges(
       data.nodes,
       data.edges,
       settings,
       searchTerm
     );
-    setNodes(filteredNodes);
-    setEdges(filteredEdges);
-  }, [data, settings, searchTerm, setNodes, setEdges]);
-
+    setNodes(flowNodes);
+    setEdges(flowEdges);
+  }, [data, settings, searchTerm, generateNodesAndEdges, setNodes, setEdges]);
+  
   // Save node positions when they change
   const onNodeDragStop = useCallback(
     (event: React.MouseEvent, node: Node) => {
@@ -124,11 +203,23 @@ const GraphView: React.FC<GraphViewProps> = ({ data, availableTags = [] }) => {
     [settings.selectedTags, updateSelectedTags]
   );
 
-  // Register keyboard shortcuts for the graph
-  useGraphHotkeys({
-    layout: settings.layout,
-    onChangeLayout: changeLayout,
-  });
+  // Register hotkey actions for the graph
+  const hotKeyActions = useMemo(() => ({
+    zoomIn: () => reactFlowInstance.zoomIn({ duration: 300 }),
+    zoomOut: () => reactFlowInstance.zoomOut({ duration: 300 }),
+    fitView: () => reactFlowInstance.fitView({ duration: 500 }),
+    reset: () => {
+      const { nodes: flowNodes, edges: flowEdges } = generateNodesAndEdges(
+        data.nodes,
+        data.edges,
+        settings,
+        searchTerm
+      );
+      setNodes(flowNodes);
+      setEdges(flowEdges);
+      setTimeout(() => reactFlowInstance.fitView({ duration: 500 }), 50);
+    }
+  }), [reactFlowInstance, data, settings, searchTerm, generateNodesAndEdges, setNodes, setEdges]);
 
   return (
     <div className="h-[calc(100vh-180px)] border rounded-lg relative bg-background">
