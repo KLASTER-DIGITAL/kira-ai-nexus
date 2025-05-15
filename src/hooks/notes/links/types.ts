@@ -1,34 +1,43 @@
 
+import { Note } from "@/types/notes";
+
 export interface NodeBasicInfo {
   id: string;
   title: string;
-  type: "note" | "task" | "event";
-}
-
-export interface LinkInfo {
-  id?: string;
-  source_id: string;
-  target_id: string;
-  type?: string;
+  type: string;
 }
 
 export interface LinkData {
   id: string;
   source_id: string;
   target_id: string;
+  type: string;
   source?: NodeBasicInfo;
   target?: NodeBasicInfo;
-  type?: string;
+}
+
+export interface LinksResult {
+  incomingLinks: LinkData[];
+  outgoingLinks: LinkData[];
 }
 
 export interface CreateLinkParams {
-  source_id: string;
-  target_id: string;
-  type?: string;
+  sourceId: string;
+  targetId: string;
+  type: string;
 }
 
 export interface UpdateLinksParams {
-  sourceId: string;
-  targetIds: string[];
+  noteId: string;
+  oldTitle: string;
+  newTitle: string;
+  content: string;
+}
+
+export interface NodeLink {
+  id: string;
+  source: string;
+  target: string;
   type?: string;
 }
+

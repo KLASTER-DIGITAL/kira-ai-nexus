@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Note } from "@/types/notes";
@@ -9,77 +10,63 @@ import NoteEditorActions from "./editor/NoteEditorActions";
 import { LocalGraphView } from "@/components/graph";
 
 interface NoteEditorProps {
-  note: Note;
+  note?: Note;
   onUpdateNote: (note: Note) => Promise<void>;
   onDeleteNote: (noteId: string) => Promise<void>;
   isNew?: boolean;
   onCancel?: () => void;
+  onNoteSelect?: (noteId: string) => void;
+  onSave: (noteData: { title: string; content: string; tags: string[] }) => void;
 }
 
-const NoteEditor: React.FC<NoteEditorProps> = ({ note, onUpdateNote, onDeleteNote, isNew = false, onCancel }) => {
-  const [title, setTitle] = useState(note.title);
-  const [content, setContent] = useState(note.content || "");
-  const [tags, setTags] = useState(note.tags || []);
-  const [isFavorite, setIsFavorite] = useState(note.is_favorite || false);
-  const [updatedNote, setUpdatedNote] = useState<Note>(note);
-  const { generateLinks } = useNoteLinks();
+const NoteEditor: React.FC<NoteEditorProps> = ({ 
+  note, 
+  onSave, 
+  onCancel, 
+  isNew = false,
+  onNoteSelect 
+}) => {
+  const defaultNote: Note = {
+    id: "",
+    title: "",
+    content: "",
+    tags: [],
+    user_id: "",
+    type: "note"
+  };
 
-  // Autosave functionality
-  useNoteAutosave({
-    note: updatedNote,
-    onUpdateNote: onUpdateNote,
-    enabled: !isNew,
-  });
+  const [title, setTitle] = useState(note?.title || "");
+  const [content, setContent] = useState(note?.content || "");
+  const [tags, setTags] = useState(note?.tags || []);
+  
+  const { links } = useNoteLinks(note?.id);
 
   useEffect(() => {
-    // Update the local state when the note prop changes
-    setTitle(note.title);
-    setContent(note.content || "");
-    setTags(note.tags || []);
-    setIsFavorite(note.is_favorite || false);
-    setUpdatedNote(note);
+    if (note) {
+      setTitle(note.title);
+      setContent(note.content || "");
+      setTags(note.tags || []);
+    }
   }, [note]);
 
-  useEffect(() => {
-    // Update the updatedNote state when the local state changes
-    setUpdatedNote({
-      ...updatedNote,
-      title: title,
-      content: content,
-      tags: tags,
-      is_favorite: isFavorite,
-    });
-  }, [title, content, tags, isFavorite]);
-
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(e.target.value);
+  const handleTitleChange = (newTitle: string) => {
+    setTitle(newTitle);
   };
 
   const handleContentChange = (value: string) => {
     setContent(value);
-    generateLinks(value, note.id);
   };
 
-  const handleTagsChange = (tags: string[]) => {
-    setTags(tags);
+  const handleTagsChange = (newTags: string[]) => {
+    setTags(newTags);
   };
 
-  const handleFavoriteChange = (checked: boolean) => {
-    setIsFavorite(checked);
-  };
-
-  const handleSave = async () => {
-    await onUpdateNote(updatedNote);
-  };
-
-  const handleDelete = async () => {
-    await onDeleteNote(note.id);
-  };
-
-  const handleCancel = () => {
-    if (onCancel) {
-      onCancel();
-    }
+  const handleSave = () => {
+    onSave({
+      title,
+      content,
+      tags
+    });
   };
 
   return (
@@ -87,25 +74,31 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note, onUpdateNote, onDeleteNot
       <CardHeader className="pb-2">
         <NoteMetadata
           title={title}
-          tags={tags}
-          isFavorite={isFavorite}
           onTitleChange={handleTitleChange}
+          tags={tags}
           onTagsChange={handleTagsChange}
-          onFavoriteChange={handleFavoriteChange}
+          color=""
+          onColorChange={() => {}}
         />
       </CardHeader>
       <CardContent className="flex-grow">
-        <NoteContent content={content} onContentChange={handleContentChange} />
+        <NoteContent
+          content={content}
+          onContentChange={handleContentChange}
+          tags={tags}
+          onTagsChange={handleTagsChange}
+          color=""
+          onColorChange={() => {}}
+        />
       </CardContent>
       <CardFooter className="flex justify-between">
         <NoteEditorActions
           isNew={isNew}
           onSave={handleSave}
-          onDelete={handleDelete}
-          onCancel={handleCancel}
+          onCancelClick={onCancel}
         />
       </CardFooter>
-      <LocalGraphView nodeId={note.id} />
+      {note?.id && <LocalGraphView nodeId={note.id} />}
     </Card>
   );
 };

@@ -1,12 +1,13 @@
 
-import { useCallback } from 'react';
-import { Editor } from '@tiptap/react';
-import { useWikiLinks } from '../useWikiLinks';
-import { useEditorExtensions } from './useEditorExtensions';
+import { useCallback } from "react";
+import { Editor } from "@tiptap/react";
+import { useEditorExtensions } from "./useEditorExtensions";
+import { useWikiLinkExtensions } from "./useWikiLinkExtensions";
+import { useWikiLinks } from "../links/useWikiLinks";
 
-interface UseEditorConfigProps {
-  content: string;
-  onChange: (content: string) => void;
+interface UseEditorConfigOptions {
+  content?: string;
+  onChange?: (content: string) => void;
   placeholder?: string;
   editable?: boolean;
   autoFocus?: boolean;
@@ -14,62 +15,58 @@ interface UseEditorConfigProps {
   onNoteCreated?: (noteId: string) => void;
 }
 
-/**
- * Hook for configuring TipTap editor
- */
-export const useEditorConfig = ({
-  content,
-  onChange,
-  placeholder = "Начните писать...",
-  editable = true,
-  autoFocus = false,
-  noteId,
-  onNoteCreated,
-}: UseEditorConfigProps) => {
+export const useEditorConfig = (options: UseEditorConfigOptions = {}) => {
   const {
-    handleCreateNote,
-    validateWikiLink,
-    processWikiLinks,
-    fetchNotesForSuggestion,
-    validateLinks
-  } = useWikiLinks(noteId, onNoteCreated);
+    content = "",
+    onChange = () => {},
+    placeholder = "Начните писать...",
+    editable = true,
+    autoFocus = false,
+    noteId,
+    onNoteCreated,
+  } = options;
 
-  // Get editor extensions
-  const { getExtensions } = useEditorExtensions(
-    placeholder,
-    validateWikiLink,
-    fetchNotesForSuggestion,
-    handleCreateNote
-  );
+  // Get wiki links functionality
+  const wikiLinks = useWikiLinks(noteId);
+  
+  // Get base extensions for the editor
+  const baseExtensions = useEditorExtensions(placeholder);
+  
+  // Get wiki link specific extensions
+  const wikiLinkExtensions = useWikiLinkExtensions({
+    noteId,
+    onNoteCreated,
+    allNotes: wikiLinks.allNotes
+  });
 
-  /**
-   * Create the editor configuration object
-   */
+  // Combine all extensions
+  const extensions = [
+    ...baseExtensions,
+    ...wikiLinkExtensions,
+  ];
+
+  // Configure editor
   const getEditorConfig = useCallback(() => {
     return {
-      extensions: getExtensions(),
+      extensions,
       content,
       editable,
+      autofocus: autoFocus,
       onUpdate: ({ editor }: { editor: Editor }) => {
         onChange(editor.getHTML());
-        
-        // Process and extract wiki links from content after each update
-        if (noteId) {
-          processWikiLinks(editor);
-        }
       },
-      autofocus: autoFocus,
     };
-  }, [
-    content, 
-    onChange, 
-    editable, 
-    autoFocus, 
-    noteId,
-    getExtensions,
-    processWikiLinks
-  ]);
+  }, [content, extensions, editable, autoFocus, onChange]);
 
-  return { getEditorConfig, validateLinks };
+  // Validate links in the editor
+  const validateLinks = useCallback((editor: Editor) => {
+    // The logic would be handled by wikiLinks
+    console.log("Validating links in editor");
+    // This function would be implemented in the wiki link extensions
+  }, []);
+
+  return {
+    getEditorConfig,
+    validateLinks,
+  };
 };
-

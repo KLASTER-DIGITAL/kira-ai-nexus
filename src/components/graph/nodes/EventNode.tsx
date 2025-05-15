@@ -1,93 +1,63 @@
 
-import React, { memo } from "react";
+import React from "react";
 import { Handle, Position } from "@xyflow/react";
+import { getNodeColor, getNodeBorderColor } from "../utils/graphUtils";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
+import { Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Calendar, Clock } from "lucide-react";
-
-interface Event {
-  id: string;
-  title: string;
-  start_date: string;
-  end_date?: string;
-  description?: string;
-  tags?: string[];
-}
 
 interface EventNodeProps {
   data: {
-    event: Event;
+    event: any;
+    label: string;
+    type: string;
   };
   selected: boolean;
 }
 
 const EventNode: React.FC<EventNodeProps> = ({ data, selected }) => {
   const { event } = data;
+  const nodeColor = getNodeColor('event');
+  const nodeBorderColor = getNodeBorderColor('event');
   
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+  // Format the date if available
+  const formattedStartDate = event?.startDate ? format(
+    new Date(event.startDate), 
+    "d MMM yyyy HH:mm", 
+    { locale: ru }
+  ) : null;
   
   return (
-    <div
+    <div 
       className={cn(
-        "px-4 py-2 rounded-lg shadow-md transition-all bg-card border w-[180px]",
-        selected ? "border-primary shadow-lg ring-1 ring-primary" : "border-border"
+        "px-3 py-2 rounded-md shadow-md bg-white dark:bg-slate-800 border-2",
+        selected ? `border-orange-400` : `border-[${nodeBorderColor}]`,
+        "min-w-[150px] max-w-[220px] transition-all"
       )}
     >
-      <div className="font-medium text-sm truncate">{event.title}</div>
+      <Handle type="target" position={Position.Top} className="w-2 h-2" />
       
-      {event.start_date && (
-        <div className="flex items-center text-xs text-muted-foreground mt-1">
-          <Calendar className="h-3 w-3 mr-1" />
-          <span>{formatDate(event.start_date)}</span>
+      <div className="flex items-center gap-1 mb-1">
+        <Calendar className="w-4 h-4 text-blue-500" />
+        <div className="text-xs font-medium text-blue-500">
+          EVENT
+        </div>
+      </div>
+      
+      <div className="font-medium text-sm mb-1 line-clamp-2">
+        {data.label}
+      </div>
+      
+      {formattedStartDate && (
+        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          {formattedStartDate}
         </div>
       )}
       
-      {/* Show tags if available */}
-      {event.tags && event.tags.length > 0 && (
-        <div className="flex flex-wrap mt-2 gap-1">
-          {event.tags.slice(0, 2).map((tag, index) => (
-            <div
-              key={index}
-              className="bg-muted px-1.5 py-0.5 text-[10px] rounded"
-            >
-              {tag}
-            </div>
-          ))}
-          {event.tags.length > 2 && (
-            <div className="bg-muted px-1.5 py-0.5 text-[10px] rounded">
-              +{event.tags.length - 2}
-            </div>
-          )}
-        </div>
-      )}
-      
-      {/* Handles for connections */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        style={{
-          width: 6,
-          height: 6,
-          backgroundColor: "#f59e0b",
-          border: "1px solid white",
-        }}
-        isConnectable={false}
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        style={{
-          width: 6,
-          height: 6,
-          backgroundColor: "#f59e0b",
-          border: "1px solid white",
-        }}
-        isConnectable={false}
-      />
+      <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
     </div>
   );
 };
 
-export default memo(EventNode);
+export default EventNode;

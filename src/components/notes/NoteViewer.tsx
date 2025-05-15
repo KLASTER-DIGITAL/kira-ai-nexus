@@ -21,6 +21,15 @@ const NoteViewer: React.FC<NoteViewerProps> = ({ note, onNoteSelect }) => {
     }
   };
   
+  // Transform incomingLinks to the format expected by BacklinksList
+  const formattedLinks = links?.incomingLinks?.map(link => ({
+    id: link.id,
+    nodes: {
+      id: link.source.id,
+      title: link.source.title
+    }
+  })) || [];
+  
   return (
     <Card className="w-full">
       <CardHeader>
@@ -38,7 +47,7 @@ const NoteViewer: React.FC<NoteViewerProps> = ({ note, onNoteSelect }) => {
         {hasBacklinks && (
           <div className="mt-4">
             <BacklinksList 
-              links={links.incomingLinks} 
+              links={formattedLinks}
               onLinkClick={handleWikiLinkClick}
             />
           </div>

@@ -1,95 +1,85 @@
 
-import React, { memo } from "react";
+import React from "react";
 import { Handle, Position } from "@xyflow/react";
 import { Task } from "@/types/tasks";
+import { getNodeColor, getNodeBorderColor } from "../utils/graphUtils";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
+import { ArrowRight, Check, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Calendar, Clock } from "lucide-react";
 
 interface TaskNodeProps {
   data: {
     task: Task;
+    label: string;
+    type: string;
   };
   selected: boolean;
 }
 
 const TaskNode: React.FC<TaskNodeProps> = ({ data, selected }) => {
   const { task } = data;
+  const nodeColor = getNodeColor('task');
+  const nodeBorderColor = getNodeBorderColor('task');
   
-  const priorityColors = {
-    high: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-    medium: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
-    low: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  // Format the date
+  const formattedDueDate = task.dueDate ? format(
+    new Date(task.dueDate), 
+    "d MMM yyyy", 
+    { locale: ru }
+  ) : null;
+  
+  // Check if task is completed
+  const isCompleted = task.status === "completed";
+  
+  // Color based on priority
+  const getPriorityColor = () => {
+    switch (task.priority) {
+      case "high":
+        return "text-red-500";
+      case "medium":
+        return "text-yellow-500";
+      case "low":
+        return "text-blue-500";
+      default:
+        return "text-gray-500";
+    }
   };
   
   return (
-    <div
+    <div 
       className={cn(
-        "px-4 py-2 rounded-lg shadow-md transition-all bg-card border w-[180px]",
-        selected ? "border-primary shadow-lg ring-1 ring-primary" : "border-border"
+        "px-3 py-2 rounded-md shadow-md bg-white dark:bg-slate-800 border-2",
+        selected ? `border-orange-400` : `border-[${nodeBorderColor}]`,
+        "min-w-[150px] max-w-[220px] transition-all"
       )}
     >
-      <div className="font-medium text-sm truncate">{task.title}</div>
+      <Handle type="target" position={Position.Top} className="w-2 h-2" />
       
-      <div className="flex items-center gap-2 mt-2">
-        {task.due_date && (
-          <div className="flex items-center text-xs text-muted-foreground">
-            <Calendar className="h-3 w-3 mr-1" />
-            <span>{new Date(task.due_date).toLocaleDateString()}</span>
-          </div>
-        )}
-        
-        <div className={cn(
-          "px-1.5 py-0.5 text-xs rounded-sm",
-          task.priority ? priorityColors[task.priority as keyof typeof priorityColors] : ""
-        )}>
-          {task.priority || "None"}
+      <div className="flex items-center justify-between mb-1">
+        <div className={cn("text-xs font-bold", getPriorityColor())}>
+          {task.priority?.toUpperCase()}
         </div>
+        {isCompleted && (
+          <Check className="w-4 h-4 text-green-500" />
+        )}
       </div>
       
-      {/* Show tags if available */}
-      {task.tags && task.tags.length > 0 && (
-        <div className="flex flex-wrap mt-2 gap-1">
-          {task.tags.slice(0, 2).map((tag, index) => (
-            <div
-              key={index}
-              className="bg-muted px-1.5 py-0.5 text-[10px] rounded"
-            >
-              {tag}
-            </div>
-          ))}
-          {task.tags.length > 2 && (
-            <div className="bg-muted px-1.5 py-0.5 text-[10px] rounded">
-              +{task.tags.length - 2}
-            </div>
-          )}
+      <div className="font-medium text-sm mb-1 line-clamp-2">
+        {task.title}
+      </div>
+      
+      {formattedDueDate && (
+        <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <Clock className="w-3 h-3 mr-1" />
+          {formattedDueDate}
         </div>
       )}
       
-      {/* Handles for connections */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        style={{
-          width: 6,
-          height: 6,
-          backgroundColor: "#3b82f6",
-          border: "1px solid white",
-        }}
-        isConnectable={false}
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        style={{
-          width: 6,
-          height: 6,
-          backgroundColor: "#3b82f6",
-          border: "1px solid white",
-        }}
-        isConnectable={false}
-      />
+      <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
     </div>
   );
 };
 
-export default memo(TaskNode);
+export default TaskNode;

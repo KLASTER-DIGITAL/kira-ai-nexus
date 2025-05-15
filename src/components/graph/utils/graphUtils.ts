@@ -1,63 +1,111 @@
 
-import { Node, Edge } from "@xyflow/react";
-import { NodeBasicInfo, NodeLink } from "@/hooks/notes/links/types";
+import { Edge, Node } from "@xyflow/react";
+import { Note } from "@/types/notes";
+import { Task } from "@/types/tasks";
 
-export function getRandomPosition() {
-  return {
-    x: Math.random() * 800,
-    y: Math.random() * 600,
-  };
+export interface NodeLink {
+  id: string;
+  source: string;
+  target: string;
+  type?: string;
 }
 
-export function getNodeType(node: NodeBasicInfo): string {
-  switch (node.type) {
-    case 'note': return 'noteNode';
-    case 'task': return 'taskNode';
-    case 'event': return 'eventNode';
-    default: return 'noteNode';
-  }
+export interface GraphData {
+  nodes: Node[];
+  edges: Edge[];
 }
 
-export function getLinkColor(type: string): string {
-  switch (type) {
-    case 'wikilink': return '#9d5cff';
-    case 'tasklink': return '#00a3ff';
-    case 'eventlink': return '#ff6b6b';
-    case 'reference': return '#00d085';
-    default: return '#888888';
-  }
-}
-
-export function generateGraphElements(
-  nodes: NodeBasicInfo[],
-  links: NodeLink[],
-  savedPositions: Record<string, {x: number, y: number}>
-): { nodes: Node[], edges: Edge[] } {
+export const generateNodesAndEdges = (
+  notes: Note[],
+  tasks: Task[],
+  links: NodeLink[]
+): GraphData => {
+  const nodes: Node[] = [];
+  const edges: Edge[] = [];
   
-  if (!nodes || !links) return { nodes: [], edges: [] };
+  // Add note nodes
+  notes.forEach(note => {
+    nodes.push({
+      id: note.id,
+      data: { label: note.title, type: 'note', note },
+      position: { x: Math.random() * 800, y: Math.random() * 600 },
+      type: 'noteNode',
+    });
+  });
+  
+  // Add task nodes
+  tasks.forEach(task => {
+    nodes.push({
+      id: task.id,
+      data: { label: task.title, type: 'task', task },
+      position: { x: Math.random() * 800, y: Math.random() * 600 },
+      type: 'taskNode',
+    });
+  });
+  
+  // Add edges based on links
+  links.forEach(link => {
+    edges.push({
+      id: link.id,
+      source: link.source,
+      target: link.target,
+      type: 'default',
+      animated: true,
+    });
+  });
+  
+  return { nodes, edges };
+};
 
-  // Create nodes for React Flow
-  const reactFlowNodes: Node[] = nodes.map((node) => ({
-    id: node.id,
-    type: getNodeType(node),
-    data: { node },
-    position: savedPositions[node.id] || getRandomPosition(),
-  }));
+export const getNodeColor = (nodeType: string): string => {
+  switch (nodeType) {
+    case 'note':
+      return '#9b87f5'; // purple
+    case 'task':
+      return '#10B981'; // green
+    case 'event':
+      return '#60A5FA'; // blue
+    default:
+      return '#6B7280'; // gray
+  }
+};
 
-  // Create edges for React Flow
-  const reactFlowEdges: Edge[] = links.map((link) => ({
-    id: `e-${link.source_id}-${link.target_id}`,
-    source: link.source_id,
-    target: link.target_id,
-    animated: true,
-    style: {
-      stroke: getLinkColor(link.type),
-      strokeWidth: 2
-    },
-  }));
+export const getNodeBorderColor = (nodeType: string): string => {
+  switch (nodeType) {
+    case 'note':
+      return '#8b77e5'; // darker purple
+    case 'task':
+      return '#0AA971'; // darker green
+    case 'event':
+      return '#5095EA'; // darker blue
+    default:
+      return '#5B6270'; // darker gray
+  }
+};
 
-  return { 
-    nodes: reactFlowNodes, 
-    edges: reactFlowEdges 
-  };
-}
+export const filterNodesByType = (
+  nodes: Node[],
+  showNotes: boolean,
+  showTasks: boolean,
+  showEvents: boolean
+): Node[] => {
+  return nodes.filter(node => {
+    const nodeType = node.data?.type;
+    
+    if (nodeType === 'note' && showNotes) return true;
+    if (nodeType === 'task' && showTasks) return true;
+    if (nodeType === 'event' && showEvents) return true;
+    
+    return false;
+  });
+};
+
+export const filterNodesBySearch = (nodes: Node[], searchTerm: string): Node[] => {
+  if (!searchTerm) return nodes;
+  
+  const lowercaseSearch = searchTerm.toLowerCase();
+  return nodes.filter(node => {
+    const nodeLabel = node.data?.label?.toLowerCase();
+    return nodeLabel && nodeLabel.includes(lowercaseSearch);
+  });
+};
