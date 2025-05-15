@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { useEditor, EditorContent, Editor } from "@tiptap/react";
-import { MenuBar } from "./TipTapMenuBar";
+import { MenuBar } from "./menubar";
 import { useEditorConfig } from "@/hooks/notes/editor/useEditorConfig";
 import { useWikiLinks } from "@/hooks/notes/links/useWikiLinks";
 import { addWikiLinkClickHandlers } from "./extensions/wiki-link/WikiLinkClickHandler";

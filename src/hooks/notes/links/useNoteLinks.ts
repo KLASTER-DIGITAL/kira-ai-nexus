@@ -1,6 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { LinksResult, NoteBasicInfo, CreateLinkParams, UpdateLinksParams } from "./types";
+import { LinksResult, NodeBasicInfo, CreateLinkParams, UpdateLinksParams } from "./types";
 import { fetchLinks, fetchAllNotes, createLink } from "./linksApi";
 
 /**
@@ -24,8 +24,8 @@ export const useNoteLinks = (noteId?: string) => {
   
   // Mutation to create a link between notes
   const createLinkMutation = useMutation({
-    mutationFn: async ({ sourceId, targetId }: CreateLinkParams) => {
-      return await createLink(sourceId, targetId);
+    mutationFn: async (params: CreateLinkParams) => {
+      return await createLink(params.sourceId, params.targetId, params.type);
     },
     onSuccess: () => {
       // Invalidate queries to refresh data
@@ -35,10 +35,10 @@ export const useNoteLinks = (noteId?: string) => {
   
   // Mutation to update links when notes are renamed
   const updateLinksMutation = useMutation({
-    mutationFn: async ({ oldTitle, newTitle }: UpdateLinksParams) => {
+    mutationFn: async (params: UpdateLinksParams) => {
       // This is a placeholder for when we need to update links that might reference a note by title
-      console.log(`Updating links from "${oldTitle}" to "${newTitle}"`);
-      return { oldTitle, newTitle };
+      console.log(`Updating links from "${params.oldTitle}" to "${params.newTitle}"`);
+      return { oldTitle: params.oldTitle, newTitle: params.newTitle };
     },
     onSuccess: () => {
       // Invalidate to refresh data
@@ -47,12 +47,27 @@ export const useNoteLinks = (noteId?: string) => {
     }
   });
   
+  // Format links for compatibility with existing components
+  const formattedLinks = linksData ? {
+    incomingLinks: linksData.incomingLinks.map(link => ({
+      id: link.id,
+      nodes: {
+        id: link.source.id,
+        title: link.source.title
+      }
+    })),
+    outgoingLinks: linksData.outgoingLinks
+  } : { incomingLinks: [], outgoingLinks: [] };
+  
   return {
-    links: linksData || { incomingLinks: [], outgoingLinks: [] },
+    links: formattedLinks,
+    rawLinks: linksData || { incomingLinks: [], outgoingLinks: [] },
     isLoading: isLinksLoading || isAllNotesLoading,
     error: linksError,
     allNotes: allNotesData || [],
-    createLink: (linkData: CreateLinkParams) => createLinkMutation.mutate(linkData),
-    updateLinks: (data: UpdateLinksParams) => updateLinksMutation.mutate(data)
+    createLink: (sourceId: string, targetId: string, type?: string) => 
+      createLinkMutation.mutate({ sourceId, targetId, type }),
+    updateLinks: (oldTitle: string, newTitle: string) => 
+      updateLinksMutation.mutate({ oldTitle, newTitle })
   };
 };

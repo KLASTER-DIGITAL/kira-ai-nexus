@@ -1,176 +1,159 @@
+import { Node, Edge } from "@xyflow/react";
+import { Note } from "@/types/notes";
 
-import { Node, Edge } from '@xyflow/react';
-import { Note } from '@/types/notes';
+export type GraphNode = Node<{
+  title: string;
+  type: string;
+  nodeType?: string;
+  tags?: string[];
+}>;
 
-/**
- * Calculate position for nodes in a circular layout
- */
-export const calculateNodePosition = (
-  index: number,
-  total: number,
-  centerX: number,
-  centerY: number,
-  radius: number
-) => {
-  if (total === 1) {
-    return { x: centerX, y: centerY };
-  }
+export type GraphEdge = Edge<{
+  type?: string;
+}>;
 
-  const angle = (index / total) * 2 * Math.PI;
-  const x = centerX + radius * Math.cos(angle);
-  const y = centerY + radius * Math.sin(angle);
-
-  return { x, y };
-};
+export interface GraphData {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}
 
 /**
- * Generate a color based on node type or tag
- */
-export const getNodeColor = (type: string, tags?: string[]) => {
-  const baseColors = {
-    note: '#9b87f5',
-    task: '#10B981',
-    event: '#60A5FA',
-    default: '#6B7280'
-  };
-
-  // If it's a note with tags, use the first tag to influence the color
-  if (type === 'note' && tags && tags.length > 0) {
-    // Simple hash function to get consistent colors
-    const tag = tags[0];
-    let hash = 0;
-    for (let i = 0; i < tag.length; i++) {
-      hash = tag.charCodeAt(i) + ((hash << 5) - hash);
-    }
-
-    // Convert to HSL color with fixed saturation and lightness
-    const hue = Math.abs(hash) % 360;
-    return `hsl(${hue}, 80%, 65%)`;
-  }
-
-  return baseColors[type as keyof typeof baseColors] || baseColors.default;
-};
-
-/**
- * Prepare nodes and edges for the graph visualization
+ * Generate nodes and edges for the graph view
  */
 export const generateNodesAndEdges = (
-  nodes: any[],
-  links: any[],
-  showTags: boolean = true,
-  centerX: number = 0,
-  centerY: number = 0
-): { nodes: Node[]; edges: Edge[] } => {
-  if (!nodes || !links) {
+  notes: Note[] = [], 
+  links: any[] = [],
+  centerNodeId?: string
+): GraphData => {
+  if (!notes.length) {
     return { nodes: [], edges: [] };
   }
 
-  // Generate nodes
-  const graphNodes: Node[] = nodes.map((node, index) => {
-    const position = calculateNodePosition(
-      index,
-      nodes.length,
-      centerX,
-      centerY,
-      200
-    );
-
-    const nodeData = {
-      title: node.title,
-      type: node.type || 'note',
-      content: node.content,
-      tags: node.tags || [],
-      created_at: node.created_at,
-      updated_at: node.updated_at
-    };
-
-    // Set the appropriate node type
-    let nodeType = 'noteNode';
-    if (node.type === 'task') nodeType = 'taskNode';
-    if (node.type === 'event') nodeType = 'eventNode';
-
-    // Get node color based on type and tags
-    const color = getNodeColor(
-      node.type || 'note',
-      showTags ? node.tags : undefined
-    );
-
-    return {
-      id: node.id,
-      type: nodeType,
-      position,
-      data: {
-        ...nodeData,
-        label: node.title,
-        color,
-      },
-      style: {
-        background: color,
-        borderColor: color,
-      },
-    };
-  });
-
-  // Generate edges
-  const graphEdges: Edge[] = links.map((link) => {
-    const type = typeof link.type === 'string' ? link.type.toLowerCase() : 'default';
+  // Create nodes
+  const nodes: GraphNode[] = notes.map((note, index) => {
+    const isCenter = note.id === centerNodeId;
+    
+    // Position nodes in a circle around the center
+    const angle = (index / notes.length) * 2 * Math.PI;
+    const radius = isCenter ? 0 : 300;
+    const x = radius * Math.cos(angle);
+    const y = radius * Math.sin(angle);
     
     return {
-      id: link.id,
-      source: link.source_id,
-      target: link.target_id,
-      type: 'smoothstep',
-      animated: type === 'reference',
-      style: {
-        stroke: type === 'reference' ? '#9b87f5' : '#6B7280',
-      },
+      id: note.id,
+      position: { x: isCenter ? 0 : x, y: isCenter ? 0 : y },
       data: {
-        type: type,
+        title: note.title,
+        type: note.type || 'note',
+        nodeType: getNodeTypeFromTags(note.tags),
+        tags: note.tags
       },
+      type: getNodeTypeComponent(note.type || 'note'),
     };
   });
-
-  return { nodes: graphNodes, edges: graphEdges };
+  
+  // Create edges
+  const edges: GraphEdge[] = links.map((link, index) => ({
+    id: link.id || `e-${index}`,
+    source: link.source_id,
+    target: link.target_id,
+    data: {
+      type: link.type
+    },
+    type: 'default',
+    animated: false,
+  }));
+  
+  return { nodes, edges };
 };
 
 /**
- * Filter nodes based on search query
+ * Determine the node type from tags
  */
-export const filterNodesByQuery = (nodes: Node[], searchQuery: string): Node[] => {
-  if (!searchQuery) return nodes;
+export const getNodeTypeFromTags = (tags?: string[]): string => {
+  if (!tags || !Array.isArray(tags)) return 'default';
   
-  const query = searchQuery.toLowerCase();
+  const tagsString = tags.join(',').toLowerCase();
   
-  return nodes.filter((node) => {
-    const title = node.data.title.toLowerCase();
-    const tags = node.data.tags || [];
+  if (tagsString.includes('task')) return 'task';
+  if (tagsString.includes('event')) return 'event';
+  if (tagsString.includes('project')) return 'project';
+  
+  return 'note';
+};
+
+/**
+ * Get the component type for a node based on its type
+ */
+export const getNodeTypeComponent = (type?: string): string => {
+  switch (type) {
+    case 'task':
+      return 'taskNode';
+    case 'event':
+      return 'eventNode';
+    default:
+      return 'noteNode';
+  }
+};
+
+/**
+ * Filter graph data based on search query and selected tags
+ */
+export const filterGraphData = (
+  data: GraphData,
+  searchQuery?: string,
+  selectedTags?: string[]
+): GraphData => {
+  if (!searchQuery && (!selectedTags || !selectedTags.length)) {
+    return data;
+  }
+  
+  // Filter nodes based on search query and tags
+  const filteredNodes = data.nodes.filter((node) => {
+    const matchesSearch = !searchQuery || 
+      node.data.title.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesTitle = title.includes(query);
-    const matchesTags = tags.some((tag: string) => 
-      tag.toLowerCase().includes(query)
-    );
+    const matchesTags = !selectedTags?.length || 
+      selectedTags.some(tag => node.data.tags?.includes(tag));
     
-    return matchesTitle || matchesTags;
+    return matchesSearch && matchesTags;
   });
+  
+  // Only keep edges where both nodes are in the filtered set
+  const filteredNodeIds = filteredNodes.map(node => node.id);
+  const filteredEdges = data.edges.filter((edge) => {
+    return filteredNodeIds.includes(edge.source) && 
+           filteredNodeIds.includes(edge.target);
+  });
+  
+  return {
+    nodes: filteredNodes,
+    edges: filteredEdges
+  };
 };
 
 /**
- * Filter nodes by type
+ * Get the related node IDs from a central node
  */
-export const filterNodesByType = (nodes: Node[], nodeTypes: string[]): Node[] => {
-  if (!nodeTypes.length) return nodes;
+export const getRelatedNodeIds = (
+  nodeId: string,
+  edges: GraphEdge[],
+  depth: number = 1
+): string[] => {
+  if (depth <= 0) return [];
   
-  return nodes.filter((node) => nodeTypes.includes(node.data.type));
-};
-
-/**
- * Filter nodes by tags
- */
-export const filterNodesByTags = (nodes: Node[], selectedTags: string[]): Node[] => {
-  if (!selectedTags.length) return nodes;
+  const directlyConnected = edges
+    .filter(edge => edge.source === nodeId || edge.target === nodeId)
+    .map(edge => edge.source === nodeId ? edge.target : edge.source);
   
-  return nodes.filter((node) => {
-    const nodeTags = node.data.tags || [];
-    return selectedTags.some(tag => nodeTags.includes(tag));
-  });
+  if (depth === 1) {
+    return [...new Set([nodeId, ...directlyConnected])];
+  }
+  
+  // For deeper connections, recursively find related nodes
+  const nextLevel = directlyConnected.flatMap(id => 
+    getRelatedNodeIds(id, edges, depth - 1)
+  );
+  
+  return [...new Set([nodeId, ...directlyConnected, ...nextLevel])];
 };

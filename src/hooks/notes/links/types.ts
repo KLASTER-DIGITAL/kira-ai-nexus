@@ -1,17 +1,18 @@
 
-export interface NodeBasicInfo {
-  id: string;
-  title: string;
-  type: string;
-}
+import { Note } from "@/types/notes";
 
 export interface LinkData {
   id: string;
-  source_id: string;
-  target_id: string;
-  type: string;
-  source?: NodeBasicInfo;
-  target?: NodeBasicInfo;
+  source: {
+    id: string;
+    title: string;
+    type?: string;
+  };
+  target: {
+    id: string;
+    title: string;
+    type?: string;
+  };
 }
 
 export interface LinksResult {
@@ -19,8 +20,31 @@ export interface LinksResult {
   outgoingLinks: LinkData[];
 }
 
+export interface NodeBasicInfo {
+  id: string;
+  title: string;
+  type?: string;
+}
+
 export interface CreateLinkParams {
   sourceId: string;
   targetId: string;
   type?: string;
+}
+
+export interface UpdateLinksParams {
+  oldTitle: string;
+  newTitle: string;
+}
+
+export interface NoteLink {
+  id: string;
+  source: {
+    id: string;
+    title: string;
+  };
+  target?: {
+    id: string;
+    title: string;
+  };
 }

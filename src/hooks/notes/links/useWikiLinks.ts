@@ -2,7 +2,7 @@
 import { useCallback } from "react";
 import { useNotes } from "@/hooks/useNotes";
 import { useNotesMutations } from "@/hooks/notes/useNotesMutations";
-import { useNoteLinks } from "../useNoteLinks";
+import { useNoteLinks } from "./useNoteLinks";
 import { Note } from "@/types/notes";
 
 /**
@@ -40,28 +40,33 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
   // Handle creating a new note
   const handleCreateNote = useCallback(
     async (title: string) => {
-      if (!title.trim()) return;
+      if (!title.trim()) return null;
       
-      // Create a new note
-      const newNote = await createNote({
-        title,
-        content: "",
-        tags: [],
-        type: "note",
-        user_id: "", // This will be filled by the service
-      });
+      try {
+        // Create a new note
+        const newNote = await createNote({
+          title,
+          content: "",
+          tags: [],
+          type: "note",
+          user_id: "", // This will be filled by the service
+        });
 
-      // Create link between current note and new note if in editing context
-      if (noteId && newNote) {
-        await createLink(noteId, newNote.id, "note");
+        // Create link between current note and new note if in editing context
+        if (noteId && newNote) {
+          createLink(noteId, newNote.id);
+        }
+        
+        // Notify parent component of created note
+        if (onNoteCreated && newNote) {
+          onNoteCreated(newNote.id);
+        }
+        
+        return newNote;
+      } catch (error) {
+        console.error("Error creating note:", error);
+        return null;
       }
-      
-      // Notify parent component of created note
-      if (onNoteCreated && newNote) {
-        onNoteCreated(newNote.id);
-      }
-      
-      return newNote;
     },
     [noteId, createNote, createLink, onNoteCreated]
   );

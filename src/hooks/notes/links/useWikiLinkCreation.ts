@@ -1,7 +1,8 @@
 
 import { useCallback } from "react";
 import { useNotesMutations } from "@/hooks/notes/useNotesMutations";
-import { useNoteLinks } from "../useNoteLinks";
+import { useNoteLinks } from "./useNoteLinks";
+import { Note } from "@/types/notes";
 
 /**
  * Hook for creating new wiki links and associated notes
@@ -28,9 +29,9 @@ export const useWikiLinkCreation = (
           user_id: "", // This will be filled by the backend
         });
 
-        // Link the new note to the current note if we have a noteId
+        // Link the new note to the current note if we have a noteId and the note was created
         if (noteId && newNote) {
-          await createLink(noteId, newNote.id);
+          createLink(noteId, newNote.id);
         }
 
         // Notify parent component that a note was created
