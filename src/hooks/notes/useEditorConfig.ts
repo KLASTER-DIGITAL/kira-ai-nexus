@@ -45,8 +45,8 @@ export const useEditorConfig = ({
     // Create suggestion configuration for wiki links
     const wikiLinkSuggestionConfig = createWikiLinkSuggestion(fetchNotesForSuggestion, handleCreateNote);
     
-    // Wrap with Suggestion.configure
-    const wikiLinkSuggestion = Suggestion.configure(wikiLinkSuggestionConfig);
+    // Create the suggestion extension directly from the configuration
+    const wikiLinkSuggestion = Suggestion(wikiLinkSuggestionConfig);
     
     // Define extensions array
     const extensions: Extensions = [

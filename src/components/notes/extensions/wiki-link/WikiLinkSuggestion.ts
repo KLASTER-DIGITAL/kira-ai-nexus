@@ -19,9 +19,13 @@ export const createWikiLinkSuggestion = (
   fetchSuggestions: FetchWikiLinkSuggestions,
   createNoteCallback: CreateWikiLink
 ) => {
-  // Return the configured Suggestion extension directly
+  // Return an object compatible with the Suggestion function
   return {
-    type: 'suggestion',
+    char: '[[',
+    allowSpaces: true,
+    allowedPrefixes: [' ', '\n', null],
+    startOfLine: false,
+    
     // Create the extension when it's imported by TipTap
     items: async ({ query }) => {
       if (query.length === 0) return [];
@@ -143,4 +147,4 @@ export const createWikiLinkSuggestion = (
 };
 
 // Export named component
-export { default as WikiLinkSuggestionList } from './WikiLinkSuggestList';
+export { default as WikiLinkSuggestList } from './WikiLinkSuggestList';
