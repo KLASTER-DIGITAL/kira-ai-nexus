@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import GraphSearchInput from "./GraphSearchInput";
-import GraphFilterPanel from "./GraphFilterPanel";
+import { GraphFilterPanel } from "./GraphFilterPanel";
 
 interface GraphToolbarProps {
   searchTerm: string;

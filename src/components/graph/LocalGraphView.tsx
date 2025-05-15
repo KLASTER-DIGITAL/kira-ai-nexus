@@ -1,27 +1,28 @@
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import GraphView from "./GraphView";
+import React, { useState, useCallback } from 'react';
+import { Card } from '@/components/ui/card';
+import NotesGraph from '@/components/notes/graph/NotesGraph';
 
 interface LocalGraphViewProps {
   nodeId: string;
-  title?: string;
-  onNodeClick?: (nodeId: string, nodeType: string) => void;
+  onNodeClick?: (nodeId: string, nodeType?: string) => void;
 }
 
-const LocalGraphView: React.FC<LocalGraphViewProps> = ({ 
-  nodeId, 
-  title = "Связи", 
-  onNodeClick 
-}) => {
+const LocalGraphView: React.FC<LocalGraphViewProps> = ({ nodeId, onNodeClick }) => {
+  const handleNodeClick = useCallback((clickedNodeId: string) => {
+    if (onNodeClick) {
+      onNodeClick(clickedNodeId);
+    }
+  }, [onNodeClick]);
+
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <GraphView nodeId={nodeId} onNodeClick={onNodeClick} />
-      </CardContent>
+    <Card className="h-[400px] relative">
+      <div className="absolute inset-0">
+        <NotesGraph 
+          nodeId={nodeId} 
+          onNodeClick={handleNodeClick}
+        />
+      </div>
     </Card>
   );
 };

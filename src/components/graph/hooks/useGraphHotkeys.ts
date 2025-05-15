@@ -1,36 +1,44 @@
 
-import { useEffect } from "react";
+import { useHotkeys } from 'react-hotkeys-hook';
 
-interface HotKeyActions {
-  zoomIn: () => void;
-  zoomOut: () => void;
-  fitView: () => void;
-  reset: () => void;
+export interface HotKeyActions {
+  zoomIn?: () => void;
+  zoomOut?: () => void;
+  fitView?: () => void;
+  reset?: () => void;
+  search?: () => void;
 }
 
-export const useGraphHotkeys = (onActions: HotKeyActions) => {
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.altKey) {
-        if (event.key === '+' || event.key === '=') {
-          event.preventDefault();
-          onActions.zoomIn();
-        } else if (event.key === '-') {
-          event.preventDefault();
-          onActions.zoomOut();
-        } else if (event.key === '0') {
-          event.preventDefault();
-          onActions.fitView();
-        } else if (event.key === 'r') {
-          event.preventDefault();
-          onActions.reset();
-        }
-      }
-    };
+export function useGraphHotkeys(actions: HotKeyActions) {
+  // Zoom In: + or =
+  useHotkeys(['+=', 'ctrl+=', 'meta+='], (e) => {
+    e.preventDefault();
+    actions.zoomIn?.();
+  });
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [onActions]);
-};
+  // Zoom Out: -
+  useHotkeys(['-', 'ctrl+-', 'meta+-'], (e) => {
+    e.preventDefault();
+    actions.zoomOut?.();
+  });
+
+  // Fit View: f
+  useHotkeys(['f'], (e) => {
+    e.preventDefault();
+    actions.fitView?.();
+  });
+
+  // Reset: r
+  useHotkeys(['r'], (e) => {
+    e.preventDefault();
+    actions.reset?.();
+  });
+
+  // Search: ctrl+f / cmd+f
+  useHotkeys(['ctrl+f', 'meta+f'], (e) => {
+    e.preventDefault();
+    actions.search?.();
+  });
+
+  return null;
+}
