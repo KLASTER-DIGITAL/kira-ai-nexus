@@ -1,38 +1,63 @@
-export interface GraphViewSettings {
-  showNotes: boolean;
-  showTasks: boolean;
-  showEvents: boolean;
-  showIsolatedNodes: boolean;
-  selectedTags: string[];
-  layout: 'force' | 'radial' | 'hierarchical';
-  savedPositions: Record<string, {x: number, y: number}>;
-}
 
-export interface GraphViewFilters {
-  nodeTypes?: string[];
-  searchTerm?: string;
-  tags?: string[];
-  showIsolatedNodes?: boolean;
-}
+import { Note } from "@/types/notes";
 
 export interface NodeBasicInfo {
   id: string;
   title: string;
-  type: string;
-  content?: string;
-  tags?: string[];
-  [key: string]: any;  // Allow for additional properties based on node type
+  type: 'note' | 'task' | 'event';
 }
 
-export interface NodeLink {
-  id?: string;
-  source_id: string;
-  target_id: string;
-  type: string;
+// For backward compatibility
+export type NoteBasicInfo = NodeBasicInfo;
+
+export interface Link {
+  id: string;
+  source: string;
+  target: string;
+  label?: string;
+  type?: string;
 }
 
-export interface NodeShape {
-  type: string;
-  color: string;
-  icon: string;
+export interface LinksResult {
+  links: Link[];
+  isLoading: boolean;
+  error: Error | null;
+  allNotes: NoteBasicInfo[];
+}
+
+export interface CreateLinkParams {
+  source: string;
+  target: string;
+  label?: string;
+  type?: string;
+}
+
+export interface UpdateLinksParams {
+  noteId: string;
+  links: Array<{
+    targetId: string;
+    label?: string;
+    type?: string;
+  }>;
+}
+
+export interface UseWikiLinkCreationParams {
+  noteId: string;
+  content: string;
+}
+
+export interface UseWikiLinksProps {
+  noteId?: string;
+}
+
+export interface UseWikiLinkSuggestionsProps {
+  query: string;
+}
+
+export interface UseWikiLinkNavigationProps {
+  onNavigate: (linkId: string) => void;
+}
+
+export interface UseWikiLinkValidationProps {
+  content: string;
 }

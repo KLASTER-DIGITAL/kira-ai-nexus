@@ -1,35 +1,38 @@
 
-import React, { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
+import React from 'react';
+import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
-interface GraphSearchInputProps {
-  onSearch: (query: string) => void;
-  placeholder?: string;
+export interface GraphSearchInputProps {
+  searchTerm: string;
+  setSearchTerm: (value: string) => void;
 }
 
-export default function GraphSearchInput({ onSearch, placeholder = 'Поиск...' }: GraphSearchInputProps) {
-  const [query, setQuery] = useState('');
-
-  // Debounce search input
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onSearch(query);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [query, onSearch]);
-
+export const GraphSearchInput: React.FC<GraphSearchInputProps> = ({
+  searchTerm,
+  setSearchTerm
+}) => {
   return (
-    <div className="w-full relative">
+    <div className="relative">
       <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
       <Input
-        name="graph-search"
-        placeholder={placeholder}
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        className="pl-9 pr-4 w-full md:w-[200px] lg:w-[300px]"
+        type="search"
+        placeholder="Поиск узлов..."
+        className="pl-8 pr-8"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
       />
+      {searchTerm && (
+        <button
+          onClick={() => setSearchTerm('')}
+          className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+          aria-label="Clear search"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
-}
+};
+
+export default GraphSearchInput;

@@ -1,166 +1,135 @@
 
 import React from 'react';
-import { X } from 'lucide-react';
-
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-interface GraphFilterPanelProps {
-  showNotes: boolean;
-  showTasks: boolean;
-  showEvents: boolean;
-  showIsolatedNodes: boolean;
-  availableTags: string[];
+export interface GraphFilterPanelProps {
   selectedTags: string[];
-  onToggleNotes: () => void;
-  onToggleTasks: () => void;
-  onToggleEvents: () => void;
-  onToggleIsolatedNodes: () => void;
-  onUpdateSelectedTags: (tags: string[]) => void;
+  toggleTag: (tag: string) => void;
+  allTags: string[];
+  settings: {
+    showNotes: boolean;
+    showTasks: boolean;
+    showEvents: boolean;
+    showIsolatedNodes: boolean;
+  };
+  toggleNodeTypeVisibility: (type: 'notes' | 'tasks' | 'events') => void;
+  toggleIsolatedNodes: () => void;
 }
 
-export function GraphFilterPanel({
-  showNotes,
-  showTasks,
-  showEvents,
-  showIsolatedNodes,
-  availableTags,
+export const GraphFilterPanel: React.FC<GraphFilterPanelProps> = ({
   selectedTags,
-  onToggleNotes,
-  onToggleTasks,
-  onToggleEvents,
-  onToggleIsolatedNodes,
-  onUpdateSelectedTags
-}: GraphFilterPanelProps) {
-  // Handle tag selection
-  const handleTagSelect = (tag: string) => {
-    if (selectedTags.includes(tag)) {
-      onUpdateSelectedTags(selectedTags.filter(t => t !== tag));
-    } else {
-      onUpdateSelectedTags([...selectedTags, tag]);
-    }
-  };
-
-  // Clear all selected tags
-  const clearTagSelection = () => {
-    onUpdateSelectedTags([]);
-  };
-
+  toggleTag,
+  allTags,
+  settings,
+  toggleNodeTypeVisibility,
+  toggleIsolatedNodes,
+}) => {
   return (
-    <div className="flex flex-wrap gap-2">
-      {/* Node type toggles */}
-      <Button
-        variant={showNotes ? "default" : "outline"}
-        size="sm"
-        onClick={onToggleNotes}
-        className="text-xs"
-      >
-        Заметки
-      </Button>
-      
-      <Button
-        variant={showTasks ? "default" : "outline"}
-        size="sm"
-        onClick={onToggleTasks}
-        className="text-xs"
-      >
-        Задачи
-      </Button>
-      
-      <Button
-        variant={showEvents ? "default" : "outline"}
-        size="sm"
-        onClick={onToggleEvents}
-        className="text-xs"
-      >
-        События
-      </Button>
-
-      <Button
-        variant={showIsolatedNodes ? "default" : "outline"}
-        size="sm"
-        onClick={onToggleIsolatedNodes}
-        className="text-xs"
-      >
-        Изолированные
-      </Button>
-
-      {/* Tag filter popover */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="text-xs">
-            Теги {selectedTags.length > 0 && `(${selectedTags.length})`}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start" className="w-60 p-2">
-          <div className="flex justify-between items-center mb-2">
-            <h4 className="text-sm font-medium">Фильтр по тегам</h4>
-            {selectedTags.length > 0 && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={clearTagSelection}
-                className="h-6 px-2 text-xs"
-              >
-                Очистить все
-              </Button>
-            )}
+    <div className="space-y-4 p-4">
+      <div>
+        <h3 className="font-medium mb-2">Типы узлов</h3>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="show-notes" className="flex items-center gap-2">
+              Заметки
+              <Badge variant="outline" className="bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
+                Заметки
+              </Badge>
+            </Label>
+            <Switch
+              id="show-notes"
+              checked={settings.showNotes}
+              onCheckedChange={() => toggleNodeTypeVisibility('notes')}
+            />
           </div>
           
-          <Separator className="my-2" />
+          <div className="flex items-center justify-between">
+            <Label htmlFor="show-tasks" className="flex items-center gap-2">
+              Задачи
+              <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                Задачи
+              </Badge>
+            </Label>
+            <Switch
+              id="show-tasks"
+              checked={settings.showTasks}
+              onCheckedChange={() => toggleNodeTypeVisibility('tasks')}
+            />
+          </div>
           
-          {selectedTags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-2">
-              {selectedTags.map(tag => (
-                <Badge 
-                  key={tag} 
-                  variant="secondary"
-                  className="flex items-center gap-1 text-xs"
+          <div className="flex items-center justify-between">
+            <Label htmlFor="show-events" className="flex items-center gap-2">
+              События
+              <Badge variant="outline" className="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200">
+                События
+              </Badge>
+            </Label>
+            <Switch
+              id="show-events"
+              checked={settings.showEvents}
+              onCheckedChange={() => toggleNodeTypeVisibility('events')}
+            />
+          </div>
+        </div>
+      </div>
+      
+      <Separator />
+      
+      <div>
+        <h3 className="font-medium mb-2">Настройки отображения</h3>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="show-isolated">Показать изолированные узлы</Label>
+          <Switch
+            id="show-isolated"
+            checked={settings.showIsolatedNodes}
+            onCheckedChange={toggleIsolatedNodes}
+          />
+        </div>
+      </div>
+      
+      <Separator />
+      
+      <div>
+        <h3 className="font-medium mb-2">Фильтр по тегам</h3>
+        {allTags.length > 0 ? (
+          <ScrollArea className="h-40">
+            <div className="flex flex-wrap gap-2 p-1">
+              {allTags.map((tag) => (
+                <Badge
+                  key={tag}
+                  variant={selectedTags.includes(tag) ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => toggleTag(tag)}
                 >
                   {tag}
-                  <X 
-                    size={12} 
-                    className="cursor-pointer" 
-                    onClick={() => handleTagSelect(tag)}
-                  />
                 </Badge>
               ))}
             </div>
-          )}
-          
-          <ScrollArea className="h-60">
-            {availableTags.length > 0 ? (
-              <div className="space-y-2">
-                {availableTags.map(tag => (
-                  <div key={tag} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`tag-${tag}`} 
-                      checked={selectedTags.includes(tag)}
-                      onCheckedChange={() => handleTagSelect(tag)}
-                    />
-                    <label 
-                      htmlFor={`tag-${tag}`}
-                      className="text-sm cursor-pointer flex-1"
-                    >
-                      {tag}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground p-1">Нет доступных тегов</p>
-            )}
           </ScrollArea>
-        </PopoverContent>
-      </Popover>
+        ) : (
+          <p className="text-sm text-muted-foreground">Нет доступных тегов</p>
+        )}
+      </div>
+      
+      <Separator />
+      
+      <Button
+        variant="outline"
+        className="w-full"
+        onClick={() => {
+          // Reset all filters
+          selectedTags.forEach(tag => toggleTag(tag));
+        }}
+      >
+        Сбросить фильтры
+      </Button>
     </div>
   );
-}
+};
+
+export default GraphFilterPanel;

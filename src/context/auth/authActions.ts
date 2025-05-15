@@ -1,3 +1,4 @@
+
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { cleanupAuthState } from './utils';
@@ -84,11 +85,13 @@ export const signOut = async () => {
     
     // Attempt global sign out
     console.log("Performing global sign out");
-    await supabase.auth.signOut({ scope: 'global' });
+    const { error } = await supabase.auth.signOut({ scope: 'global' });
     
-    console.log("Sign out complete, redirecting to auth page");
-    // Force page reload for a clean state
-    window.location.href = '/auth';
+    if (!error) {
+      console.log("Sign out complete, redirecting to auth page");
+      // Use a basic redirect instead of navigate
+      window.location.href = '/auth';
+    }
     
     return { error: null };
   } catch (error) {

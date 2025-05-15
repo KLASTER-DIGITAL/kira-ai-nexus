@@ -20,7 +20,7 @@ export interface AuthContextProps {
   // Auth methods
   signUp: (email: string, password: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
-  signOut: () => Promise<{ error: any }>; // Updated to match implementation
+  signOut: () => Promise<{ error: any }>;
   requestPasswordReset: (email: string) => Promise<{ error: any }>;
   resetPassword: (newPassword: string) => Promise<{ error: any }>;
   
