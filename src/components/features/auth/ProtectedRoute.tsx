@@ -26,19 +26,22 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <LoadingScreen />;
   }
 
-  // Check for redirection based on auth state and role
-  const redirectPath = getRedirectPath(profile, location, isAuthenticated);
-  
-  if (redirectPath) {
-    console.log(`Redirecting to ${redirectPath} from ${location.pathname}`);
-    return <Navigate to={redirectPath} state={{ from: location }} replace />;
-  }
-  
-  // Role-based access check (if a specific role is required)
-  if (requiredRole && profile?.role !== requiredRole) {
-    const fallbackPath = profile?.role === 'superadmin' ? '/dashboard/admin' : '/dashboard/user';
-    console.log(`Role check failed. Required: ${requiredRole}, User has: ${profile?.role}, redirecting to ${fallbackPath}`);
-    return <Navigate to={fallbackPath} replace />;
+  // Only check redirectPath if we're not on the auth page
+  if (location.pathname !== '/auth') {
+    // Check for redirection based on auth state and role
+    const redirectPath = getRedirectPath(profile, location, isAuthenticated);
+    
+    if (redirectPath) {
+      console.log(`Redirecting to ${redirectPath} from ${location.pathname}`);
+      return <Navigate to={redirectPath} state={{ from: location }} replace />;
+    }
+    
+    // Role-based access check (if a specific role is required)
+    if (requiredRole && profile?.role !== requiredRole) {
+      const fallbackPath = profile?.role === 'superadmin' ? '/dashboard/admin' : '/dashboard/user';
+      console.log(`Role check failed. Required: ${requiredRole}, User has: ${profile?.role}, redirecting to ${fallbackPath}`);
+      return <Navigate to={fallbackPath} replace />;
+    }
   }
 
   // Default authorization - allow access

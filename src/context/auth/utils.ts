@@ -79,12 +79,20 @@ export const getRedirectPath = (
   location: Location,
   isAuthenticated: boolean
 ): string | null => {
-  // If user is not authenticated and not on auth or reset password page, redirect to auth
+  console.log("Checking redirect path:", { 
+    location: location.pathname,
+    isAuthenticated,
+    profile
+  });
+
+  // Don't redirect on auth page or reset password page
+  if (location.pathname === '/auth' || location.pathname === '/reset-password' || location.pathname === '/') {
+    return null;
+  }
+
+  // If user is not authenticated and not on allowed public pages, redirect to auth
   if (!isAuthenticated) {
-    if (location.pathname !== '/auth' && location.pathname !== '/reset-password' && location.pathname !== '/') {
-      return '/auth';
-    }
-    return null; // Don't redirect if already on auth page, reset password page or home page
+    return '/auth';
   }
 
   // Handle authenticated user redirections

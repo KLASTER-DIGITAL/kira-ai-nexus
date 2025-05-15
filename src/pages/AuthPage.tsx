@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { z } from 'zod';
@@ -51,26 +52,8 @@ const AuthPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Reset error when changing tabs
-  useEffect(() => {
-    setError(null);
-  }, [activeTab]);
-
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated && !isLoading) {
-      console.log("User is authenticated, redirecting from auth page");
-      const from = location.state?.from?.pathname || '/dashboard';
-      navigate(from, { replace: true });
-    }
-  }, [isAuthenticated, navigate, location.state, isLoading]);
-
-  // Don't render anything while checking auth
-  if (isLoading) {
-    return null;
-  }
-
-  // Login form
+  // Initialize all forms upfront, not conditionally based on activeTab
+  // This ensures the same hooks are called in the same order on every render
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -79,7 +62,6 @@ const AuthPage: React.FC = () => {
     },
   });
 
-  // Register form
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -89,13 +71,35 @@ const AuthPage: React.FC = () => {
     },
   });
 
-  // Reset password form
   const resetForm = useForm<ResetFormValues>({
     resolver: zodResolver(resetSchema),
     defaultValues: {
       email: '',
     },
   });
+  
+  // Reset error when changing tabs
+  useEffect(() => {
+    setError(null);
+  }, [activeTab]);
+
+  // Add logging to debug authentication state
+  useEffect(() => {
+    console.log("Auth state in AuthPage:", { isAuthenticated, isLoading });
+    
+    // Redirect if already authenticated
+    if (isAuthenticated && !isLoading) {
+      console.log("User is authenticated, redirecting from auth page");
+      const from = location.state?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, location.state, isLoading]);
+
+  // Don't render anything while checking auth
+  if (isLoading) {
+    console.log("Auth is loading, showing loading indicator");
+    return null;
+  }
 
   // Handle login
   const onLogin = async (data: LoginFormValues) => {
@@ -130,7 +134,7 @@ const AuthPage: React.FC = () => {
         setActiveTab('login');
       }
     } catch (err) {
-      setError('Неизвестная ош��бка при регистрации');
+      setError('Неизвестная ошибка при регистрации');
     } finally {
       setIsSubmitting(false);
     }
