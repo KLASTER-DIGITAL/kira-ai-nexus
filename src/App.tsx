@@ -1,27 +1,31 @@
 
-import React, { useEffect } from 'react'
-import { Routes, Route } from 'react-router-dom'
-import { Toaster } from "@/components/ui/toaster"
+import React, { useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { Toaster } from "@/components/ui/toaster";
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
-// Pages
-import Index from './pages/Index'
-import NotFound from './pages/NotFound'
-import CalendarPage from './pages/CalendarPage'
-import ChatPage from './pages/ChatPage'
-import DashboardPage from './pages/DashboardPage'
-import UserDashboardPage from './pages/UserDashboardPage'
-import AdminDashboardPage from './pages/AdminDashboardPage'
-import NotesPage from './pages/NotesPage'
-import NotesGraphPage from './pages/NotesGraphPage'
-import TasksPage from './pages/TasksPage'
-import AISettingsPage from './pages/AISettingsPage'
-import AuthPage from './pages/AuthPage'
-import ResetPasswordPage from './pages/ResetPasswordPage'
-import ProtectedRoute from './components/auth/ProtectedRoute'
-import HomePage from './pages/HomePage'
-import HelpPage from './pages/HelpPage'
-import UserHelpPage from './pages/UserHelpPage'
-import AdminHelpPage from './pages/AdminHelpPage'
+// Import pages from the new structure
+import {
+  Index,
+  HomePage,
+  AuthPage, 
+  ResetPasswordPage,
+  DashboardPage,
+  UserDashboardPage,
+  AdminDashboardPage,
+  NotesPage,
+  NotesGraphPage,
+  TasksPage,
+  AISettingsPage,
+  HelpPage,
+  UserHelpPage,
+  AdminHelpPage,
+  NotFound
+} from './pages';
+
+// Import pages that haven't been refactored yet
+import CalendarPage from './pages/CalendarPage';
+import ChatPage from './pages/ChatPage';
 
 function App() {
   // Установка favicon программно
@@ -63,7 +67,7 @@ function App() {
       </Routes>
       <Toaster />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
