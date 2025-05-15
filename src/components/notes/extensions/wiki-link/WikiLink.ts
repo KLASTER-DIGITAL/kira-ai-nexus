@@ -1,78 +1,138 @@
 
-import { Mark, markPasteRule } from '@tiptap/core';
+import { Mark, markInputRule, markPasteRule } from '@tiptap/core';
+import { Plugin } from '@tiptap/pm/state';
+import { Decoration, DecorationSet } from '@tiptap/pm/view';
+
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    wikiLink: {
+      setWikiLink: (attributes: { href: string; label?: string; isValid?: boolean }) => ReturnType;
+      toggleWikiLink: (attributes: { href: string; label?: string; isValid?: boolean }) => ReturnType;
+      unsetWikiLink: () => ReturnType;
+    }
+  }
+}
 
 export interface WikiLinkOptions {
   HTMLAttributes: Record<string, any>;
-  noteId: string;
+  validateLink?: (href: string) => Promise<boolean> | boolean;
+  noteId?: string;
   onNoteCreated?: (noteId: string) => void;
 }
 
 export const WikiLink = Mark.create<WikiLinkOptions>({
   name: 'wikiLink',
-  
+
+  priority: 1000,
+
+  inclusive: false,
+
   addOptions() {
     return {
       HTMLAttributes: {},
+      validateLink: () => true,
       noteId: '',
-      onNoteCreated: undefined,
-    };
+      onNoteCreated: undefined
+    }
   },
-  
+
   addAttributes() {
     return {
       href: {
         default: null,
       },
-      title: {
+      label: {
         default: null,
       },
-    };
+      isValid: {
+        default: true,
+        parseHTML: (element) => {
+          return element.getAttribute('data-valid') !== 'false';
+        },
+        renderHTML: (attributes) => {
+          if (attributes.isValid === false) {
+            return { 'data-valid': 'false' };
+          }
+          return {};
+        }
+      }
+    }
   },
-  
+
   parseHTML() {
     return [
-      { 
-        tag: 'a[data-type="wiki-link"]',
-        getAttrs: node => {
-          if (typeof node === 'string') return {};
-          
-          const element = node as HTMLElement;
-          return { 
-            href: element.getAttribute('href'), 
-            title: element.getAttribute('title')
-          };
-        }
+      {
+        tag: 'a[data-wiki-link]',
       },
-    ];
+    ]
   },
-  
+
   renderHTML({ HTMLAttributes }) {
-    return ['a', { ...HTMLAttributes, 'data-type': 'wiki-link', class: 'wiki-link' }, 0];
+    const isValid = HTMLAttributes.isValid !== false;
+    
+    return [
+      'a',
+      { 
+        ...this.options.HTMLAttributes,
+        ...HTMLAttributes,
+        'data-wiki-link': '', 
+        'class': `wiki-link ${isValid ? 'wiki-link-valid' : 'wiki-link-invalid'}`,
+        'data-valid': isValid ? 'true' : 'false',
+        href: HTMLAttributes.href,
+      },
+      HTMLAttributes.label || HTMLAttributes.href
+    ]
   },
-  
+
   addCommands() {
     return {
-      setWikiLink: attributes => ({ chain }) => {
-        return chain()
-          .setMark(this.name, attributes)
-          .run();
+      setWikiLink: attributes => ({ commands }) => {
+        return commands.setMark(this.name, attributes)
       },
-      toggleWikiLink: attributes => ({ chain }) => {
-        return chain()
-          .toggleMark(this.name, attributes, { extendEmptyMarkRange: true })
-          .run();
+
+      toggleWikiLink: attributes => ({ commands }) => {
+        return commands.toggleMark(this.name, attributes)
       },
-      unsetWikiLink: () => ({ chain }) => {
-        return chain()
-          .unsetMark(this.name, { extendEmptyMarkRange: true })
-          .run();
+
+      unsetWikiLink: () => ({ commands }) => {
+        return commands.unsetMark(this.name)
       },
-    };
+    }
   },
-  
-  addKeyboardShortcuts() {
-    return {
-      'Mod-k': () => this.editor.commands.toggleWikiLink({ href: '' }),
-    };
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        props: {
+          decorations: ({ doc, selection }) => {
+            const decorations: Decoration[] = []
+            const linkRegex = /\[\[(.+?)\]\]/g
+            
+            doc.descendants((node, pos) => {
+              if (!node.isText) {
+                return
+              }
+
+              const text = node.text || ''
+              let match
+              
+              while ((match = linkRegex.exec(text)) !== null) {
+                const start = pos + match.index
+                const end = start + match[0].length
+                const linkText = match[1]
+                
+                decorations.push(
+                  Decoration.inline(start, end, {
+                    class: 'wiki-link-wrapper',
+                  })
+                )
+              }
+            })
+            
+            return DecorationSet.create(doc, decorations)
+          },
+        },
+      }),
+    ]
   },
-});
+})

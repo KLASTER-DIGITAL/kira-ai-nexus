@@ -36,11 +36,11 @@ const GraphViewPage: React.FC = () => {
   const formattedData = graphData 
     ? { 
         nodes: graphData.nodes,
-        edges: graphData.links?.map(link => ({
+        edges: graphData.links.map(link => ({
           id: link.id,
           source: link.source,
           target: link.target
-        })) || []
+        }))
       } 
     : { nodes: [], edges: [] };
 

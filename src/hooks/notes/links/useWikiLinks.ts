@@ -46,9 +46,12 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
       };
       
       try {
-        const createdNote = await createNote(newNoteData as any);
+        const createdNoteResult = await createNote(newNoteData as any);
         
-        if (createdNote && createdNote.id) {
+        // Check that we have a valid note with an ID before proceeding
+        if (createdNoteResult && typeof createdNoteResult === 'object' && 'id' in createdNoteResult) {
+          const createdNote = createdNoteResult as Note;
+          
           // Create a link if we have a current note
           if (noteId) {
             await createWikiLink(cleanTitle);

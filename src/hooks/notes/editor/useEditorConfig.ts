@@ -1,6 +1,5 @@
 
 import { useMemo, useCallback } from "react";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
@@ -8,6 +7,7 @@ import { WikiLink } from "@/components/notes/extensions/wiki-link/WikiLink";
 import { useWikiLinks } from "../links/useWikiLinks";
 import { TagSuggestion } from "@/components/notes/extensions/tags/TagSuggestion";
 import { useTags } from "../useTags";
+import { Editor } from '@tiptap/react';
 
 interface EditorConfigProps {
   content: string;
@@ -28,13 +28,15 @@ export const useEditorConfig = ({
   noteId, 
   onNoteCreated 
 }: EditorConfigProps) => {
-  const supabase = useSupabaseClient();
   const { tags } = useTags();
   
   // Define extensions used in the editor
   const extensions = useMemo(() => [
     StarterKit.configure({
-      history: true
+      history: {
+        depth: 100,
+        newGroupDelay: 500
+      }
     }),
     Placeholder.configure({
       placeholder: placeholder || 'Начните писать...'
@@ -48,19 +50,17 @@ export const useEditorConfig = ({
     }),
     TagSuggestion.configure({
       suggestion: {
-        items: ({ query }) => {
-          // Filter tags based on query
-          if (!query) return tags;
-          return tags.filter(tag => 
-            tag.toLowerCase().includes(query.toLowerCase())
-          );
+        items: ({ query }: { query: string; editor: Editor }) => {
+          return (tags || [])
+            .filter(tag => tag.toLowerCase().includes(query.toLowerCase()))
+            .slice(0, 5);
         },
         render: () => {
           return {
-            onStart: () => {},
-            onUpdate: () => {},
-            onKeyDown: () => {},
-            onExit: () => {}
+            onStart: () => {/* implementation */},
+            onUpdate: () => {/* implementation */},
+            onKeyDown: () => false,
+            onExit: () => {/* implementation */}
           };
         }
       }
@@ -80,7 +80,7 @@ export const useEditorConfig = ({
   }, [handleWikiLinkClick]);
 
   // Only validate links when we have a note ID
-  const validateLinks = useCallback((editor: any) => {
+  const validateLinks = useCallback((editor: Editor) => {
     if (!noteId) return;
     // This functionality is currently handled separately by the wiki link extension
     // or can be implemented here if needed
@@ -91,7 +91,7 @@ export const useEditorConfig = ({
     return {
       editable,
       content,
-      onUpdate: ({ editor }: { editor: any }) => {
+      onUpdate: ({ editor }: { editor: Editor }) => {
         onChange(editor.getHTML());
       },
       autofocus: autoFocus,
@@ -100,18 +100,21 @@ export const useEditorConfig = ({
         attributes: {
           class: 'focus:outline-none'
         },
-        handleClick: (view: any, pos: number, event: any) => {
+        handleClick: (view: any, pos: number, event: MouseEvent) => {
           const { schema } = view.state;
-          const node = schema.nodes.link;
+          
           if (!(event.target instanceof HTMLAnchorElement)) {
             return false;
           }
-          const element = event.target;
+          
+          const element = event.target as HTMLAnchorElement;
           const href = element.getAttribute('href');
+          
           if (href) {
             handleLinkClick(href);
             return true;
           }
+          
           return false;
         }
       }
