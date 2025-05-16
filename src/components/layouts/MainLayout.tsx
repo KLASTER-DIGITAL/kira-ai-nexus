@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/auth";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { Toaster } from "sonner";
@@ -13,6 +13,7 @@ import { AppHeader } from "@/components/layouts/header/AppHeader";
 export function MainLayout() {
   const { profile, isLoading } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
+  const location = useLocation();
 
   // Используем эффект для предотвращения мерцания при гидратации
   useEffect(() => {

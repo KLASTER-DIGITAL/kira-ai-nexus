@@ -1,10 +1,10 @@
 
 import React from "react";
-import Layout from "@/components/layout/Layout";
-import TaskList from "@/components/features/tasks/TaskList";
 import { useAuth } from "@/context/auth";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import TaskList from "@/components/features/tasks/TaskList";
+import { PageHeader } from "@/components/layouts/PageHeader";
 
 const TasksPage: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -12,7 +12,9 @@ const TasksPage: React.FC = () => {
 
   if (!isAuthenticated) {
     return (
-      <Layout title="Задачи">
+      <div className="container mx-auto">
+        <PageHeader title="Задачи" />
+        
         <div className="max-w-4xl mx-auto">
           <div className="text-center p-8 border rounded-md bg-muted/10">
             <h2 className="text-xl font-semibold mb-2">Необходимо войти в систему</h2>
@@ -24,16 +26,21 @@ const TasksPage: React.FC = () => {
             </Button>
           </div>
         </div>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout title="Задачи">
+    <div className="container mx-auto">
+      <PageHeader 
+        title="Задачи" 
+        description="Управляйте вашими задачами, создавайте новые и отслеживайте прогресс"
+      />
+      
       <div className="max-w-5xl mx-auto">
         <TaskList />
       </div>
-    </Layout>
+    </div>
   );
 };
 

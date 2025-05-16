@@ -25,7 +25,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { PageTitle } from "./PageTitle";
 import { UserMenu } from "./UserMenu";
 
 export function AppHeader() {
@@ -40,9 +39,6 @@ export function AppHeader() {
           <Menu className="h-5 w-5" />
           <span className="sr-only">Меню</span>
         </Button>
-        
-        {/* Заголовок страницы */}
-        <PageTitle />
         
         {/* Поиск - скрыт на мобильных устройствах */}
         <div className="hidden md:flex w-full max-w-sm items-center">

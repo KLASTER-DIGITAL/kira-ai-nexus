@@ -28,6 +28,7 @@ import {
 } from './pages';
 
 import { ProtectedRoute } from '@/components/features/auth';
+import { Settings } from "lucide-react";
 
 function App() {
   return (
@@ -87,19 +88,18 @@ function App() {
 // Временная страница для новых разделов, которые еще в разработке
 function UnderConstructionPage({ title }: { title: string }) {
   return (
-    <div className="flex flex-col items-center justify-center h-[70vh] text-center">
-      <div className="rounded-full bg-primary/10 p-6 mb-4">
-        <Settings className="h-10 w-10 text-primary" />
+    <div className="container mx-auto">
+      <div className="flex flex-col items-center justify-center h-[70vh] text-center">
+        <div className="rounded-full bg-primary/10 p-6 mb-4">
+          <Settings className="h-10 w-10 text-primary" />
+        </div>
+        <h1 className="text-2xl font-semibold mb-2">{title}</h1>
+        <p className="text-muted-foreground max-w-md">
+          Эта страница находится в разработке и скоро будет доступна.
+        </p>
       </div>
-      <h1 className="text-2xl font-semibold mb-2">{title}</h1>
-      <p className="text-muted-foreground max-w-md">
-        Эта страница находится в разработке и скоро будет доступна.
-      </p>
     </div>
   );
 }
-
-// Добавим импорт иконки Settings
-import { Settings } from "lucide-react";
 
 export default App;

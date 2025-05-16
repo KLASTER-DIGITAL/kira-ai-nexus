@@ -1,15 +1,20 @@
 
 import React, { useState } from "react";
-import Layout from "@/components/layout/Layout";
 import CalendarView from "@/components/calendar/CalendarView";
 import CalendarIntegration from "@/components/calendar/CalendarIntegration";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageHeader } from "@/components/layouts/PageHeader";
 
 const CalendarPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("calendar");
 
   return (
-    <Layout title="Календарь">
+    <div className="container mx-auto">
+      <PageHeader 
+        title="Календарь" 
+        description="Управление событиями и настройка интеграций с календарем"
+      />
+      
       <div className="max-w-5xl mx-auto">
         <Tabs defaultValue="calendar" onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="grid w-full max-w-md grid-cols-2">
@@ -24,7 +29,7 @@ const CalendarPage: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
+    </div>
   );
 };
 

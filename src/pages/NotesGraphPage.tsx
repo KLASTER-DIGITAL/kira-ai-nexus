@@ -1,15 +1,17 @@
 
 import React from "react";
-import Layout from "@/components/layout/Layout";
 import NotesGraph from "@/components/notes/graph/NotesGraph";
+import { PageHeader } from "@/components/layouts/PageHeader";
 
 const NotesGraphPage: React.FC = () => {
   return (
-    <Layout title="Граф заметок">
-      <div className="container mx-auto">
-        <NotesGraph />
-      </div>
-    </Layout>
+    <div className="container mx-auto">
+      <PageHeader 
+        title="Граф заметок" 
+        description="Визуализация связей между заметками"
+      />
+      <NotesGraph />
+    </div>
   );
 };
 

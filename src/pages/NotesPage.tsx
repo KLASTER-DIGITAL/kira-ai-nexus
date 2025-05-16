@@ -1,11 +1,12 @@
+
 import React, { useState, useEffect } from "react";
-import { Layout } from "@/components/layout";
-import NotesContent from "@/components/notes/content/NotesContent";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { useNotesListState } from "@/hooks/notes/useNotesListState";
 import { useNotesGrouping } from "@/hooks/notes/useNotesGrouping";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/layouts/PageHeader";
+import NotesContent from "@/components/notes/content/NotesContent";
 import NotesDialogs from "@/components/notes/dialogs/NotesDialogs";
 
 const NotesPage: React.FC = () => {
@@ -64,33 +65,36 @@ const NotesPage: React.FC = () => {
   );
 
   return (
-    <Layout title="Заметки" actions={actions}>
-      <div className="container mx-auto pb-20">
-        <NotesContent 
-          notes={notes || []}
-          isLoading={isLoading}
-          hasActiveFilters={hasActiveFilters}
-          groupByOption={groupByOption}
-          noteGroups={noteGroups}
-          onEdit={handleEditNote}
-          onDelete={handleDeletePrompt}
-          onNewNote={handleCreateNote}
-          onClearFilters={clearFilters}
-          totalCount={totalCount}
-        />
-        
-        <NotesDialogs
-          isEditorOpen={isEditorOpen}
-          setIsEditorOpen={setIsEditorOpen}
-          isDeleteDialogOpen={isDeleteDialogOpen}
-          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-          activeNote={activeNote}
-          onSaveNote={handleSaveNote}
-          onConfirmDelete={handleConfirmDelete}
-          onNoteSelect={handleNoteSelect}
-        />
-      </div>
-    </Layout>
+    <div className="container mx-auto pb-20">
+      <PageHeader 
+        actions={actions} 
+        description="Управляйте вашими заметками, создавайте новые и организуйте их"
+      />
+      
+      <NotesContent 
+        notes={notes || []}
+        isLoading={isLoading}
+        hasActiveFilters={hasActiveFilters}
+        groupByOption={groupByOption}
+        noteGroups={noteGroups}
+        onEdit={handleEditNote}
+        onDelete={handleDeletePrompt}
+        onNewNote={handleCreateNote}
+        onClearFilters={clearFilters}
+        totalCount={totalCount}
+      />
+      
+      <NotesDialogs
+        isEditorOpen={isEditorOpen}
+        setIsEditorOpen={setIsEditorOpen}
+        isDeleteDialogOpen={isDeleteDialogOpen}
+        setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+        activeNote={activeNote}
+        onSaveNote={handleSaveNote}
+        onConfirmDelete={handleConfirmDelete}
+        onNoteSelect={handleNoteSelect}
+      />
+    </div>
   );
 };
 

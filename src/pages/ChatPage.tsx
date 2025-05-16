@@ -1,14 +1,19 @@
 
 import React from "react";
-import Layout from "@/components/layout/Layout";
-import ChatInterface from "@/components/chat/ChatInterface";
 import { useAuth } from "@/context/auth";
+import ChatInterface from "@/components/chat/ChatInterface";
+import { PageHeader } from "@/components/layouts/PageHeader";
 
 const ChatPage: React.FC = () => {
   const { isAuthenticated } = useAuth();
   
   return (
-    <Layout title="Чат">
+    <div className="container mx-auto">
+      <PageHeader 
+        title="Чат" 
+        description="Общайтесь с KIRA AI ассистентом"
+      />
+      
       <div className="max-w-4xl mx-auto h-[calc(100vh-180px)]">
         {isAuthenticated ? (
           <ChatInterface />
@@ -19,7 +24,7 @@ const ChatPage: React.FC = () => {
           </div>
         )}
       </div>
-    </Layout>
+    </div>
   );
 };
 
