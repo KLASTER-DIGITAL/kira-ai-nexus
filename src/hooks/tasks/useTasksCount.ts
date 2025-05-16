@@ -15,12 +15,13 @@ export const useTasksCount = () => {
         }
         
         // Получаем количество активных задач
+        // Изменение: используем строковый literal вместо вложенного доступа к свойствам
         const { count, error } = await supabase
           .from('nodes')
           .select('*', { count: 'exact', head: true })
           .eq('type', 'task')
           .eq('user_id', authData.user.id)
-          .eq('content->completed', false); // Фильтр по незавершенным задачам
+          .eq('content->>completed', 'false'); // Исправлено на строковое сравнение с content->> синтаксисом
         
         if (error) {
           console.error("Ошибка при получении количества задач:", error);
