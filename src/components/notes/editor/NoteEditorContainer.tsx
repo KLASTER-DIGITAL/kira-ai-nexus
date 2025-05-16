@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Note, NoteContent as NoteContentType } from "@/types/notes";
+import { Note } from "@/types/notes";
 import { useNoteLinks } from "@/hooks/notes/links/useNoteLinks";
 import NoteMetadataComponent from "./NoteMetadata";
 import NoteContentEditor from "./NoteContentEditor";

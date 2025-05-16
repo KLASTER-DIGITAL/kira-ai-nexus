@@ -1,11 +1,6 @@
 
 import React from "react";
-import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
-import GraphSearchBar from "./GraphSearchBar";
-import GraphFilterPopover from "./GraphFilterPopover";
 
 interface GraphToolbarProps {
   searchTerm: string;
@@ -26,34 +21,30 @@ const GraphToolbar: React.FC<GraphToolbarProps> = ({
   showIsolatedNodes,
   setShowIsolatedNodes,
 }) => {
-  const navigate = useNavigate();
-
   return (
-    <Card className="p-4 mb-4">
-      <CardContent className="p-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <GraphSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-          
-          <GraphFilterPopover 
-            selectedTags={selectedTags}
-            toggleTag={toggleTag}
-            allTags={allTags}
-            showIsolatedNodes={showIsolatedNodes}
-            setShowIsolatedNodes={setShowIsolatedNodes}
-          />
-          
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9"
-            onClick={() => navigate("/notes")}
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            <span>К заметкам</span>
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="flex gap-2">
+      <Button 
+        variant="outline" 
+        size="sm"
+        onClick={() => setSearchTerm('')}
+        disabled={!searchTerm}
+      >
+        Очистить поиск
+      </Button>
+      
+      <Button 
+        variant="outline" 
+        size="sm"
+        onClick={() => {
+          const tags = [...selectedTags];
+          tags.forEach(tag => toggleTag(tag));
+          setSearchTerm('');
+        }}
+        disabled={selectedTags.length === 0 && !searchTerm}
+      >
+        Сбросить фильтры
+      </Button>
+    </div>
   );
 };
 

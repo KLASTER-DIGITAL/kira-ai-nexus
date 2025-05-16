@@ -1,5 +1,7 @@
+
 import React, { useCallback, useState, useEffect } from 'react';
-import ReactFlow, {
+import {
+  ReactFlow,
   Edge,
   Node,
   useNodesState,
@@ -12,12 +14,29 @@ import ReactFlow, {
 import '@xyflow/react/dist/style.css';
 import NoteNode from './NoteNode';
 import { Note } from '@/types/notes';
-import { graphLayout } from './utils/graphUtils';
 import GraphFilterPopover from './components/GraphFilterPopover';
 import GraphSearchBar from './components/GraphSearchBar';
 import GraphControls from './components/GraphControls';
 import GraphToolbar from './components/GraphToolbar';
 import { useGraphHotkeys } from './hooks/useGraphHotkeys';
+
+// Utility function for layout
+const graphLayout = (nodes: Node[], edges: Edge[]) => {
+  // Simple layout function - in a real app, you might use a more sophisticated algorithm
+  const nodeMap = new Map();
+  nodes.forEach((node, index) => {
+    const position = {
+      x: 100 + (index % 5) * 200,
+      y: 100 + Math.floor(index / 5) * 150
+    };
+    nodeMap.set(node.id, { ...node, position });
+  });
+  
+  return { 
+    nodes: Array.from(nodeMap.values()),
+    edges
+  };
+};
 
 // Получение контента для поиска
 const getNoteSearchContent = (note: Note): string => {
@@ -38,7 +57,6 @@ interface NotesGraphProps {
 }
 
 const NotesGraph: React.FC<NotesGraphProps> = ({ nodeId, onNodeClick }) => {
-  const { disableHotkeys } = useGraphHotkeys();
   const [isLayouting, setIsLayouting] = useState(false);
   
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -51,6 +69,14 @@ const NotesGraph: React.FC<NotesGraphProps> = ({ nodeId, onNodeClick }) => {
   const [linksData, setLinksData] = useState<Edge[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const reactFlowInstance = useReactFlow();
+
+  // Set up hotkeys
+  useGraphHotkeys({
+    zoomIn: () => reactFlowInstance.zoomIn(),
+    zoomOut: () => reactFlowInstance.zoomOut(),
+    fitView: () => reactFlowInstance.fitView(),
+    reset: () => applyLayout()
+  });
 
   // Load graph data from local storage on mount
   useEffect(() => {
@@ -206,31 +232,40 @@ const NotesGraph: React.FC<NotesGraphProps> = ({ nodeId, onNodeClick }) => {
       >
         <Panel position="top-left">
           <GraphSearchBar 
-            value={searchQuery}
-            onChange={setSearchQuery}
-            clearSearch={() => setSearchQuery('')}
+            searchTerm={searchQuery}
+            setSearchTerm={setSearchQuery}
           />
         </Panel>
         
         <Panel position="top-right">
           <GraphFilterPopover 
-            tags={allTags}
             selectedTags={selectedTags}
-            onSelectTag={toggleTag}
-            onClearFilters={clearFilters}
+            toggleTag={toggleTag}
+            allTags={allTags}
+            showIsolatedNodes={true}
+            setShowIsolatedNodes={() => {}}
           />
         </Panel>
         
         <Panel position="bottom-center">
           <GraphToolbar
-            onCenterGraph={centerGraph}
-            onResetView={resetView}
-            onLayoutGraph={applyLayout}
+            searchTerm={searchQuery}
+            setSearchTerm={setSearchQuery}
+            selectedTags={selectedTags}
+            toggleTag={toggleTag}
+            allTags={allTags}
+            showIsolatedNodes={true}
+            setShowIsolatedNodes={() => {}}
           />
         </Panel>
         
         <Panel position="bottom-right">
-          <GraphControls />
+          <GraphControls
+            onZoomIn={() => reactFlowInstance.zoomIn()}
+            onZoomOut={() => reactFlowInstance.zoomOut()}
+            onFitView={() => reactFlowInstance.fitView()}
+            onReset={applyLayout}
+          />
         </Panel>
         
         <Background 

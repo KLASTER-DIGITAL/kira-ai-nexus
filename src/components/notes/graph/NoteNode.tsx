@@ -1,7 +1,11 @@
 
 import React, { memo } from 'react';
-import { Handle, NodeProps, Position } from '@xyflow/react';
+import { Handle, Position } from '@xyflow/react';
 import { Note, NoteContent } from '@/types/notes';
+
+interface NoteNodeData {
+  note: Note;
+}
 
 // Функция для получения текстового содержимого заметки
 const getNoteContent = (note: Note): string => {
@@ -21,7 +25,7 @@ const getNoteTags = (note: Note): string[] => {
   return note.tags || [];
 };
 
-const NoteNode = ({ data }: NodeProps<{ note: Note }>) => {
+const NoteNode = ({ data }: { data: NoteNodeData }) => {
   const { note } = data;
   const content = getNoteContent(note);
   const tags = getNoteTags(note);

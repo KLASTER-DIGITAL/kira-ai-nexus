@@ -8,22 +8,22 @@ interface HotKeyActions {
   reset: () => void;
 }
 
-export const useGraphHotkeys = (onActions: HotKeyActions) => {
+export const useGraphHotkeys = (actions: HotKeyActions): void => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.altKey) {
         if (event.key === '+' || event.key === '=') {
           event.preventDefault();
-          onActions.zoomIn();
+          actions.zoomIn();
         } else if (event.key === '-') {
           event.preventDefault();
-          onActions.zoomOut();
+          actions.zoomOut();
         } else if (event.key === '0') {
           event.preventDefault();
-          onActions.fitView();
+          actions.fitView();
         } else if (event.key === 'r') {
           event.preventDefault();
-          onActions.reset();
+          actions.reset();
         }
       }
     };
@@ -32,5 +32,5 @@ export const useGraphHotkeys = (onActions: HotKeyActions) => {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onActions]);
+  }, [actions]);
 };
