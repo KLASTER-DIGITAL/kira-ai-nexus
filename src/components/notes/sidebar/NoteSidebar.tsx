@@ -30,6 +30,7 @@ const NoteSidebar: React.FC<NoteSidebarProps> = ({
     try {
       console.log("Сохраняем заметку в сайдбаре:", noteData);
       const success = await onSaveNote(noteData);
+      
       if (success) {
         // Задержка перед закрытием сайдбара для лучшего UX
         setTimeout(() => {

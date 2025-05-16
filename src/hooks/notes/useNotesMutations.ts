@@ -6,8 +6,17 @@ import { transformNoteData } from "./utils";
 
 const createNote = async (noteData: { title: string; content: string; tags: string[]; color?: string }) => {
   try {
+    console.log("Creating note with data:", noteData);
+    
+    // Проверяем авторизацию пользователя
+    const { data: user } = await supabase.auth.getUser();
+    if (!user?.user) {
+      console.error("User not authenticated");
+      throw new Error("User not authenticated");
+    }
+    
     const { data, error } = await supabase
-      .from('nodes')  // Use 'nodes' table instead of 'notes'
+      .from('nodes')
       .insert({
         title: noteData.title,
         content: {
@@ -16,7 +25,7 @@ const createNote = async (noteData: { title: string; content: string; tags: stri
           color: noteData.color || ''
         },
         tags: noteData.tags,
-        user_id: (await supabase.auth.getUser()).data.user?.id,
+        user_id: user.user.id,
         type: 'note'
       })
       .select();
@@ -30,7 +39,7 @@ const createNote = async (noteData: { title: string; content: string; tags: stri
       throw new Error('No data returned from createNote');
     }
 
-    // Transform the returned data to ensure it has the correct shape
+    console.log("Created note successfully:", data[0]);
     return transformNoteData(data[0]);
   } catch (error) {
     console.error('Error in createNote:', error);
@@ -40,8 +49,17 @@ const createNote = async (noteData: { title: string; content: string; tags: stri
 
 const updateNote = async (noteData: { noteId: string; noteData: { title: string; content: string; tags: string[]; color?: string } }) => {
   try {
+    console.log("Updating note with data:", noteData);
+    
+    // Проверяем авторизацию пользователя
+    const { data: user } = await supabase.auth.getUser();
+    if (!user?.user) {
+      console.error("User not authenticated");
+      throw new Error("User not authenticated");
+    }
+    
     const { data, error } = await supabase
-      .from('nodes')  // Use 'nodes' table instead of 'notes'
+      .from('nodes')
       .update({
         title: noteData.noteData.title,
         content: {
@@ -62,7 +80,7 @@ const updateNote = async (noteData: { noteId: string; noteData: { title: string;
 
     // Process the returned data to ensure it matches our Note type
     if (data && data.length > 0) {
-      // Transform the returned data to ensure it has the correct shape
+      console.log("Updated note successfully:", data[0]);
       return transformNoteData(data[0]);
     }
     
@@ -75,8 +93,17 @@ const updateNote = async (noteData: { noteId: string; noteData: { title: string;
 
 const deleteNote = async (noteId: string) => {
   try {
+    console.log("Deleting note:", noteId);
+    
+    // Проверяем авторизацию пользователя
+    const { data: user } = await supabase.auth.getUser();
+    if (!user?.user) {
+      console.error("User not authenticated");
+      throw new Error("User not authenticated");
+    }
+    
     const { error } = await supabase
-      .from('nodes')  // Use 'nodes' table instead of 'notes'
+      .from('nodes')
       .delete()
       .eq('id', noteId);
 
@@ -85,6 +112,7 @@ const deleteNote = async (noteId: string) => {
       throw error;
     }
 
+    console.log("Deleted note successfully:", noteId);
     return noteId;
   } catch (error) {
     console.error('Error in deleteNote:', error);

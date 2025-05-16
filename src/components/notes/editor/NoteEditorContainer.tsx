@@ -7,6 +7,7 @@ import NoteMetadataComponent from "./NoteMetadata";
 import NoteContentEditor from "./NoteContentEditor";
 import NoteEditorActions from "./NoteEditorActions";
 import { LocalGraphView } from "@/components/graph";
+import { toast } from "sonner";
 
 interface NoteEditorContainerProps {
   note?: Note;
@@ -82,6 +83,7 @@ const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({
 
   const handleSave = async () => {
     if (!title.trim()) {
+      toast.error("Заголовок не может быть пустым");
       return false;
     }
     
@@ -91,18 +93,22 @@ const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({
       
       const success = await onSave({
         title,
-        content, // Передаем текст контента
-        tags,    // Теги передаются отдельно
-        color    // Передаем цвет
+        content,
+        tags,
+        color
       });
       
       if (success) {
         setLastSavedAt(new Date());
+        toast.success(isNew ? "Заметка создана" : "Заметка обновлена");
+        return true;
+      } else {
+        toast.error("Не удалось сохранить заметку");
+        return false;
       }
-      
-      return success;
     } catch (error) {
       console.error("Ошибка при сохранении заметки:", error);
+      toast.error("Не удалось сохранить заметку. Попробуйте еще раз.");
       return false;
     } finally {
       setIsSaving(false);

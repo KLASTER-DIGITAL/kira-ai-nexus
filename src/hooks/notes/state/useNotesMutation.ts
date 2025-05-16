@@ -25,24 +25,24 @@ export const useNotesMutation = () => {
             title: noteData.title,
             content: noteData.content,
             tags: noteData.tags,
-            color: noteData.color || ''
+            color: noteData.color
           }
         });
         
-        toast.success("Заметка обновлена");
+        console.log("Заметка обновлена");
+        return true;
       } else {
         // Create new note
         const result = await createNote({
           title: noteData.title,
           content: noteData.content,
           tags: noteData.tags,
-          color: noteData.color || ''
+          color: noteData.color
         });
         
         console.log("Заметка создана:", result);
-        toast.success("Заметка создана");
+        return true;
       }
-      return true;
     } catch (error) {
       console.error("Ошибка при сохранении заметки:", error);
       toast.error("Не удалось сохранить заметку. Попробуйте еще раз.");
