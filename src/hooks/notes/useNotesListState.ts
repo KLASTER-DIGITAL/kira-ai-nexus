@@ -1,11 +1,12 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Note } from "@/types/notes";
 import { useNotes } from "@/hooks/useNotes";
 import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { SortOption, GroupByOption } from "@/hooks/notes/types";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const useNotesListState = () => {
   // Local state for UI management
@@ -26,8 +27,6 @@ export const useNotesListState = () => {
     "notes-group-by", 
     "none"
   );
-  
-  const { toast } = useToast();
 
   // Use our notes hook with pagination and sorting
   const { 
@@ -50,39 +49,51 @@ export const useNotesListState = () => {
   
   // Handle opening the editor for a new note
   const handleNewNote = () => {
+    console.log("Открываем редактор для создания новой заметки");
     setActiveNote(undefined);
     setIsEditorOpen(true);
   };
 
   // Handle editing a note
   const handleEditNote = (note: Note) => {
+    console.log("Открываем редактор для заметки:", note.title);
     setActiveNote(note);
     setIsEditorOpen(true);
   };
 
   // Handle saving a note (both new and edit)
-  const handleSaveNote = (noteData: { title: string; content: string; tags: string[] }) => {
-    if (activeNote) {
-      // Update existing note
-      updateNote({
-        id: activeNote.id,
-        title: noteData.title,
-        content: noteData.content,
-        tags: noteData.tags,
-        user_id: activeNote.user_id,
-        type: activeNote.type
-      });
-    } else {
-      // Create new note
-      createNote({
-        title: noteData.title,
-        content: noteData.content,
-        tags: noteData.tags,
-        user_id: "", // Will be filled by backend
-        type: "note"
-      });
+  const handleSaveNote = async (noteData: { title: string; content: string; tags: string[] }) => {
+    console.log("Сохраняем заметку:", noteData);
+    try {
+      if (activeNote) {
+        // Update existing note
+        await updateNote({
+          id: activeNote.id,
+          title: noteData.title,
+          content: noteData.content,
+          tags: noteData.tags,
+          user_id: activeNote.user_id,
+          type: activeNote.type
+        });
+        toast.success("Заметка обновлена");
+      } else {
+        // Create new note
+        const result = await createNote({
+          title: noteData.title,
+          content: noteData.content,
+          tags: noteData.tags,
+          user_id: "", // Will be filled by backend
+          type: "note"
+        } as any);
+        
+        console.log("Заметка создана:", result);
+        toast.success("Заметка создана");
+      }
+      setIsEditorOpen(false);
+    } catch (error) {
+      console.error("Ошибка при сохранении заметки:", error);
+      toast.error("Не удалось сохранить заметку. Попробуйте еще раз.");
     }
-    setIsEditorOpen(false);
   };
 
   // Handle opening the delete confirmation dialog
@@ -95,18 +106,53 @@ export const useNotesListState = () => {
   };
 
   // Handle confirming note deletion
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (activeNote) {
-      deleteNote(activeNote.id);
+      try {
+        await deleteNote(activeNote.id);
+        toast.success("Заметка удалена");
+      } catch (error) {
+        console.error("Ошибка при удалении заметки:", error);
+        toast.error("Не удалось удалить заметку");
+      }
     }
     setIsDeleteDialogOpen(false);
   };
 
   // Handle note selection via wiki links
   const handleNoteSelect = (noteId: string) => {
+    console.log("Выбрана заметка по ID:", noteId);
     const selectedNote = notes?.find((note) => note.id === noteId);
     if (selectedNote) {
       handleEditNote(selectedNote);
+    } else {
+      console.log("Заметка не найдена среди загруженных, загружаем из базы...");
+      // Если не найдена в текущем списке, получить заметку напрямую из базы
+      supabase
+        .from('nodes')
+        .select('*')
+        .eq('id', noteId)
+        .single()
+        .then(({ data, error }) => {
+          if (error) {
+            console.error("Ошибка загрузки заметки:", error);
+            toast.error("Не удалось загрузить заметку");
+          } else if (data) {
+            // Преобразовать данные в формат Note
+            const note: Note = {
+              id: data.id,
+              title: data.title,
+              content: data.content?.text || "",
+              tags: data.content?.tags || [],
+              color: data.content?.color,
+              type: data.type,
+              user_id: data.user_id,
+              created_at: data.created_at,
+              updated_at: data.updated_at
+            };
+            handleEditNote(note);
+          }
+        });
     }
   };
   
@@ -141,19 +187,16 @@ export const useNotesListState = () => {
         (payload) => {
           console.log('Notes change detected:', payload);
           if (payload.eventType === 'INSERT' && payload.new) {
-            toast({
-              title: "Новая заметка",
-              description: "Кто-то добавил новую заметку",
+            toast.info("Новая заметка", {
+              description: "Создана новая заметка"
             });
           } else if (payload.eventType === 'UPDATE' && payload.new) {
-            toast({
-              title: "Заметка обновлена",
-              description: "Заметка была обновлена",
+            toast.info("Заметка обновлена", {
+              description: "Заметка была изменена"
             });
           } else if (payload.eventType === 'DELETE' && payload.old) {
-            toast({
-              title: "Заметка удалена",
-              description: "Заметка была удалена",
+            toast.info("Заметка удалена", {
+              description: "Заметка была удалена"
             });
           }
         }

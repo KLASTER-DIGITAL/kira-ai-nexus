@@ -1,14 +1,18 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/dashboard/layout/DashboardLayout";
 import NotesContent from "@/components/notes/content/NotesContent";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { useNotesListState } from "@/hooks/notes/useNotesListState";
 import { useNotesGrouping } from "@/hooks/notes/useNotesGrouping";
+import { toast } from "sonner";
+import NotesDialogs from "@/components/notes/dialogs/NotesDialogs";
 
 const NotesPage: React.FC = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   // Use the hooks for managing notes state
   const notesState = useNotesListState();
@@ -22,15 +26,37 @@ const NotesPage: React.FC = () => {
     totalCount,
     hasActiveFilters,
     groupByOption,
+    handleSaveNote,
+    handleConfirmDelete,
+    activeNote,
+    handleNoteSelect
   } = notesState;
   
   // Get note groups if needed
   const noteGroups = useNotesGrouping(notes || [], groupByOption);
 
+  useEffect(() => {
+    const unsubscribe = notesState.setupRealtimeSubscription();
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, []);
+
+  const handleCreateNote = () => {
+    console.log("Создаём новую заметку");
+    try {
+      handleNewNote();
+      setIsEditorOpen(true);
+    } catch (error) {
+      console.error("Ошибка при создании заметки:", error);
+      toast.error("Не удалось создать заметку. Попробуйте еще раз.");
+    }
+  };
+
   const actions = (
     <Button 
       variant="default" 
-      onClick={() => handleNewNote()}
+      onClick={handleCreateNote}
       className="flex items-center gap-1"
     >
       <PlusCircle className="h-4 w-4" /> 
@@ -49,9 +75,20 @@ const NotesPage: React.FC = () => {
           noteGroups={noteGroups}
           onEdit={handleEditNote}
           onDelete={handleDeletePrompt}
-          onNewNote={handleNewNote}
+          onNewNote={handleCreateNote}
           onClearFilters={clearFilters}
           totalCount={totalCount}
+        />
+        
+        <NotesDialogs
+          isEditorOpen={isEditorOpen}
+          setIsEditorOpen={setIsEditorOpen}
+          isDeleteDialogOpen={isDeleteDialogOpen}
+          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+          activeNote={activeNote}
+          onSaveNote={handleSaveNote}
+          onConfirmDelete={handleConfirmDelete}
+          onNoteSelect={handleNoteSelect}
         />
       </div>
     </DashboardLayout>

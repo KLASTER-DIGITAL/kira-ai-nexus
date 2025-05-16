@@ -1,17 +1,18 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Note } from "@/types/notes";
 import { useNoteLinks } from "@/hooks/notes/links/useNoteLinks";
-import { useNoteAutosave } from "@/hooks/notes/useNoteAutosave";
 import NoteMetadataComponent from "./editor/NoteMetadata";
 import NoteContent from "./editor/NoteContent";
 import NoteEditorActions from "./editor/NoteEditorActions";
 import { LocalGraphView } from "@/components/graph";
+import { toast } from "sonner";
 
 interface NoteEditorProps {
   note?: Note;
-  onUpdateNote: (note: Note) => Promise<void>;
-  onDeleteNote: (noteId: string) => Promise<void>;
+  onUpdateNote?: (note: Note) => Promise<void>;
+  onDeleteNote?: (noteId: string) => Promise<void>;
   isNew?: boolean;
   onCancel?: () => void;
   onNoteSelect?: (noteId: string) => void;
@@ -23,23 +24,13 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
   onSave, 
   onCancel, 
   isNew = false,
-  onNoteSelect,
-  onUpdateNote,
-  onDeleteNote
+  onNoteSelect
 }) => {
-  const defaultNote: Note = {
-    id: "",
-    title: "",
-    content: "",
-    tags: [],
-    user_id: "",
-    type: "note"
-  };
-
   const [title, setTitle] = useState(note?.title || "");
   const [content, setContent] = useState(note?.content || "");
-  const [tags, setTags] = useState(note?.tags || []);
+  const [tags, setTags] = useState<string[]>(note?.tags || []);
   const [color, setColor] = useState(note?.color || "");
+  const [isSaving, setIsSaving] = useState(false);
   
   const { links } = useNoteLinks(note?.id);
 
@@ -68,12 +59,29 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
     setColor(newColor);
   };
 
-  const handleSave = () => {
-    onSave({
-      title,
-      content,
-      tags
-    });
+  const handleSave = async () => {
+    if (!title.trim()) {
+      toast.error("Заголовок не может быть пустым");
+      return;
+    }
+    
+    try {
+      setIsSaving(true);
+      console.log("Сохраняем заметку:", { title, content, tags });
+      
+      await onSave({
+        title,
+        content,
+        tags
+      });
+      
+      toast.success(isNew ? "Заметка создана" : "Заметка сохранена");
+    } catch (error) {
+      console.error("Ошибка при сохранении заметки:", error);
+      toast.error("Не удалось сохранить заметку");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -84,6 +92,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
           onTitleChange={handleTitleChange}
           color={color}
           onColorChange={handleColorChange}
+          isSaving={isSaving}
         />
       </CardHeader>
       <CardContent className="flex-grow">
@@ -104,11 +113,11 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
           isNew={isNew}
           onSave={handleSave}
           onCancel={onCancel || (() => {})}
-          isSaving={false}
+          isSaving={isSaving}
           hasTitle={title.trim().length > 0}
         />
       </CardFooter>
-      {note?.id && <LocalGraphView nodeId={note.id} />}
+      {note?.id && <LocalGraphView nodeId={note.id} onNodeClick={onNoteSelect} />}
     </Card>
   );
 };
