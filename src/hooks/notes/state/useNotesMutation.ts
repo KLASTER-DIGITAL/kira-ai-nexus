@@ -66,6 +66,8 @@ export const useNotesMutation = () => {
 
   return {
     handleSaveNote,
-    handleConfirmDelete
+    handleConfirmDelete,
+    updateNote,
+    deleteNote
   };
 };

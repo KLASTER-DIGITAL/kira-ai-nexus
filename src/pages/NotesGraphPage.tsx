@@ -77,7 +77,6 @@ const NotesGraphPage: React.FC = () => {
       <div className="mt-6 h-[70vh] border rounded-md bg-background">
         <NotesGraph 
           onNodeClick={onNodeClick} 
-          isLoading={isLoading}
         />
       </div>
       

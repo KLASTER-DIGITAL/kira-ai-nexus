@@ -29,7 +29,9 @@ const NotesPage: React.FC = () => {
     handleSaveNote,
     handleConfirmDelete,
     activeNote,
-    handleNoteSelect
+    handleNoteSelect,
+    updateNote,
+    deleteNote
   } = notesState;
   
   // Get note groups if needed
@@ -96,8 +98,8 @@ const NotesPage: React.FC = () => {
         activeNote={activeNote}
         isNew={!activeNote}
         onSaveNote={handleSaveNote}
-        onUpdateNote={notesState.updateNote}
-        onDeleteNote={notesState.deleteNote}
+        onUpdateNote={updateNote}
+        onDeleteNote={deleteNote}
         onNoteSelect={handleNoteSelect}
       />
 
@@ -110,6 +112,7 @@ const NotesPage: React.FC = () => {
           if (success) {
             setIsDeleteDialogOpen(false);
           }
+          return success;
         }}
         noteTitle={activeNote?.title}
       />

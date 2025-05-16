@@ -7,6 +7,7 @@ import { useNotesMutation } from "./useNotesMutation";
 import { useNotesNavigation } from "./useNotesNavigation";
 import { useNotesRealtime } from "./useNotesRealtime";
 import { extractUniqueTags } from "./utils";
+import { useNotesMutations } from "../useNotesMutations";
 
 /**
  * Main hook for managing note list state
@@ -36,6 +37,7 @@ export const useNotesListState = () => {
   
   // Set up mutations
   const mutations = useNotesMutation();
+  const { updateNote: apiUpdateNote, deleteNote: apiDeleteNote } = useNotesMutations();
   
   // Set up navigation
   const navigation = useNotesNavigation();
@@ -61,10 +63,10 @@ export const useNotesListState = () => {
   };
 
   // Direct access to mutation functions for component usage
-  const updateNote = async (note: Note) => {
+  const updateNote = async (note: Note): Promise<void> => {
     if (!note?.id) return;
     try {
-      await mutations.updateNote({
+      await apiUpdateNote({
         noteId: note.id,
         noteData: {
           title: note.title,
@@ -72,20 +74,16 @@ export const useNotesListState = () => {
           tags: note.tags || []
         }
       });
-      return true;
     } catch (error) {
       console.error('Error updating note:', error);
-      return false;
     }
   };
   
-  const deleteNote = async (noteId: string) => {
+  const deleteNote = async (noteId: string): Promise<void> => {
     try {
-      await mutations.deleteNote(noteId);
-      return true;
+      await apiDeleteNote(noteId);
     } catch (error) {
       console.error('Error deleting note:', error);
-      return false;
     }
   };
 
