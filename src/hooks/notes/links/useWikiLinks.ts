@@ -46,11 +46,14 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
       };
       
       try {
+        // Store the result in a variable first to avoid testing void for truthiness
         const createdNoteResult = await createNote(newNoteData as any);
+        let createdNoteId: string | null = null;
         
-        // Исправлено: Правильная проверка результата создания заметки
+        // Check if we have a valid result
         if (createdNoteResult && typeof createdNoteResult === 'object' && 'id' in createdNoteResult) {
           const createdNote = createdNoteResult as Note;
+          createdNoteId = createdNote.id;
           
           // Create a link if we have a current note ID
           if (noteId) {
@@ -59,17 +62,16 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
           
           // Notify parent component
           if (onNoteCreated) {
-            onNoteCreated(createdNote.id);
+            onNoteCreated(createdNoteId);
           }
           
           // Navigate to the new note
           if (onLinkClick) {
-            onLinkClick(createdNote.id);
+            onLinkClick(createdNoteId);
           }
-          
-          return createdNote.id;
         }
-        return null;
+        
+        return createdNoteId;
       } catch (error) {
         console.error("Error creating note:", error);
         return null;
