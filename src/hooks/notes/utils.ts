@@ -8,25 +8,35 @@ import { Note } from "@/types/notes";
  */
 export const transformNoteData = (rawData: any): Note => {
   try {
+    console.log("Трансформация данных заметки:", rawData);
+
+    if (!rawData) {
+      console.error("Получены пустые данные заметки");
+      throw new Error("Пустые данные заметки");
+    }
+
     // Извлекаем содержимое
-    let content: any;
+    let content: any = '';
     let tags: string[] = [];
     let color: string = '';
 
     // Обрабатываем содержимое в зависимости от его структуры
     if (typeof rawData.content === 'object' && rawData.content !== null) {
       const contentObj = rawData.content;
+      
       // Извлекаем текст из объекта содержимого
       const text = contentObj.text || '';
+      
       // Используем теги из объекта содержимого или запасной вариант - теги на корневом уровне
       tags = Array.isArray(contentObj.tags) ? contentObj.tags : (rawData.tags || []);
+      
       // Извлекаем цвет, если доступен
       color = contentObj.color || '';
       
       // Мы сохраним текстовое содержимое в свойство note.content
       content = text;
     } else if (typeof rawData.content === 'string') {
-      // Если содержимое каким-то образом является строкой, используем его напрямую
+      // Если содержимое является строкой, используем его напрямую
       content = rawData.content;
       tags = rawData.tags || [];
     } else {
@@ -39,7 +49,7 @@ export const transformNoteData = (rawData: any): Note => {
     const note: Note = {
       id: rawData.id,
       title: rawData.title || '',
-      content: content,  // Теперь это текстовое содержимое
+      content: content,
       tags: tags,
       color: color,
       user_id: rawData.user_id,
@@ -48,17 +58,18 @@ export const transformNoteData = (rawData: any): Note => {
       type: rawData.type || 'note',
     };
 
+    console.log("Преобразованная заметка:", note);
     return note;
   } catch (error) {
-    console.error("Error transforming note data:", error, rawData);
+    console.error("Ошибка преобразования данных заметки:", error, rawData);
     
     // Возвращаем минимальный действительный объект заметки для предотвращения сбоев
     return {
-      id: rawData.id || 'unknown',
-      title: rawData.title || 'Error loading note',
+      id: rawData?.id || 'unknown',
+      title: rawData?.title || 'Ошибка загрузки заметки',
       content: '',
       tags: [],
-      user_id: rawData.user_id || '',
+      user_id: rawData?.user_id || '',
       type: 'note',
     };
   }

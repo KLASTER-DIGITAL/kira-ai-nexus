@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { BellIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -12,33 +12,79 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useNotificationsCount } from "@/hooks/notifications/useNotificationsCount";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-const notifications = [
+interface Notification {
+  id: number;
+  title: string;
+  description: string;
+  time: string;
+  unread: boolean;
+}
+
+const getDefaultNotifications = (): Notification[] => [
   {
     id: 1,
-    title: "New Task Assigned",
-    description: "You have been assigned a new task.",
-    time: "2 minutes ago",
+    title: "Новая задача назначена",
+    description: "Вам была назначена новая задача.",
+    time: "2 минуты назад",
     unread: true,
   },
   {
     id: 2,
-    title: "Calendar Event Reminder",
-    description: "Meeting with team in 30 minutes.",
-    time: "30 minutes ago",
+    title: "Напоминание о событии",
+    description: "Встреча с командой через 30 минут.",
+    time: "30 минут назад",
     unread: true,
   },
   {
     id: 3,
-    title: "Note Update",
-    description: "Someone commented on your note.",
-    time: "2 hours ago",
+    title: "Обновление заметки",
+    description: "Кто-то прокомментировал вашу заметку.",
+    time: "2 часа назад",
     unread: false,
   },
 ];
 
 const NotificationMenu = () => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const { data: notificationsCount = 0, refetch } = useNotificationsCount();
+  
+  useEffect(() => {
+    // В реальном приложении здесь будет запрос к API для получения уведомлений
+    // Пока используем демонстрационные данные
+    const fetchNotifications = async () => {
+      try {
+        // Проверяем авторизацию пользователя
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError || !authData.user) {
+          console.error("Ошибка авторизации:", authError || "Пользователь не авторизован");
+          setNotifications([]);
+          return;
+        }
+        
+        // Здесь будет реальный запрос к таблице уведомлений
+        // Пока используем демо-данные
+        setNotifications(getDefaultNotifications().slice(0, notificationsCount));
+      } catch (error) {
+        console.error("Ошибка при загрузке уведомлений:", error);
+        setNotifications([]);
+      }
+    };
+    
+    fetchNotifications();
+  }, [notificationsCount]);
+  
   const unreadCount = notifications.filter(n => n.unread).length;
+  
+  const handleMarkAllAsRead = () => {
+    // В реальном приложении здесь будет запрос к API для обновления статусов уведомлений
+    setNotifications(notifications.map(n => ({ ...n, unread: false })));
+    toast.success("Все уведомления отмечены как прочитанные");
+    refetch(); // Обновляем счетчик уведомлений
+  };
   
   return (
     <DropdownMenu>
@@ -57,15 +103,21 @@ const NotificationMenu = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-80" align="end">
         <DropdownMenuLabel className="flex justify-between">
-          <span>Notifications</span>
-          <Button variant="link" size="sm" className="h-auto p-0">
-            Mark all as read
+          <span>Уведомления</span>
+          <Button 
+            variant="link" 
+            size="sm" 
+            className="h-auto p-0"
+            onClick={handleMarkAllAsRead}
+            disabled={unreadCount === 0}
+          >
+            Отметить все как прочитанные
           </Button>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {notifications.length === 0 ? (
           <div className="py-4 text-center text-muted-foreground">
-            No notifications
+            Нет уведомлений
           </div>
         ) : (
           notifications.map((notification) => (
@@ -87,7 +139,7 @@ const NotificationMenu = () => {
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem className="cursor-pointer justify-center font-medium">
-          View all notifications
+          Просмотреть все уведомления
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

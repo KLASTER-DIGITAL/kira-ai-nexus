@@ -1,44 +1,46 @@
 
 import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
-/**
- * Hook for setting up realtime subscriptions for notes
- */
 export const useNotesRealtime = () => {
-  // Setup realtime subscription
+  const queryClient = useQueryClient();
+  
+  // Настройка подписки на изменения в реальном времени
   const setupRealtimeSubscription = () => {
-    console.log("Setting up realtime subscription for notes");
-    const channel = supabase
-      .channel('notes-changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'nodes', filter: "type=eq.note" }, 
-        (payload) => {
-          console.log('Notes change detected:', payload);
-          if (payload.eventType === 'INSERT' && payload.new) {
-            toast.info("Новая заметка", {
-              description: "Создана новая заметка"
-            });
-          } else if (payload.eventType === 'UPDATE' && payload.new) {
-            toast.info("Заметка обновлена", {
-              description: "Заметка была изменена"
-            });
-          } else if (payload.eventType === 'DELETE' && payload.old) {
-            toast.info("Заметка удалена", {
-              description: "Заметка была удалена"
-            });
+    try {
+      // Подписываемся на изменения в таблице nodes для типа note
+      const channel = supabase
+        .channel('notes-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Слушаем все события (INSERT, UPDATE, DELETE)
+            schema: 'public',
+            table: 'nodes',
+            filter: `type=eq.note` // Фильтруем только заметки
+          },
+          (payload) => {
+            console.log('Получено событие реального времени:', payload);
+            // Инвалидируем кэш при любых изменениях данных
+            queryClient.invalidateQueries({ queryKey: ['notes'] });
           }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+        )
+        .subscribe((status) => {
+          console.log('Статус подписки на реальное время:', status);
+        });
+      
+      // Возвращаем функцию отписки для использования в useEffect
+      return () => {
+        console.log('Отписка от канала реального времени');
+        supabase.removeChannel(channel);
+      };
+    } catch (error) {
+      console.error('Ошибка при настройке подписки реального времени:', error);
+      return () => {}; // Возвращаем пустую функцию в случае ошибки
+    }
   };
 
-  return {
-    setupRealtimeSubscription
-  };
+  return { setupRealtimeSubscription };
 };

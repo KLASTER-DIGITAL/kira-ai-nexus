@@ -6,6 +6,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { navigationConfig } from "./navigation-config";
 import { SidebarSection } from "./SidebarSection";
 import { SidebarItem } from "./SidebarItem";
+import { useTasksCount } from "@/hooks/tasks/useTasksCount";
+import { useNotificationsCount } from "@/hooks/notifications/useNotificationsCount";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface SidebarNavigationProps {
   collapsed: boolean;
@@ -14,6 +17,26 @@ interface SidebarNavigationProps {
 export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({ collapsed }) => {
   const { profile } = useAuth();
   const location = useLocation();
+  const queryClient = useQueryClient();
+  
+  // Получаем количество задач и уведомлений
+  const { data: tasksCount = 0 } = useTasksCount();
+  const { data: notificationsCount = 0 } = useNotificationsCount();
+  
+  // Хук для динамического получения данных счетчиков
+  const getBadgeValue = (badgeQueryKey?: string) => {
+    if (!badgeQueryKey) return undefined;
+    
+    if (badgeQueryKey === 'tasks-count') {
+      return tasksCount > 0 ? tasksCount : undefined;
+    }
+    
+    if (badgeQueryKey === 'notifications-count') {
+      return notificationsCount > 0 ? notificationsCount : undefined;
+    }
+    
+    return undefined;
+  };
   
   // Фильтруем элементы навигации на основе роли пользователя
   const navSections = navigationConfig.filter(section => {
@@ -44,14 +67,20 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({ collapsed 
               title={section.title}
               isCollapsed={collapsed}
             >
-              {filteredItems.map((item) => (
-                <SidebarItem 
-                  key={item.href}
-                  item={item}
-                  isActive={location.pathname === item.href || location.pathname.startsWith(`${item.href}/`)}
-                  isCollapsed={collapsed}
-                />
-              ))}
+              {filteredItems.map((item) => {
+                // Получаем динамический счетчик, если задан badgeQueryKey
+                const dynamicBadge = getBadgeValue(item.badgeQueryKey);
+                const badgeValue = dynamicBadge !== undefined ? dynamicBadge : item.badge;
+                
+                return (
+                  <SidebarItem 
+                    key={item.href}
+                    item={{...item, badge: badgeValue}}
+                    isActive={location.pathname === item.href || location.pathname.startsWith(`${item.href}/`)}
+                    isCollapsed={collapsed}
+                  />
+                );
+              })}
             </SidebarSection>
           );
         })}

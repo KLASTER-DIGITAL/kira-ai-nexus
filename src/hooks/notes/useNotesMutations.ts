@@ -6,13 +6,13 @@ import { transformNoteData } from "./utils";
 
 const createNote = async (noteData: { title: string; content: string; tags: string[]; color?: string }) => {
   try {
-    console.log("Creating note with data:", noteData);
+    console.log("Создание заметки с данными:", noteData);
     
     // Проверяем авторизацию пользователя
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      console.error("User not authenticated");
-      throw new Error("User not authenticated");
+      console.error("Пользователь не авторизован");
+      throw new Error("Пользователь не авторизован");
     }
     
     // Подготовка данных для сохранения в БД
@@ -22,6 +22,14 @@ const createNote = async (noteData: { title: string; content: string; tags: stri
       tags: noteData.tags || [],
       color: noteData.color || ''
     };
+    
+    console.log("Подготовленные данные заметки:", {
+      title: noteData.title,
+      content: noteContent,
+      user_id: user.id,
+      type: 'note',
+      tags: noteData.tags || []
+    });
     
     const { data, error } = await supabase
       .from('nodes')
@@ -35,31 +43,31 @@ const createNote = async (noteData: { title: string; content: string; tags: stri
       .select();
 
     if (error) {
-      console.error('Error creating note:', error);
+      console.error('Ошибка при создании заметки:', error);
       throw error;
     }
 
     if (!data || data.length === 0) {
-      throw new Error('No data returned from createNote');
+      throw new Error('Не получены данные после создания заметки');
     }
 
-    console.log("Created note successfully:", data[0]);
+    console.log("Заметка успешно создана:", data[0]);
     return transformNoteData(data[0]);
   } catch (error) {
-    console.error('Error in createNote:', error);
+    console.error('Ошибка в createNote:', error);
     throw error;
   }
 };
 
 const updateNote = async (noteData: { noteId: string; noteData: { title: string; content: string; tags: string[]; color?: string } }) => {
   try {
-    console.log("Updating note with data:", noteData);
+    console.log("Обновление заметки с данными:", noteData);
     
     // Проверяем авторизацию пользователя
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      console.error("User not authenticated");
-      throw new Error("User not authenticated");
+      console.error("Пользователь не авторизован");
+      throw new Error("Пользователь не авторизован");
     }
     
     // Подготовка данных для обновления
@@ -68,6 +76,13 @@ const updateNote = async (noteData: { noteId: string; noteData: { title: string;
       tags: noteData.noteData.tags || [],
       color: noteData.noteData.color || ''
     };
+    
+    console.log("Подготовленные данные для обновления заметки:", {
+      id: noteData.noteId,
+      title: noteData.noteData.title,
+      content: noteContent,
+      tags: noteData.noteData.tags
+    });
     
     const { data, error } = await supabase
       .from('nodes')
@@ -82,32 +97,32 @@ const updateNote = async (noteData: { noteId: string; noteData: { title: string;
       .select();
 
     if (error) {
-      console.error('Error updating note:', error);
+      console.error('Ошибка при обновлении заметки:', error);
       throw error;
     }
 
     // Process the returned data to ensure it matches our Note type
     if (data && data.length > 0) {
-      console.log("Updated note successfully:", data[0]);
+      console.log("Заметка успешно обновлена:", data[0]);
       return transformNoteData(data[0]);
     }
     
     return null;
   } catch (error) {
-    console.error('Error in updateNote:', error);
+    console.error('Ошибка в updateNote:', error);
     throw error;
   }
 };
 
 const deleteNote = async (noteId: string) => {
   try {
-    console.log("Deleting note:", noteId);
+    console.log("Удаление заметки:", noteId);
     
     // Проверяем авторизацию пользователя
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      console.error("User not authenticated");
-      throw new Error("User not authenticated");
+      console.error("Пользователь не авторизован");
+      throw new Error("Пользователь не авторизован");
     }
     
     const { error } = await supabase
@@ -117,14 +132,14 @@ const deleteNote = async (noteId: string) => {
       .eq('user_id', user.id);  // Добавлена проверка user_id для усиления безопасности
 
     if (error) {
-      console.error('Error deleting note:', error);
+      console.error('Ошибка при удалении заметки:', error);
       throw error;
     }
 
-    console.log("Deleted note successfully:", noteId);
+    console.log("Заметка успешно удалена:", noteId);
     return noteId;
   } catch (error) {
-    console.error('Error in deleteNote:', error);
+    console.error('Ошибка в deleteNote:', error);
     throw error;
   }
 };

@@ -20,10 +20,21 @@ export const useNotesQuery = (options: NotesQueryOptions = {}) => {
   return useQuery({
     queryKey: ["notes", filter, page, pageSize, sort],
     queryFn: async (): Promise<PaginatedNotesResult> => {
+      console.log("Загрузка заметок с параметрами:", { filter, page, pageSize, sort });
+      
+      // Проверяем авторизацию пользователя
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !authData.user) {
+        console.error("Ошибка авторизации:", authError || "Пользователь не авторизован");
+        throw new Error("Требуется авторизация для загрузки заметок");
+      }
+
       let query = supabase
         .from("nodes")
         .select("*", { count: "exact" })
-        .eq("type", "note");
+        .eq("type", "note")
+        .eq("user_id", authData.user.id); // Добавлена явная фильтрация по user_id
 
       // Apply tag filter
       if (filter?.tags && filter.tags.length > 0) {
@@ -33,7 +44,7 @@ export const useNotesQuery = (options: NotesQueryOptions = {}) => {
       // Fix the or() method call - Supabase's or method expects a string with filter conditions
       if (filter?.searchText) {
         const searchTerm = filter.searchText.toLowerCase();
-        query = query.or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%`);
+        query = query.or(`title.ilike.%${searchTerm}%,content->text.ilike.%${searchTerm}%`);
       }
 
       // Apply sorting
@@ -63,14 +74,18 @@ export const useNotesQuery = (options: NotesQueryOptions = {}) => {
       const { data, error, count } = await query;
 
       if (error) {
-        console.error("Error fetching notes:", error);
+        console.error("Ошибка при загрузке заметок:", error);
         throw error;
       }
 
+      console.log("Полученные данные заметок:", data);
+      
       // Transform the raw data to match the Note type
       const notes = data ? data.map(transformNoteData) : [];
       const totalCount = count || 0;
       const totalPages = Math.ceil(totalCount / pageSize);
+
+      console.log(`Загружено ${notes.length} заметок из ${totalCount} всего`);
 
       return {
         notes,

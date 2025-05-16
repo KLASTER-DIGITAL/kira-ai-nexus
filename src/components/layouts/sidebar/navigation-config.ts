@@ -6,7 +6,8 @@ export interface NavigationItem {
   href: string;
   icon: LucideIcon;
   role?: "user" | "superadmin" | "all";
-  badge?: string | number;
+  badge?: string | number | null;
+  badgeQueryKey?: string; // Ключ для динамического обновления счетчика
 }
 
 export interface NavigationSection {
@@ -35,7 +36,8 @@ export const navigationConfig: NavigationSection[] = [
         href: "/notifications",
         icon: Bell,
         role: "all",
-        badge: "3"
+        badge: null, // Будет обновлено динамически
+        badgeQueryKey: 'notifications-count'
       }
     ]
   },
@@ -53,7 +55,8 @@ export const navigationConfig: NavigationSection[] = [
         href: "/tasks",
         icon: CheckSquare,
         role: "all",
-        badge: "5"
+        badge: null, // Будет обновлено динамически
+        badgeQueryKey: 'tasks-count'
       },
       {
         title: "Календарь",
