@@ -2,7 +2,7 @@
 import React from "react";
 import { useSidebarStore } from "@/store/sidebarStore";
 import { cn } from "@/lib/utils";
-import Header from "@/components/header/Header";
+import DashboardHeader from "@/components/dashboard/layout/DashboardHeader";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -19,10 +19,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   return (
     <div className="flex-1 flex flex-col w-full">
-      <Header 
-        sidebarCollapsed={collapsed} 
-        toggleSidebar={() => useSidebarStore.getState().toggleCollapse()}
-        pageTitle={title}
+      <DashboardHeader
+        title={title}
+        mobileMenuToggle={() => useSidebarStore.getState().toggleCollapse()}
         actions={actions}
       />
       
