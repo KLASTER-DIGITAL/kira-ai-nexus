@@ -46,14 +46,13 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
       };
       
       try {
-        // Store the result in a variable first to avoid testing void for truthiness
-        const createdNoteResult = await createNote(newNoteData as any);
-        let createdNoteId: string | null = null;
+        // Create the note and capture the result
+        // Use createNote as a Promise that returns Note or null
+        const createdNote = await createNote(newNoteData as any) as Note | null;
         
-        // Check if we have a valid result
-        if (createdNoteResult && typeof createdNoteResult === 'object' && 'id' in createdNoteResult) {
-          const createdNote = createdNoteResult as Note;
-          createdNoteId = createdNote.id;
+        // Check if we have a valid note with an ID
+        if (createdNote && 'id' in createdNote) {
+          const createdNoteId = createdNote.id;
           
           // Create a link if we have a current note ID
           if (noteId) {
@@ -69,9 +68,11 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
           if (onLinkClick) {
             onLinkClick(createdNoteId);
           }
+          
+          return createdNoteId;
         }
         
-        return createdNoteId;
+        return null;
       } catch (error) {
         console.error("Error creating note:", error);
         return null;
