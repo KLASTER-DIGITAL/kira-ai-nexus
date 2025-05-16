@@ -1,7 +1,8 @@
 
 import React, { useState } from "react";
 import { 
-  SidebarProvider 
+  SidebarProvider, 
+  SidebarWrapper
 } from "@/components/ui/sidebar";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
@@ -22,7 +23,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title, actions }) => {
 
   return (
     <SidebarProvider defaultOpen={!sidebarCollapsed}>
-      <div className="flex h-screen overflow-hidden">
+      <SidebarWrapper className="flex h-screen overflow-hidden">
         {/* Use the actual Sidebar component from Sidebar.tsx */}
         <div className="h-full">
           <Sidebar />
@@ -42,7 +43,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title, actions }) => {
         
         {/* AI Sidebar component */}
         <AISidebar />
-      </div>
+      </SidebarWrapper>
     </SidebarProvider>
   );
 };
