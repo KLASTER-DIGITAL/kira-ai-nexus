@@ -5,6 +5,10 @@ import NotesContent from "@/components/notes/content/NotesContent";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 
+// Проверим, какие пропсы принимает NotesContent
+// Если NotesContent ожидает другие пропсы, мы должны адаптироваться
+// Здесь предполагаем, что компонент из /components/features/notes/content/NotesContent.tsx
+
 const NotesPage: React.FC = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
@@ -22,10 +26,7 @@ const NotesPage: React.FC = () => {
   return (
     <DashboardLayout title="Заметки" actions={actions}>
       <div className="container mx-auto pb-20">
-        <NotesContent 
-          showCreateDialog={showCreateDialog} 
-          setShowCreateDialog={setShowCreateDialog} 
-        />
+        <NotesContent />
       </div>
     </DashboardLayout>
   );

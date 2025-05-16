@@ -3,7 +3,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/utils";
-import navigationItems from "./navigationItems";
+import navigationItems, { NavItem } from "./navigationItems";
 import { 
   TooltipProvider, 
   Tooltip, 
@@ -42,7 +42,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
       <nav className="px-2 space-y-1">
         <TooltipProvider delayDuration={0}>
           {filteredNavItems.map((item) => {
-            const Icon = item.icon as LucideIcon;
+            const Icon = item.icon;
             
             return (
               <Tooltip key={item.href}>

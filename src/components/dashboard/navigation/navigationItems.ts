@@ -8,13 +8,13 @@ import {
   Network,
   Settings,
   Users,
+  LucideIcon
 } from "lucide-react";
-import { ReactNode } from "react";
 
-type NavItem = {
+export type NavItem = {
   title: string;
   href: string;
-  icon: ReactNode;
+  icon: LucideIcon;
   role?: "user" | "superadmin" | "all";
   badge?: string | number;
   submenu?: NavItem[];
