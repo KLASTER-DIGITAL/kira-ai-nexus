@@ -1,6 +1,6 @@
 
 // Экспорты компонентов заметок
-export { default as NoteContent } from './editor/NoteContent';
+export { default as NoteContentEditor } from './editor/NoteContentEditor';
 export { default as NoteMetadata } from './editor/NoteMetadata';
 export { default as NoteEditorActions } from './editor/NoteEditorActions';
 export { default as NotesContent } from './content/NotesContent';
