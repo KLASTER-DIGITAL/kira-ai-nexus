@@ -17,6 +17,9 @@ export const useNotesMutation = () => {
   ) => {
     console.log("Сохраняем заметку:", noteData);
     try {
+      // Убедимся, что цвет сохраняется правильно
+      const colorToSave = noteData.color || '';
+      
       if (activeNote) {
         // Update existing note - правильно формируем формат контента
         await updateNote({
@@ -25,11 +28,12 @@ export const useNotesMutation = () => {
             title: noteData.title,
             content: noteData.content,
             tags: noteData.tags,
-            color: noteData.color
+            color: colorToSave
           }
         });
         
         console.log("Заметка обновлена");
+        toast.success("Заметка обновлена");
         return true;
       } else {
         // Create new note
@@ -37,15 +41,26 @@ export const useNotesMutation = () => {
           title: noteData.title,
           content: noteData.content,
           tags: noteData.tags,
-          color: noteData.color
+          color: colorToSave
         });
         
         console.log("Заметка создана:", result);
+        toast.success("Заметка создана");
         return true;
       }
     } catch (error) {
       console.error("Ошибка при сохранении заметки:", error);
-      toast.error("Не удалось сохранить заметку. Попробуйте еще раз.");
+      let errorMessage = "Не удалось сохранить заметку. Попробуйте еще раз.";
+      
+      if (error instanceof Error) {
+        console.error(`Детали ошибки: ${error.message}`);
+        // Если у нас есть более конкретное сообщение, покажем его
+        if (error.message.includes("User not authenticated")) {
+          errorMessage = "Требуется авторизация для сохранения заметки";
+        }
+      }
+      
+      toast.error(errorMessage);
       return false;
     }
   };

@@ -78,6 +78,7 @@ const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({
   };
 
   const handleColorChange = (newColor: string) => {
+    console.log("Изменение цвета на:", newColor);
     setColor(newColor);
   };
 
@@ -100,10 +101,8 @@ const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({
       
       if (success) {
         setLastSavedAt(new Date());
-        toast.success(isNew ? "Заметка создана" : "Заметка обновлена");
         return true;
       } else {
-        toast.error("Не удалось сохранить заметку");
         return false;
       }
     } catch (error) {
@@ -135,7 +134,7 @@ const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({
           onNoteSelect={onNoteSelect}
           tags={tags}
           onTagsChange={handleTagsChange}
-          color={color}
+          color={color} 
           onColorChange={handleColorChange}
           links={links}
         />

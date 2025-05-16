@@ -15,6 +15,7 @@ const createNote = async (noteData: { title: string; content: string; tags: stri
       throw new Error("User not authenticated");
     }
     
+    // В таблице nodes нет колонки tags, поэтому сохраняем теги в content
     const { data, error } = await supabase
       .from('nodes')
       .insert({
@@ -24,7 +25,6 @@ const createNote = async (noteData: { title: string; content: string; tags: stri
           tags: noteData.tags,
           color: noteData.color || ''
         },
-        tags: noteData.tags,
         user_id: user.user.id,
         type: 'note'
       })
@@ -58,6 +58,7 @@ const updateNote = async (noteData: { noteId: string; noteData: { title: string;
       throw new Error("User not authenticated");
     }
     
+    // В таблице nodes нет колонки tags, поэтому сохраняем теги в content
     const { data, error } = await supabase
       .from('nodes')
       .update({
@@ -67,7 +68,6 @@ const updateNote = async (noteData: { noteId: string; noteData: { title: string;
           tags: noteData.noteData.tags,
           color: noteData.noteData.color || ''
         },
-        tags: noteData.noteData.tags,
         updated_at: new Date().toISOString()
       })
       .eq('id', noteData.noteId)
