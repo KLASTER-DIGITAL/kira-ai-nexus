@@ -1,24 +1,35 @@
 
-import { Note } from "@/types/notes";
+import { Note, NoteContent } from "@/types/notes";
 
 /**
  * Преобразует сырые данные заметки из БД в тип Note
  */
 export const transformNoteData = (data: any): Note => {
-  // Обрабатываем content в зависимости от его типа
-  const content = data.content && typeof data.content === 'object' 
-    ? data.content.text || ""
-    : data.content || "";
+  let content = "";
+  let tags: string[] = [];
+  let color = "";
   
-  // Извлекаем теги из объекта content, если они там есть
-  const tags = data.content && typeof data.content === 'object' && data.content.tags
-    ? data.content.tags
-    : data.tags || [];
-    
-  // Извлекаем цвет из объекта content, если он там есть
-  const color = data.content && typeof data.content === 'object' && data.content.color
-    ? data.content.color
-    : data.color || "";
+  // Handle content based on its type
+  if (data.content) {
+    if (typeof data.content === 'object') {
+      // Extract content from the content object
+      content = data.content.text || "";
+      tags = Array.isArray(data.content.tags) ? data.content.tags : [];
+      color = data.content.color || "";
+    } else if (typeof data.content === 'string') {
+      content = data.content;
+    }
+  }
+  
+  // If tags not found in content object, use the root tags (if available)
+  if (tags.length === 0 && Array.isArray(data.tags)) {
+    tags = data.tags;
+  }
+  
+  // If color not found in content object, use the root color (if available)
+  if (!color && data.color) {
+    color = data.color;
+  }
   
   return {
     id: data.id,

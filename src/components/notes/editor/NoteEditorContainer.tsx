@@ -56,6 +56,11 @@ const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({
         } else {
           setColor(note.color || "");
         }
+      } else {
+        // Если content отсутствует или null, используем пустую строку
+        setContent("");
+        setTags(note.tags || []);
+        setColor(note.color || "");
       }
     }
   }, [note]);

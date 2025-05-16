@@ -1,25 +1,19 @@
 
-import { Note } from "@/types/notes";
+import { Note, NoteContent } from "@/types/notes";
 
 export interface CreateNoteInput {
   title: string;
-  content: string;
-  tags: string[];
+  content: string | NoteContent;
+  tags?: string[];
   color?: string;
 }
 
 export interface UpdateNoteInput {
   id: string;
   title?: string;
-  content?: string;
+  content?: string | NoteContent;
   tags?: string[];
   color?: string;
-}
-
-export interface NoteContent {
-  text: string;
-  tags: string[];
-  color: string;
 }
 
 // Helper function to format notes from DB (shared across mutations)
@@ -52,6 +46,8 @@ export const formatNoteFromDb = (data: any): Note => {
     tags,
     color,
     type: data.type,
-    user_id: data.user_id
+    user_id: data.user_id,
+    created_at: data.created_at,
+    updated_at: data.updated_at
   };
 };

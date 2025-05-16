@@ -1,8 +1,8 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Note } from "@/types/notes";
-import { UpdateNoteInput, NoteContent, formatNoteFromDb } from "./types";
+import { Note, NoteContent } from "@/types/notes";
+import { UpdateNoteInput, formatNoteFromDb } from "./types";
 
 export const useUpdateNote = () => {
   const queryClient = useQueryClient();
@@ -46,12 +46,30 @@ export const useUpdateNote = () => {
           };
         }
         
-        // If we have content, tags or color updates, update the content field
-        updateData.content = {
-          text: noteData.content !== undefined ? noteData.content : currentContent.text,
-          tags: noteData.tags !== undefined ? noteData.tags : currentContent.tags,
-          color: noteData.color !== undefined ? noteData.color : currentContent.color
-        };
+        // If we have new content, prepare it for update
+        let newContent: string | null = null;
+        if (typeof noteData.content === 'string') {
+          // If content is a string, update text only
+          updateData.content = {
+            text: noteData.content,
+            tags: noteData.tags !== undefined ? noteData.tags : currentContent.tags,
+            color: noteData.color !== undefined ? noteData.color : currentContent.color
+          };
+        } else if (typeof noteData.content === 'object') {
+          // If content is an object, use its properties
+          updateData.content = {
+            text: noteData.content.text || currentContent.text,
+            tags: noteData.content.tags || currentContent.tags,
+            color: noteData.content.color || currentContent.color
+          };
+        } else {
+          // If no content update, use any tags or color updates
+          updateData.content = {
+            text: currentContent.text,
+            tags: noteData.tags !== undefined ? noteData.tags : currentContent.tags,
+            color: noteData.color !== undefined ? noteData.color : currentContent.color
+          };
+        }
         
         // Perform the update
         const { data, error } = await supabase

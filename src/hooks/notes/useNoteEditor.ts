@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Note } from "@/types/notes";
+import { Note, NoteContent } from "@/types/notes";
 import { useNotesMutations } from "./useNotesMutations";
 import { toast } from "sonner";
 
@@ -10,7 +10,7 @@ import { toast } from "sonner";
  */
 export const useNoteEditor = (note?: Note, onSuccess?: () => void) => {
   const [title, setTitle] = useState(note?.title || "");
-  const [content, setContent] = useState(note?.content || "");
+  const [content, setContent] = useState(note?.content && typeof note.content === 'object' ? note.content.text : (note?.content || ""));
   const [tags, setTags] = useState(note?.tags || []);
   const [color, setColor] = useState(note?.color || "");
   const { createNote, updateNote, isCreating, isUpdating } = useNotesMutations();
@@ -19,9 +19,16 @@ export const useNoteEditor = (note?: Note, onSuccess?: () => void) => {
   useEffect(() => {
     if (note) {
       setTitle(note.title);
-      setContent(note.content || "");
-      setTags(note.tags || []);
-      setColor(note.color || "");
+      
+      if (typeof note.content === 'object') {
+        setContent(note.content.text || "");
+        setTags(note.content.tags || note.tags || []);
+        setColor(note.content.color || note.color || "");
+      } else {
+        setContent(note.content || "");
+        setTags(note.tags || []);
+        setColor(note.color || "");
+      }
     } else {
       setTitle("");
       setContent("");
@@ -37,27 +44,31 @@ export const useNoteEditor = (note?: Note, onSuccess?: () => void) => {
     try {
       if (note) {
         // Обновление существующей заметки - формируем данные в правильном формате для БД
+        const contentObject: NoteContent = {
+          text: content,
+          tags,
+          color
+        };
+        
         await updateNote({
           id: note.id,
           title,
-          content: {
-            text: content,
-            tags,
-            color
-          },
+          content: contentObject,
           user_id: note.user_id,
           type: "note"
         });
         toast.success("Заметка обновлена");
       } else {
         // Создание новой заметки - передаем данные в правильном формате
+        const contentObject: NoteContent = {
+          text: content,
+          tags,
+          color
+        };
+        
         const result = await createNote({
           title,
-          content: {
-            text: content,
-            tags,
-            color
-          },
+          content: contentObject,
           user_id: "", // Will be filled by backend
           type: "note"
         });

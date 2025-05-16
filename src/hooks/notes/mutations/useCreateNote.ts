@@ -1,7 +1,6 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Note } from "@/types/notes";
+import { Note, NoteContent } from "@/types/notes";
 import { CreateNoteInput, formatNoteFromDb } from "./types";
 
 export const useCreateNote = () => {
@@ -16,12 +15,24 @@ export const useCreateNote = () => {
         throw new Error('User not authenticated');
       }
       
-      // For the nodes table, we need to store the metadata (tags, color) in the content field as JSON
-      const contentData = {
-        text: noteData.content || '',
-        tags: noteData.tags || [],
-        color: noteData.color || ''
-      };
+      // Prepare content data as object for DB storage
+      let contentData: NoteContent;
+      
+      if (typeof noteData.content === 'object') {
+        // If content is already an object with the right structure, use it
+        contentData = {
+          text: noteData.content.text || '',
+          tags: noteData.content.tags || noteData.tags || [],
+          color: noteData.content.color || noteData.color || ''
+        };
+      } else {
+        // Otherwise construct the content object from separate fields
+        contentData = {
+          text: noteData.content || '',
+          tags: noteData.tags || [],
+          color: noteData.color || ''
+        };
+      }
       
       // Insert the note with proper content structure
       const { data, error } = await supabase

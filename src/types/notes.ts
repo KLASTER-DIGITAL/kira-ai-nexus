@@ -1,10 +1,16 @@
 
 import { UserProfile } from './auth';
 
+export interface NoteContent {
+  text: string;
+  tags: string[];
+  color: string;
+}
+
 export interface Note {
   id: string;
   title: string;
-  content: string | null;
+  content: string | NoteContent;
   date?: string;
   color?: string;
   user_id: string;

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Note } from "@/types/notes";
+import { Note, NoteContent } from "@/types/notes";
 import { useNotesMutations } from "@/hooks/notes/useNotesMutations";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,27 +20,31 @@ export const useNotesMutation = () => {
     try {
       if (activeNote) {
         // Update existing note - правильно формируем формат контента
+        const contentObject: NoteContent = {
+          text: noteData.content,
+          tags: noteData.tags,
+          color: activeNote.color || ""
+        };
+        
         await updateNote({
           id: activeNote.id,
           title: noteData.title,
-          content: {
-            text: noteData.content,
-            tags: noteData.tags,
-            color: activeNote.color || ""
-          },
+          content: contentObject,
           user_id: activeNote.user_id,
           type: activeNote.type
         });
         toast.success("Заметка обновлена");
       } else {
         // Create new note - правильно формируем формат контента
+        const contentObject: NoteContent = {
+          text: noteData.content,
+          tags: noteData.tags,
+          color: ""
+        };
+        
         const result = await createNote({
           title: noteData.title,
-          content: {
-            text: noteData.content,
-            tags: noteData.tags,
-            color: ""
-          },
+          content: contentObject,
           user_id: "", // Will be filled by backend
           type: "note"
         });
