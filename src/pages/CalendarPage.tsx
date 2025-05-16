@@ -10,11 +10,6 @@ const CalendarPage: React.FC = () => {
 
   return (
     <div className="container mx-auto">
-      <PageHeader 
-        title="Календарь" 
-        description="Управление событиями и настройка интеграций с календарем"
-      />
-      
       <div className="max-w-5xl mx-auto">
         <Tabs defaultValue="calendar" onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="grid w-full max-w-md grid-cols-2">

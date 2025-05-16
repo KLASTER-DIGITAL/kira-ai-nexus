@@ -9,11 +9,6 @@ const ChatPage: React.FC = () => {
   
   return (
     <div className="container mx-auto">
-      <PageHeader 
-        title="Чат" 
-        description="Общайтесь с KIRA AI ассистентом"
-      />
-      
       <div className="max-w-4xl mx-auto h-[calc(100vh-180px)]">
         {isAuthenticated ? (
           <ChatInterface />

@@ -3,6 +3,7 @@ import React from "react";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { RoleBadge } from "./header/RoleBadge";
+import { Button } from "@/components/ui/button";
 
 interface PageHeaderProps {
   title?: string;
@@ -44,16 +45,18 @@ export function PageHeader({
 
   return (
     <div className={cn("flex flex-col space-y-1.5 pb-6", className)}>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight flex items-center">
-          {getPageTitle()}
-          {showRoleBadge && <RoleBadge />}
-        </h1>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight flex items-center">
+            {getPageTitle()}
+            {showRoleBadge && <RoleBadge />}
+          </h1>
+          {description && (
+            <p className="text-sm text-muted-foreground">{description}</p>
+          )}
+        </div>
         {actions && <div className="flex items-center space-x-2">{actions}</div>}
       </div>
-      {description && (
-        <p className="text-sm text-muted-foreground">{description}</p>
-      )}
     </div>
   );
 }

@@ -1,12 +1,15 @@
 
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/utils";
+import { useSidebarStore } from "@/store/sidebarStore";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Sheet, SheetContent, SheetOverlay } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ChevronsLeft, ChevronsRight, Settings, LogOut } from "lucide-react";
@@ -17,8 +20,25 @@ import { navigationConfig } from "./navigation-config";
 
 export function AppSidebar() {
   const { profile, signOut } = useAuth();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { collapsed, toggleCollapse, setCollapsed } = useSidebarStore();
   const location = useLocation();
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+  
+  // Синхронизируем состояние мобильного меню с collapsed
+  useEffect(() => {
+    if (isMobile) {
+      setMobileOpen(!collapsed);
+    }
+  }, [collapsed, isMobile]);
+
+  // Автоматически скрываем sidebar на мобильных устройствах при навигации
+  useEffect(() => {
+    if (isMobile) {
+      setCollapsed(true);
+      setMobileOpen(false);
+    }
+  }, [location.pathname, isMobile, setCollapsed]);
   
   // Определяем доступные элементы навигации на основе роли пользователя
   const navSections = navigationConfig.filter(section => {
@@ -29,19 +49,15 @@ export function AppSidebar() {
     });
   });
 
-  return (
-    <aside 
-      className={cn(
-        "fixed top-0 left-0 z-30 flex h-screen flex-col border-r border-border bg-background transition-all duration-300 ease-in-out",
-        isCollapsed ? "w-[80px]" : "w-[280px]"
-      )}
-    >
+  // Контент сайдбара, используется в обоих вариантах отображения
+  const sidebarContent = (
+    <>
       {/* Заголовок сайдбара с логотипом */}
       <div className={cn(
         "flex h-16 items-center border-b border-border px-4",
-        isCollapsed ? "justify-center" : "justify-between"
+        collapsed ? "justify-center" : "justify-between"
       )}>
-        {!isCollapsed ? (
+        {!collapsed ? (
           <Link to="/dashboard" className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-semibold">K</span>
@@ -54,8 +70,8 @@ export function AppSidebar() {
           </div>
         )}
         
-        {!isCollapsed && (
-          <Button variant="ghost" size="icon" onClick={() => setIsCollapsed(true)}>
+        {!collapsed && (
+          <Button variant="ghost" size="icon" onClick={() => toggleCollapse()}>
             <ChevronsLeft className="h-5 w-5" />
             <span className="sr-only">Свернуть меню</span>
           </Button>
@@ -80,14 +96,14 @@ export function AppSidebar() {
               <SidebarSection 
                 key={`section-${index}`}
                 title={section.title}
-                isCollapsed={isCollapsed}
+                isCollapsed={collapsed}
               >
                 {filteredItems.map((item) => (
                   <SidebarItem 
                     key={item.href}
                     item={item}
                     isActive={location.pathname === item.href || location.pathname.startsWith(`${item.href}/`)}
-                    isCollapsed={isCollapsed}
+                    isCollapsed={collapsed}
                   />
                 ))}
               </SidebarSection>
@@ -97,12 +113,12 @@ export function AppSidebar() {
       </ScrollArea>
       
       {/* Кнопка разворачивания меню (когда меню свернуто) */}
-      {isCollapsed && (
+      {collapsed && !isMobile && (
         <div className="flex justify-center py-2 border-t border-border">
           <TooltipProvider delayDuration={0}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" onClick={() => setIsCollapsed(false)}>
+                <Button variant="ghost" size="icon" onClick={() => toggleCollapse()}>
                   <ChevronsRight className="h-5 w-5" />
                   <span className="sr-only">Развернуть меню</span>
                 </Button>
@@ -117,16 +133,16 @@ export function AppSidebar() {
       <div className="p-3 border-t border-border">
         <div className={cn(
           "flex items-center", 
-          isCollapsed ? "flex-col gap-2" : "gap-3"
+          collapsed ? "flex-col gap-2" : "gap-3"
         )}>
-          <Avatar className={cn("h-10 w-10", isCollapsed && "mb-1")}>
+          <Avatar className={cn("h-10 w-10", collapsed && "mb-1")}>
             <AvatarImage src={profile?.avatar_url || ""} alt={profile?.display_name || "User"} />
             <AvatarFallback className="bg-primary text-primary-foreground">
               {profile?.display_name?.charAt(0) || profile?.email?.charAt(0) || "U"}
             </AvatarFallback>
           </Avatar>
           
-          {!isCollapsed && (
+          {!collapsed && (
             <div className="flex-1">
               <p className="text-sm font-medium leading-none">
                 {profile?.display_name || 'Пользователь'}
@@ -149,6 +165,38 @@ export function AppSidebar() {
           )}
         </div>
       </div>
+    </>
+  );
+
+  // На мобильных устройствах используем Sheet
+  if (isMobile) {
+    return (
+      <Sheet open={mobileOpen} onOpenChange={(open) => {
+        setMobileOpen(open);
+        setCollapsed(!open);
+      }}>
+        <SheetContent 
+          side="left" 
+          className="p-0 w-[280px] border-r"
+          closeButton={false}
+        >
+          <div className="flex h-full flex-col">
+            {sidebarContent}
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // На десктопе используем фиксированный sidebar
+  return (
+    <aside 
+      className={cn(
+        "fixed top-0 left-0 z-30 flex h-screen flex-col border-r border-border bg-background transition-all duration-300 ease-in-out",
+        collapsed ? "w-[80px]" : "w-[280px]"
+      )}
+    >
+      {sidebarContent}
     </aside>
   );
 }

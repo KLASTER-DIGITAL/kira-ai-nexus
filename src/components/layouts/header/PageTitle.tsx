@@ -2,12 +2,18 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { usePageHeader } from "@/context/page-header";
 
 export function PageTitle() {
   const location = useLocation();
+  const { title } = usePageHeader();
   
   // Функция для получения заголовка текущей страницы
   const getPageTitle = () => {
+    // Если заголовок задан через контекст, используем его
+    if (title) return title;
+    
+    // Иначе определяем заголовок на основе маршрута
     const path = location.pathname;
     
     if (path.startsWith('/dashboard/admin')) return 'Панель администратора';

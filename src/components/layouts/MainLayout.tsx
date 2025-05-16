@@ -5,6 +5,8 @@ import { useAuth } from "@/context/auth";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
+import { useSidebarStore } from "@/store/sidebarStore";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 // Компоненты нового UI
 import { AppSidebar } from "@/components/layouts/sidebar/AppSidebar";
@@ -14,6 +16,15 @@ export function MainLayout() {
   const { profile, isLoading } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
   const location = useLocation();
+  const { collapsed, setCollapsed } = useSidebarStore();
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
+  // Устанавливаем collapsed = true на мобильных устройствах при монтировании
+  useEffect(() => {
+    if (isMobile) {
+      setCollapsed(true);
+    }
+  }, [isMobile, setCollapsed]);
 
   // Используем эффект для предотвращения мерцания при гидратации
   useEffect(() => {
@@ -28,12 +39,17 @@ export function MainLayout() {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <div className="flex min-h-screen w-full bg-background">
         <AppSidebar />
-        <div className="flex-1 flex flex-col">
+        <main 
+          className={cn(
+            "flex-1 flex flex-col transition-all duration-300 ease-in-out w-full",
+            collapsed ? "md:pl-[80px]" : "md:pl-[280px]"
+          )}
+        >
           <AppHeader />
-          <main className="flex-1 overflow-auto p-6">
+          <div className="flex-1 overflow-auto p-4 md:p-6">
             <Outlet />
-          </main>
-        </div>
+          </div>
+        </main>
         <Toaster position="top-right" richColors />
       </div>
     </ThemeProvider>

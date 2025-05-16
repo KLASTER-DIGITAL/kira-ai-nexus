@@ -2,6 +2,8 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/context/auth";
+import { useSidebarStore } from "@/store/sidebarStore";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { cn } from "@/lib/utils";
 import { 
   Bell, 
@@ -16,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ModeToggle } from "@/components/ModeToggle";
+import { PageTitle } from "@/components/layouts/header/PageTitle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,15 +33,27 @@ import { UserMenu } from "./UserMenu";
 export function AppHeader() {
   const location = useLocation();
   const { profile } = useAuth();
+  const { collapsed, toggleCollapse } = useSidebarStore();
+  const isMobile = useMediaQuery("(max-width: 768px)");
   
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-border bg-background/95 px-4 md:px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex flex-1 items-center gap-4 md:gap-8">
-        {/* Мобильная кнопка меню */}
-        <Button variant="ghost" size="icon" className="md:hidden">
+        {/* Кнопка меню для мобильных и десктопа */}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={toggleCollapse}
+          aria-label={collapsed ? "Развернуть меню" : "Свернуть меню"}
+        >
           <Menu className="h-5 w-5" />
           <span className="sr-only">Меню</span>
         </Button>
+        
+        {/* Заголовок страницы */}
+        <div className="hidden md:block">
+          <PageTitle />
+        </div>
         
         {/* Поиск - скрыт на мобильных устройствах */}
         <div className="hidden md:flex w-full max-w-sm items-center">
@@ -52,14 +67,19 @@ export function AppHeader() {
         </div>
       </div>
       
+      {/* Заголовок страницы на мобильных */}
+      <div className="md:hidden absolute left-1/2 transform -translate-x-1/2">
+        <PageTitle />
+      </div>
+      
       {/* Правая часть заголовка с кнопками */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 md:gap-2">
         <ModeToggle />
         
-        {/* Кнопка создания */}
+        {/* Кнопка создания - адаптивная */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="hidden md:flex">
               <PlusCircle className="h-5 w-5" />
               <span className="sr-only">Создать</span>
             </Button>

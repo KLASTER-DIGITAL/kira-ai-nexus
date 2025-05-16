@@ -30,6 +30,15 @@
     --input: 220 13% 91%;
     --ring: 262 83% 58%;
     
+    /* Цвета графика и визуализации */
+    --success: 142 71% 45%;
+    --info: 199 89% 48%;
+    --warning: 38 92% 50%;
+    --danger: 0 84% 60%;
+    
+    /* Специальные цвета */
+    --kira-purple: 262 83% 58%;
+    
     /* Радиус скругления */
     --radius: 0.5rem;
   }
@@ -59,6 +68,15 @@
     --border: 215 27.9% 16.9%;
     --input: 215 27.9% 16.9%;
     --ring: 263 70% 65%;
+    
+    /* Цвета графика и визуализации */
+    --success: 142 71% 45%;
+    --info: 199 89% 48%;
+    --warning: 38 92% 50%;
+    --danger: 0 84% 60%;
+    
+    /* Специальные цвета */
+    --kira-purple: 263 70% 65%;
   }
 }
  
@@ -113,6 +131,19 @@
   
   .animate-slide-down {
     animation: slideDown 0.3s ease-out forwards;
+  }
+  
+  /* Адаптивные контейнеры */
+  .responsive-grid {
+    @apply grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+  
+  .responsive-grid-dense {
+    @apply grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-min;
+  }
+  
+  .card-grid {
+    @apply grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-min;
   }
 }
 

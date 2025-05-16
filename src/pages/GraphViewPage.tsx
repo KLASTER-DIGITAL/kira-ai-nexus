@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import { ReactFlowProvider } from '@xyflow/react';
 import GraphView from "@/components/graph/GraphView";
 import { useGraphData } from "@/hooks/useGraphData";
-import { PageHeader } from "@/components/layouts/PageHeader";
 
 const GraphViewPage: React.FC = () => {
   const { graphData, isLoading } = useGraphData();
@@ -25,7 +24,6 @@ const GraphViewPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="container mx-auto">
-        <PageHeader title="Граф связей" />
         <div className="flex items-center justify-center h-64">
           <p className="text-lg">Загрузка данных графа...</p>
         </div>
@@ -47,11 +45,6 @@ const GraphViewPage: React.FC = () => {
 
   return (
     <div className="container mx-auto">
-      <PageHeader 
-        title="Граф связей" 
-        description="Визуализация связей между элементами"
-      />
-      
       <ReactFlowProvider>
         <GraphView data={formattedData} availableTags={availableTags} />
       </ReactFlowProvider>

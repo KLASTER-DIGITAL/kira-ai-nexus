@@ -4,7 +4,6 @@ import { useAuth } from "@/context/auth";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import TaskList from "@/components/features/tasks/TaskList";
-import { PageHeader } from "@/components/layouts/PageHeader";
 
 const TasksPage: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -13,8 +12,6 @@ const TasksPage: React.FC = () => {
   if (!isAuthenticated) {
     return (
       <div className="container mx-auto">
-        <PageHeader title="Задачи" />
-        
         <div className="max-w-4xl mx-auto">
           <div className="text-center p-8 border rounded-md bg-muted/10">
             <h2 className="text-xl font-semibold mb-2">Необходимо войти в систему</h2>
@@ -32,11 +29,6 @@ const TasksPage: React.FC = () => {
 
   return (
     <div className="container mx-auto">
-      <PageHeader 
-        title="Задачи" 
-        description="Управляйте вашими задачами, создавайте новые и отслеживайте прогресс"
-      />
-      
       <div className="max-w-5xl mx-auto">
         <TaskList />
       </div>
