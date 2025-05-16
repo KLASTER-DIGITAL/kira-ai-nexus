@@ -7,7 +7,6 @@ import NoteMetadataComponent from "./NoteMetadata";
 import NoteContent from "./NoteContent";
 import NoteEditorActions from "./NoteEditorActions";
 import { LocalGraphView } from "@/components/graph";
-import { useNoteEditor } from "@/hooks/notes/useNoteEditor";
 
 interface NoteEditorContainerProps {
   note?: Note;
@@ -27,9 +26,9 @@ const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({
   onNoteSelect
 }) => {
   const [title, setTitle] = useState(note?.title || "");
-  const [content, setContent] = useState(note?.content || "");
-  const [tags, setTags] = useState<string[]>(note?.tags || []);
-  const [color, setColor] = useState(note?.color || "");
+  const [content, setContent] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [color, setColor] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   
   const { links } = useNoteLinks(note?.id);
@@ -37,9 +36,27 @@ const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({
   useEffect(() => {
     if (note) {
       setTitle(note.title);
-      setContent(note.content || "");
-      setTags(note.tags || []);
-      setColor(note.color || "");
+      
+      // Правильно обрабатываем контент заметки в зависимости от его структуры
+      if (typeof note.content === 'string') {
+        setContent(note.content || "");
+      } else if (note.content && typeof note.content === 'object') {
+        // Если content - это объект, извлекаем текст
+        setContent(note.content.text || "");
+        
+        // И также извлекаем теги и цвет, если они есть
+        if (note.content.tags) {
+          setTags(Array.isArray(note.content.tags) ? note.content.tags : []);
+        } else {
+          setTags(note.tags || []);
+        }
+        
+        if (note.content.color) {
+          setColor(note.content.color);
+        } else {
+          setColor(note.color || "");
+        }
+      }
     }
   }, [note]);
 
@@ -70,11 +87,14 @@ const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({
       
       await onSave({
         title,
-        content,
-        tags
+        content, // Передаем только текст контента
+        tags     // Теги передаются отдельно
       });
+      
+      return true;
     } catch (error) {
       console.error("Ошибка при сохранении заметки:", error);
+      return false;
     } finally {
       setIsSaving(false);
     }

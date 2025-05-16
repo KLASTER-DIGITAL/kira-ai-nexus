@@ -36,22 +36,28 @@ export const useNoteEditor = (note?: Note, onSuccess?: () => void) => {
     
     try {
       if (note) {
-        // Обновление существующей заметки
+        // Обновление существующей заметки - формируем данные в правильном формате для БД
         await updateNote({
           id: note.id,
           title,
-          content,
-          tags,
-          color
+          content: {
+            text: content,
+            tags,
+            color
+          },
+          user_id: note.user_id,
+          type: "note"
         });
         toast.success("Заметка обновлена");
       } else {
-        // Создание новой заметки
+        // Создание новой заметки - передаем данные в правильном формате
         const result = await createNote({
           title,
-          content,
-          tags,
-          color,
+          content: {
+            text: content,
+            tags,
+            color
+          },
           user_id: "", // Will be filled by backend
           type: "note"
         });

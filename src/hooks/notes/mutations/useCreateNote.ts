@@ -23,7 +23,7 @@ export const useCreateNote = () => {
         color: noteData.color || ''
       };
       
-      // Insert the note with content as JSON
+      // Insert the note with proper content structure
       const { data, error } = await supabase
         .from('nodes')
         .insert({

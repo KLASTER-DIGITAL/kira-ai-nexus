@@ -19,22 +19,28 @@ export const useNotesMutation = () => {
     console.log("Сохраняем заметку:", noteData);
     try {
       if (activeNote) {
-        // Update existing note
+        // Update existing note - правильно формируем формат контента
         await updateNote({
           id: activeNote.id,
           title: noteData.title,
-          content: noteData.content,
-          tags: noteData.tags,
+          content: {
+            text: noteData.content,
+            tags: noteData.tags,
+            color: activeNote.color || ""
+          },
           user_id: activeNote.user_id,
           type: activeNote.type
         });
         toast.success("Заметка обновлена");
       } else {
-        // Create new note
+        // Create new note - правильно формируем формат контента
         const result = await createNote({
           title: noteData.title,
-          content: noteData.content,
-          tags: noteData.tags,
+          content: {
+            text: noteData.content,
+            tags: noteData.tags,
+            color: ""
+          },
           user_id: "", // Will be filled by backend
           type: "note"
         });
