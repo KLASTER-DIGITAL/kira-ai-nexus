@@ -3,7 +3,16 @@ import React from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/utils";
-import { Bell, Search, Settings, PlusCircle, Menu } from "lucide-react";
+import { 
+  Bell, 
+  Search, 
+  Settings, 
+  PlusCircle, 
+  Menu,
+  FileText,
+  CheckSquare,
+  Calendar
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ModeToggle } from "@/components/ModeToggle";
