@@ -46,12 +46,13 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
       };
       
       try {
-        // Create the note and properly handle the potentially void return
-        const result = await createNote(newNoteData as any);
+        // Create the note - careful with the return type
+        const creationResult = await createNote(newNoteData as any);
         
-        // Check if we have a valid result with an id property
-        if (result && typeof result === 'object' && 'id' in result) {
-          const createdNoteId = result.id;
+        // We need to explicitly check if the result is a valid object with an id
+        // This handles the case when createNote returns void
+        if (creationResult && typeof creationResult === 'object' && 'id' in creationResult) {
+          const createdNoteId = creationResult.id;
           
           // Create a link if we have a current note ID
           if (noteId) {
