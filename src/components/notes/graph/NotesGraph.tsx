@@ -1,45 +1,112 @@
 
 import React, { useCallback, useState } from 'react';
-import ReactFlow, { useNodesState, useEdgesState, Controls, MiniMap, Background } from 'reactflow';
-import 'reactflow/dist/style.css';
-import { GraphFilteringControls } from './components/GraphFilteringControls';
-import { GraphToolbar } from './components/GraphToolbar';
+import { ReactFlow, useNodesState, useEdgesState, Controls, MiniMap, Background } from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import GraphFilteringControls from './components/GraphFilteringControls';
+import GraphToolbar from './components/GraphToolbar';
 import { useGraphData } from '@/hooks/useGraphData';
-import { useGraphDataFiltering } from './hooks/useGraphDataFiltering';
+import { useGraphFiltering } from './hooks/useGraphFiltering';
 import NoteNode from './NoteNode';
 
 const nodeTypes = {
-  note: NoteNode,
+  noteNode: NoteNode,
 };
 
 export interface NotesGraphProps {
   onNodeClick: (nodeId: string) => void;
+  nodeId?: string; // Добавлен опциональный параметр для использования в LocalGraphView
 }
 
-export const NotesGraph: React.FC<NotesGraphProps> = ({ onNodeClick }) => {
+export const NotesGraph: React.FC<NotesGraphProps> = ({ onNodeClick, nodeId }) => {
   const { graphData, isLoading } = useGraphData();
+  
+  // Используем хук для фильтрации данных
   const {
-    filteredNodes,
-    filteredEdges,
     selectedTags,
     setSelectedTags,
-    searchTerm,
-    setSearchTerm,
-    tagCounts,
-  } = useGraphDataFiltering(graphData);
+    searchQuery,
+    setSearchQuery,
+    showIsolatedNodes,
+    setShowIsolatedNodes,
+    toggleTag,
+    clearFilters,
+    hasFilters
+  } = useGraphFiltering();
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
-  // Set filtered data to ReactFlow
+  // Обрабатываем данные графа, когда они загружены
   React.useEffect(() => {
-    if (filteredNodes) setNodes(filteredNodes);
-    if (filteredEdges) setEdges(filteredEdges);
-  }, [filteredNodes, filteredEdges, setNodes, setEdges]);
+    if (graphData && !isLoading) {
+      // Если nodeId указан, значит мы в режиме локального графа для конкретной заметки
+      // Иначе показываем полный граф
+      const filteredData = nodeId 
+        ? filterDataForNode(graphData, nodeId, searchQuery, selectedTags, showIsolatedNodes)
+        : filterAllData(graphData, searchQuery, selectedTags, showIsolatedNodes);
+        
+      setNodes(filteredData.nodes || []);
+      setEdges(filteredData.edges || []);
+    }
+  }, [graphData, isLoading, searchQuery, selectedTags, showIsolatedNodes, nodeId]);
 
-  // Handle node click
+  // Функция для фильтрации данных для одной заметки и её связей
+  const filterDataForNode = (data, nodeId, searchQuery, tags, showIsolated) => {
+    // Упрощённая логика для демонстрации
+    // В реальном приложении здесь была бы более сложная логика фильтрации
+    const centralNode = data?.nodes?.find(n => n.id === nodeId);
+    const connectedLinks = data?.links?.filter(l => 
+      l.source === nodeId || l.target === nodeId
+    );
+    
+    const connectedNodeIds = new Set([nodeId]);
+    connectedLinks?.forEach(link => {
+      connectedNodeIds.add(link.source);
+      connectedNodeIds.add(link.target);
+    });
+    
+    const filteredNodes = data?.nodes?.filter(node => connectedNodeIds.has(node.id));
+    
+    return {
+      nodes: formatNodes(filteredNodes || []),
+      edges: formatEdges(connectedLinks || [])
+    };
+  };
+
+  // Функция для фильтрации всех данных графа
+  const filterAllData = (data, searchQuery, tags, showIsolated) => {
+    // Здесь будет логика фильтрации полного графа
+    // В данном примере просто форматируем данные для отображения
+    return {
+      nodes: formatNodes(data?.nodes || []),
+      edges: formatEdges(data?.links || [])
+    };
+  };
+
+  // Форматирование узлов для ReactFlow
+  const formatNodes = (nodes) => {
+    return nodes.map(node => ({
+      id: node.id,
+      type: 'noteNode',
+      position: { x: Math.random() * 500, y: Math.random() * 500 }, // В реальном приложении использовали бы алгоритм расположения
+      data: { note: node }
+    }));
+  };
+
+  // Форматирование связей для ReactFlow
+  const formatEdges = (links) => {
+    return links.map(link => ({
+      id: `e-${link.source || link.source_id}-${link.target || link.target_id}`,
+      source: link.source || link.source_id,
+      target: link.target || link.target_id,
+      animated: false,
+      style: { stroke: "#9d5cff", strokeWidth: 2 },
+    }));
+  };
+
+  // Обработка клика по узлу
   const handleNodeClick = useCallback(
-    (event: React.MouseEvent, node: { id: string }) => {
+    (event, node) => {
       onNodeClick(node.id);
     },
     [onNodeClick]
@@ -56,19 +123,27 @@ export const NotesGraph: React.FC<NotesGraphProps> = ({ onNodeClick }) => {
     );
   }
 
+  // Получаем все уникальные теги из данных
+  const allTags = Array.from(new Set(graphData?.nodes?.flatMap(node => node.tags || []) || []));
+
   return (
     <div className="h-full relative">
-      <GraphFilteringControls
-        tags={graphData?.tags || []}
-        tagCounts={tagCounts}
-        selectedTags={selectedTags}
-        setSelectedTags={setSelectedTags}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-      />
+      {!nodeId && (
+        <div className="absolute top-2 left-2 right-2 z-10">
+          <GraphToolbar
+            searchTerm={searchQuery}
+            setSearchTerm={setSearchQuery}
+            selectedTags={selectedTags}
+            toggleTag={toggleTag}
+            allTags={allTags}
+            showIsolatedNodes={showIsolatedNodes}
+            setShowIsolatedNodes={setShowIsolatedNodes}
+            hasFilters={hasFilters}
+            clearFilters={clearFilters}
+          />
+        </div>
+      )}
       
-      <GraphToolbar />
-
       <ReactFlow
         nodes={nodes}
         edges={edges}
