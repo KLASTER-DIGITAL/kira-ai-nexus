@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import DashboardLayout from "@/components/dashboard/layout/DashboardLayout";
-import { NotesContent } from "@/components/notes/content/NotesContent";
+import NotesContent from "@/components/notes/content/NotesContent";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 

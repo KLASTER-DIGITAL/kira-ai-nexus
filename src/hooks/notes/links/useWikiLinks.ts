@@ -49,7 +49,7 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
         const createdNoteResult = await createNote(newNoteData as any);
         
         // Fixed: Don't check truthiness on void expression
-        // Instead, check if we have a note ID and only then perform operations
+        // Instead, check if we have a returned result and it's an object with an id property
         if (createdNoteResult && typeof createdNoteResult === 'object' && 'id' in createdNoteResult) {
           const createdNote = createdNoteResult as Note;
           
