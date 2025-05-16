@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from './context/auth';
 import { Toaster } from '@/components/ui/toaster';
@@ -36,30 +36,27 @@ function App() {
         <Route path="/index" element={<Index />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        
+        {/* Main dashboard routes */}
+        <Route path="/dashboard" element={<Navigate to="/dashboard/user" replace />} />
         <Route
-          path="/dashboard"
+          path="/dashboard/user"
           element={
             <ProtectedRoute>
-              <DashboardPage />
+              <UserDashboardPage />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/admin"
+          path="/dashboard/admin"
           element={
             <ProtectedRoute requiredRole="superadmin">
               <AdminDashboardPage />
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/user"
-          element={
-            <ProtectedRoute requiredRole="user">
-              <UserDashboardPage />
-            </ProtectedRoute>
-          }
-        />
+        
+        {/* Feature pages */}
         <Route
           path="/notes"
           element={

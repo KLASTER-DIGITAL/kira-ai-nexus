@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { ModeToggle } from "@/components/ModeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/context/auth";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, FileText, CheckSquare, Calendar, MessageSquare, BarChart3, Network, GitFork } from "lucide-react";
 
@@ -21,14 +21,15 @@ interface NavItemProps {
   href: string;
   icon: React.ReactNode;
   color: string;
+  isActive?: boolean;
 }
 
-const NavItem: React.FC<NavItemProps> = ({ title, href, icon, color }) => {
+const NavItem: React.FC<NavItemProps> = ({ title, href, icon, color, isActive }) => {
   return (
     <li>
       <Link
         to={href}
-        className="flex items-center space-x-2 p-2 text-sm font-medium hover:underline"
+        className={`flex items-center space-x-2 p-2 text-sm font-medium hover:underline ${isActive ? 'bg-accent text-accent-foreground rounded-md' : ''}`}
       >
         <span className={color}>{icon}</span>
         <span>{title}</span>
@@ -37,53 +38,54 @@ const NavItem: React.FC<NavItemProps> = ({ title, href, icon, color }) => {
   );
 };
 
-const navItems = [
-  {
-    title: "Дашборд",
-    href: "/dashboard",
-    icon: <BarChart3 className="h-5 w-5" />,
-    color: "text-violet-500",
-  },
-  {
-    title: "Заметки",
-    href: "/notes",
-    icon: <FileText className="h-5 w-5" />,
-    color: "text-emerald-500",
-  },
-  {
-    title: "Задачи",
-    href: "/tasks",
-    icon: <CheckSquare className="h-5 w-5" />,
-    color: "text-blue-500",
-  },
-  {
-    title: "Календарь",
-    href: "/calendar",
-    icon: <Calendar className="h-5 w-5" />,
-    color: "text-amber-500",
-  },
-  {
-    title: "Чат",
-    href: "/chat",
-    icon: <MessageSquare className="h-5 w-5" />,
-    color: "text-pink-500",
-  },
-  {
-    title: "Граф связей",
-    href: "/graph",
-    icon: <Network className="h-5 w-5" />,
-    color: "text-purple-500",
-  },
-];
-
 const Sidebar: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     await signOut();
     navigate("/auth");
   };
+
+  const navItems = [
+    {
+      title: "Дашборд",
+      href: "/dashboard/user",
+      icon: <BarChart3 className="h-5 w-5" />,
+      color: "text-violet-500",
+    },
+    {
+      title: "Заметки",
+      href: "/notes",
+      icon: <FileText className="h-5 w-5" />,
+      color: "text-emerald-500",
+    },
+    {
+      title: "Задачи",
+      href: "/tasks",
+      icon: <CheckSquare className="h-5 w-5" />,
+      color: "text-blue-500",
+    },
+    {
+      title: "Календарь",
+      href: "/calendar",
+      icon: <Calendar className="h-5 w-5" />,
+      color: "text-amber-500",
+    },
+    {
+      title: "Чат",
+      href: "/chat",
+      icon: <MessageSquare className="h-5 w-5" />,
+      color: "text-pink-500",
+    },
+    {
+      title: "Граф связей",
+      href: "/graph",
+      icon: <Network className="h-5 w-5" />,
+      color: "text-purple-500",
+    },
+  ];
 
   return (
     <Sheet>
@@ -124,6 +126,7 @@ const Sidebar: React.FC = () => {
                   href={item.href}
                   icon={item.icon}
                   color={item.color}
+                  isActive={location.pathname.includes(item.href)}
                 />
               ))}
             </ul>

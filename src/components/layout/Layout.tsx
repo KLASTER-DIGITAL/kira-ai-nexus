@@ -1,10 +1,10 @@
 
 import React, { useState } from "react";
 import { 
-  Sidebar, 
   SidebarProvider 
 } from "@/components/ui/sidebar";
 import Header from "./Header";
+import Sidebar from "./Sidebar";
 import AISidebar from "../ai/AISidebar";
 
 interface LayoutProps {
@@ -23,9 +23,11 @@ const Layout: React.FC<LayoutProps> = ({ children, title, actions }) => {
   return (
     <SidebarProvider defaultOpen={!sidebarCollapsed}>
       <div className="flex h-screen overflow-hidden">
-        <Sidebar>
-          {/* Sidebar content can go here */}
-        </Sidebar>
+        {/* Use the actual Sidebar component from Sidebar.tsx */}
+        <div className="h-full">
+          <Sidebar />
+        </div>
+        
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header 
             sidebarCollapsed={sidebarCollapsed} 
