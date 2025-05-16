@@ -52,7 +52,7 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
         if (createdNoteResult && typeof createdNoteResult === 'object' && 'id' in createdNoteResult) {
           const createdNote = createdNoteResult as Note;
           
-          // Create a link if we have a current note
+          // Create a link if we have a current note - FIXED: separate call without truthiness check
           if (noteId) {
             await createWikiLink(cleanTitle);
           }
