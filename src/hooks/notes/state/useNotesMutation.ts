@@ -12,7 +12,7 @@ export const useNotesMutation = () => {
 
   // Handle saving a note (both new and edit)
   const handleSaveNote = async (
-    noteData: { title: string; content: string; tags: string[] }, 
+    noteData: { title: string; content: string; tags: string[]; color?: string }, 
     activeNote?: Note
   ) => {
     console.log("Сохраняем заметку:", noteData);
@@ -24,7 +24,8 @@ export const useNotesMutation = () => {
           noteData: {
             title: noteData.title,
             content: noteData.content,
-            tags: noteData.tags
+            tags: noteData.tags,
+            color: noteData.color || ''
           }
         });
         
@@ -34,7 +35,8 @@ export const useNotesMutation = () => {
         const result = await createNote({
           title: noteData.title,
           content: noteData.content,
-          tags: noteData.tags
+          tags: noteData.tags,
+          color: noteData.color || ''
         });
         
         console.log("Заметка создана:", result);

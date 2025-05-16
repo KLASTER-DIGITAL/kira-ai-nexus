@@ -3,7 +3,6 @@ import React from "react";
 import TipTapEditor from "@/components/notes/TipTapEditor";
 import BacklinksList from "@/components/notes/BacklinksList";
 import TagManager from "@/components/notes/TagManager";
-import ColorPicker from "@/components/notes/ColorPicker";
 import { LinkData } from "@/hooks/notes/links/types";
 
 interface NoteContentEditorProps {
@@ -42,13 +41,6 @@ const NoteContentEditor: React.FC<NoteContentEditorProps> = ({
 
   return (
     <>
-      <div className="mb-2">
-        <ColorPicker 
-          selectedColor={color} 
-          onColorChange={onColorChange} 
-        />
-      </div>
-      
       <TipTapEditor 
         content={content} 
         onChange={onContentChange} 

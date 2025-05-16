@@ -15,7 +15,7 @@ interface NoteEditorContainerProps {
   isNew?: boolean;
   onCancel?: () => void;
   onNoteSelect?: (noteId: string) => void;
-  onSave: (noteData: { title: string; content: string; tags: string[] }) => Promise<boolean>;
+  onSave: (noteData: { title: string; content: string; tags: string[]; color?: string }) => Promise<boolean>;
 }
 
 const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({ 
@@ -87,12 +87,13 @@ const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({
     
     try {
       setIsSaving(true);
-      console.log("Сохраняем заметку:", { title, content, tags });
+      console.log("Сохраняем заметку:", { title, content, tags, color });
       
       const success = await onSave({
         title,
         content, // Передаем текст контента
-        tags     // Теги передаются отдельно
+        tags,    // Теги передаются отдельно
+        color    // Передаем цвет
       });
       
       if (success) {

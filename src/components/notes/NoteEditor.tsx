@@ -10,7 +10,7 @@ interface NoteEditorProps {
   isNew?: boolean;
   onCancel?: () => void;
   onNoteSelect?: (noteId: string) => void;
-  onSave: (noteData: { title: string; content: string; tags: string[] }) => Promise<boolean>;
+  onSave: (noteData: { title: string; content: string; tags: string[]; color?: string }) => Promise<boolean>;
 }
 
 const NoteEditor: React.FC<NoteEditorProps> = ({ 

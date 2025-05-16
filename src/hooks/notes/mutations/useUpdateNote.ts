@@ -61,6 +61,7 @@ export const useUpdateNote = () => {
           // Если есть новые теги/цвет, обновляем их тоже
           if (noteData.tags !== undefined) {
             newContent.tags = noteData.tags;
+            updateData.tags = noteData.tags; // Также обновляем массив тегов в корне
           }
           
           if (noteData.color !== undefined) {
@@ -75,6 +76,7 @@ export const useUpdateNote = () => {
           
           if (Array.isArray(noteData.content.tags)) {
             newContent.tags = noteData.content.tags;
+            updateData.tags = noteData.content.tags; // Также обновляем массив тегов в корне
           }
           
           if (noteData.content.color !== undefined) {
@@ -84,6 +86,7 @@ export const useUpdateNote = () => {
           // Если контент не передан, проверяем наличие тегов и цвета
           if (noteData.tags !== undefined) {
             newContent.tags = noteData.tags;
+            updateData.tags = noteData.tags; // Также обновляем массив тегов в корне
           }
           
           if (noteData.color !== undefined) {

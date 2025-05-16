@@ -2,11 +2,10 @@
 import React, { useCallback, useState } from 'react';
 import { ReactFlow, useNodesState, useEdgesState, Controls, MiniMap, Background } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import GraphFilteringControls from './components/GraphFilteringControls';
-import GraphToolbar from './components/GraphToolbar';
 import { useGraphData } from '@/hooks/useGraphData';
 import { useGraphFiltering } from './hooks/useGraphFiltering';
 import NoteNode from './NoteNode';
+import GraphToolbar from './components/GraphToolbar';
 
 const nodeTypes = {
   noteNode: NoteNode,
@@ -23,10 +22,10 @@ export const NotesGraph: React.FC<NotesGraphProps> = ({ onNodeClick, nodeId }) =
   // Используем хук для фильтрации данных
   const {
     selectedTags,
-    setSelectedTags,
     searchQuery,
-    setSearchQuery,
     showIsolatedNodes,
+    setSelectedTags,
+    setSearchQuery,
     setShowIsolatedNodes,
     toggleTag,
     clearFilters,

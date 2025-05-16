@@ -42,6 +42,7 @@ export const useCreateNote = () => {
           title: noteData.title,
           content: dbContent, // Теперь это всегда объект для Supabase JSON
           type: 'note',
+          tags: noteData.tags || [], // Также сохраняем теги в корне для удобства фильтрации
           user_id: user.id
         })
         .select()

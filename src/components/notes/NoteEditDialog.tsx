@@ -13,7 +13,7 @@ interface NoteEditDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   activeNote?: Note;
-  onSaveNote: (noteData: { title: string; content: string; tags: string[] }) => Promise<boolean>;
+  onSaveNote: (noteData: { title: string; content: string; tags: string[]; color?: string }) => Promise<boolean>;
   onNoteSelect?: (noteId: string) => void;
   onUpdateNote: (note: Note) => Promise<void>;
   onDeleteNote: (noteId: string) => Promise<void>;

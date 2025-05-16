@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Note } from "@/types/notes";
 import { transformNoteData } from "./utils";
 
-const createNote = async (noteData: { title: string; content: string; tags: string[] }) => {
+const createNote = async (noteData: { title: string; content: string; tags: string[]; color?: string }) => {
   try {
     const { data, error } = await supabase
       .from('nodes')  // Use 'nodes' table instead of 'notes'
@@ -13,7 +13,7 @@ const createNote = async (noteData: { title: string; content: string; tags: stri
         content: {
           text: noteData.content,
           tags: noteData.tags,
-          color: ''
+          color: noteData.color || ''
         },
         tags: noteData.tags,
         user_id: (await supabase.auth.getUser()).data.user?.id,
@@ -38,7 +38,7 @@ const createNote = async (noteData: { title: string; content: string; tags: stri
   }
 };
 
-const updateNote = async (noteData: { noteId: string; noteData: { title: string; content: string; tags: string[] } }) => {
+const updateNote = async (noteData: { noteId: string; noteData: { title: string; content: string; tags: string[]; color?: string } }) => {
   try {
     const { data, error } = await supabase
       .from('nodes')  // Use 'nodes' table instead of 'notes'
@@ -47,7 +47,7 @@ const updateNote = async (noteData: { noteId: string; noteData: { title: string;
         content: {
           text: noteData.noteData.content,
           tags: noteData.noteData.tags,
-          color: ''
+          color: noteData.noteData.color || ''
         },
         tags: noteData.noteData.tags,
         updated_at: new Date().toISOString()
@@ -104,7 +104,7 @@ export const useNotesMutations = () => {
   });
 
   const updateNoteMutation = useMutation({
-    mutationFn: (variables: { noteId: string; noteData: { title: string; content: string; tags: string[] } }) => 
+    mutationFn: (variables: { noteId: string; noteData: { title: string; content: string; tags: string[]; color?: string } }) => 
       updateNote(variables),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });

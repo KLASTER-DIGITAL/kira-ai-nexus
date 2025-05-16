@@ -10,7 +10,7 @@ interface NoteSidebarProps {
   onOpenChange: (open: boolean) => void;
   activeNote?: Note;
   isNew?: boolean;
-  onSaveNote: (noteData: { title: string; content: string; tags: string[] }) => Promise<boolean>;
+  onSaveNote: (noteData: { title: string; content: string; tags: string[]; color?: string }) => Promise<boolean>;
   onUpdateNote: (note: Note) => Promise<void>;
   onDeleteNote: (noteId: string) => Promise<void>;
   onNoteSelect?: (noteId: string) => void;
@@ -26,12 +26,15 @@ const NoteSidebar: React.FC<NoteSidebarProps> = ({
   onDeleteNote,
   onNoteSelect
 }) => {
-  const handleSave = async (noteData: { title: string; content: string; tags: string[] }) => {
+  const handleSave = async (noteData: { title: string; content: string; tags: string[]; color?: string }) => {
     try {
+      console.log("Сохраняем заметку в сайдбаре:", noteData);
       const success = await onSaveNote(noteData);
       if (success) {
-        // Close the sidebar on successful save
-        onOpenChange(false);
+        // Задержка перед закрытием сайдбара для лучшего UX
+        setTimeout(() => {
+          onOpenChange(false);
+        }, 300);
         return true;
       }
       return false;
