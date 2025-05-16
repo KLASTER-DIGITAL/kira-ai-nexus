@@ -30,7 +30,7 @@ const createNote = async (noteData: { title: string; content: string; tags: stri
         content: noteContent,
         user_id: user.id,
         type: 'note',
-        tags: noteData.tags || [] // Duplicating tags at the root level for easier querying
+        tags: noteData.tags || [] // Дублирование тегов на корневом уровне для удобства запросов
       })
       .select();
 
@@ -132,7 +132,7 @@ const deleteNote = async (noteId: string) => {
 export const useNotesMutations = () => {
   const queryClient = useQueryClient();
 
-  // Update to use the object-style mutation configuration
+  // Используем конфигурацию в формате объекта для мутаций
   const createNoteMutation = useMutation({
     mutationFn: createNote,
     onSuccess: () => {

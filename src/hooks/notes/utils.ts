@@ -2,44 +2,44 @@
 import { Note } from "@/types/notes";
 
 /**
- * Transforms raw database note data into a structured Note object
- * @param rawData Raw data from the database
- * @returns Formatted Note object
+ * Преобразует сырые данные заметки из базы данных в структурированный объект Note
+ * @param rawData Сырые данные из базы данных
+ * @returns Отформатированный объект Note
  */
 export const transformNoteData = (rawData: any): Note => {
   try {
-    // Extract content
+    // Извлекаем содержимое
     let content: any;
     let tags: string[] = [];
     let color: string = '';
 
-    // Handle content based on its structure
+    // Обрабатываем содержимое в зависимости от его структуры
     if (typeof rawData.content === 'object' && rawData.content !== null) {
       const contentObj = rawData.content;
-      // Extract the text from the content object
+      // Извлекаем текст из объекта содержимого
       const text = contentObj.text || '';
-      // Use tags from the content object or fall back to the ones at the root level
+      // Используем теги из объекта содержимого или запасной вариант - теги на корневом уровне
       tags = Array.isArray(contentObj.tags) ? contentObj.tags : (rawData.tags || []);
-      // Extract color if available
+      // Извлекаем цвет, если доступен
       color = contentObj.color || '';
       
-      // We'll store the actual content text in the note.content property
+      // Мы сохраним текстовое содержимое в свойство note.content
       content = text;
     } else if (typeof rawData.content === 'string') {
-      // If content is somehow a string, use it directly
+      // Если содержимое каким-то образом является строкой, используем его напрямую
       content = rawData.content;
       tags = rawData.tags || [];
     } else {
-      // Default fallback
+      // Запасной вариант по умолчанию
       content = '';
       tags = rawData.tags || [];
     }
 
-    // Create a properly structured Note object
+    // Создаем правильно структурированный объект Note
     const note: Note = {
       id: rawData.id,
       title: rawData.title || '',
-      content: content,  // This is now the text content
+      content: content,  // Теперь это текстовое содержимое
       tags: tags,
       color: color,
       user_id: rawData.user_id,
@@ -52,7 +52,7 @@ export const transformNoteData = (rawData: any): Note => {
   } catch (error) {
     console.error("Error transforming note data:", error, rawData);
     
-    // Return a minimal valid note object to prevent crashes
+    // Возвращаем минимальный действительный объект заметки для предотвращения сбоев
     return {
       id: rawData.id || 'unknown',
       title: rawData.title || 'Error loading note',

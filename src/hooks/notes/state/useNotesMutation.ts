@@ -1,17 +1,17 @@
 
 import { useState } from "react";
-import { Note, NoteContent } from "@/types/notes";
+import { Note } from "@/types/notes";
 import { useNotesMutations } from "@/hooks/notes/useNotesMutations";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Hook for managing note mutations (create, update, delete)
+ * Hook для управления мутациями заметок (создание, обновление, удаление)
  */
 export const useNotesMutation = () => {
   const { createNote, updateNote, deleteNote } = useNotesMutations();
 
-  // Handle saving a note (both new and edit)
+  // Обработка сохранения заметки (как новой, так и редактируемой)
   const handleSaveNote = async (
     noteData: { title: string; content: string; tags: string[]; color?: string }, 
     activeNote?: Note
@@ -30,7 +30,7 @@ export const useNotesMutation = () => {
       const colorToSave = noteData.color || '';
       
       if (activeNote) {
-        // Update existing note
+        // Обновляем существующую заметку
         const result = await updateNote({
           noteId: activeNote.id,
           noteData: {
@@ -45,7 +45,7 @@ export const useNotesMutation = () => {
         toast.success("Заметка обновлена");
         return true;
       } else {
-        // Create new note
+        // Создаем новую заметку
         const result = await createNote({
           title: noteData.title,
           content: noteData.content,
@@ -78,7 +78,7 @@ export const useNotesMutation = () => {
     }
   };
 
-  // Handle confirming note deletion
+  // Обработка подтверждения удаления заметки
   const handleConfirmDelete = async (activeNote?: Note) => {
     if (activeNote) {
       try {
