@@ -51,7 +51,9 @@ export const useNoteEditor = (note?: Note, onSuccess?: () => void) => {
           title,
           content,
           tags,
-          color
+          color,
+          user_id: "", // Will be filled by backend
+          type: "note"
         });
         console.log("Заметка создана:", result);
         toast.success("Заметка создана");

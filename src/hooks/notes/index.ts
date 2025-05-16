@@ -8,3 +8,5 @@ export * from './useNoteAutosave';
 export * from './links';
 export * from './editor';
 export * from './mutations';
+export * from './state/useNotesListState';
+export * from './state';
