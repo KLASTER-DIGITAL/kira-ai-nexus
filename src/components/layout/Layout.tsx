@@ -1,11 +1,6 @@
 
-import React, { useState } from "react";
-import { 
-  SidebarProvider
-} from "@/components/ui/sidebar";
-import Header from "./Header";
-import Sidebar from "./Sidebar";
-import AISidebar from "../ai/AISidebar";
+import React from "react";
+import DashboardLayout from "@/components/dashboard/layout/DashboardLayout";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -14,36 +9,10 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, title, actions }) => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
-
   return (
-    <SidebarProvider defaultOpen={!sidebarCollapsed}>
-      <div className="flex h-screen overflow-hidden w-full">
-        {/* Use the actual Sidebar component from Sidebar.tsx */}
-        <div className="h-full">
-          <Sidebar />
-        </div>
-        
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header 
-            sidebarCollapsed={sidebarCollapsed} 
-            toggleSidebar={toggleSidebar}
-            pageTitle={title}
-            actions={actions}
-          />
-          <main className="flex-1 overflow-y-auto p-6">
-            {children}
-          </main>
-        </div>
-        
-        {/* AI Sidebar component */}
-        <AISidebar />
-      </div>
-    </SidebarProvider>
+    <DashboardLayout title={title} actions={actions}>
+      {children}
+    </DashboardLayout>
   );
 };
 
