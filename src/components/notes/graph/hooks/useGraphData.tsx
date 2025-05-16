@@ -213,6 +213,25 @@ const processInChunks = <T,>(items: T[], chunkSize: number, processor: (chunk: T
   });
 };
 
+// Helper function to safely extract tags from node content
+const extractTags = (nodeContent: any): string[] => {
+  if (!nodeContent) return [];
+  
+  // If content is an object with tags property
+  if (typeof nodeContent === 'object' && nodeContent !== null) {
+    // Check if tags exists directly on the object
+    if (Array.isArray(nodeContent.tags)) {
+      return nodeContent.tags;
+    }
+    // If tags are nested in a text property
+    if (nodeContent.text && typeof nodeContent.text === 'object' && Array.isArray(nodeContent.text.tags)) {
+      return nodeContent.text.tags;
+    }
+  }
+  
+  return []; // Return empty array if no tags found
+};
+
 export const useGraphData = () => {
   // Process and filter graph data
   const applyLayout = useCallback((
@@ -241,7 +260,8 @@ export const useGraphData = () => {
       
       // Apply tag filtering
       if (selectedTags.length > 0) {
-        const noteTags = Array.isArray(note.tags) ? note.tags : [];
+        // Safely extract tags from the note content
+        const noteTags = extractTags(note.content);
         if (!noteTags.some(tag => selectedTags.includes(tag))) {
           return false;
         }
@@ -368,16 +388,8 @@ export const useGraphData = () => {
           index === self.findIndex(n => n.id === node.id)
         )
         .map(node => {
-          // Extract tags from content
-          let nodeTags: string[] = [];
-          const nodeContent = node.content;
-          
-          if (nodeContent) {
-            if (typeof nodeContent === 'object') {
-              // If content is an object, try to get tags from it
-              nodeTags = Array.isArray(nodeContent.tags) ? nodeContent.tags : [];
-            }
-          }
+          // Extract tags from content safely
+          const nodeTags = extractTags(node.content);
           
           return {
             ...node,
