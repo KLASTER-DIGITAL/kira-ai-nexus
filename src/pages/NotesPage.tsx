@@ -1,33 +1,33 @@
 
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import Layout from "@/components/layout/Layout";
-import NotesList from "@/components/notes/NotesList";
+import React, { useState, useEffect } from "react";
+import DashboardLayout from "@/components/dashboard/layout/DashboardLayout";
+import { NotesContent } from "@/components/notes/content/NotesContent";
 import { Button } from "@/components/ui/button";
-import { Network } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 
 const NotesPage: React.FC = () => {
-  const navigate = useNavigate();
-  
-  return (
-    <Layout 
-      title="Заметки"
-      actions={
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-1"
-          onClick={() => navigate("/notes/graph")}
-        >
-          <Network size={16} />
-          <span>Граф связей</span>
-        </Button>
-      }
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+
+  const actions = (
+    <Button 
+      variant="default" 
+      onClick={() => setShowCreateDialog(true)}
+      className="flex items-center gap-1"
     >
-      <div className="container mx-auto">
-        <NotesList />
+      <PlusCircle className="h-4 w-4" /> 
+      Создать заметку
+    </Button>
+  );
+
+  return (
+    <DashboardLayout title="Заметки" actions={actions}>
+      <div className="container mx-auto pb-20">
+        <NotesContent 
+          showCreateDialog={showCreateDialog} 
+          setShowCreateDialog={setShowCreateDialog} 
+        />
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 };
 

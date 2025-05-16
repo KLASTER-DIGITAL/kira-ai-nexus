@@ -6,10 +6,10 @@ import {
   Search,
   Settings,
   HelpCircle,
-  Moon,
   Sun,
-  Github,
+  Moon,
   Menu,
+  PlusCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -23,17 +23,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "next-themes";
+import { Badge } from "@/components/ui/badge";
 
 interface DashboardHeaderProps {
   title?: string;
   mobileMenuToggle?: () => void;
   actions?: React.ReactNode;
+  className?: string;
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   title,
   mobileMenuToggle,
   actions,
+  className,
 }) => {
   const { setTheme, theme } = useTheme();
   const location = useLocation();
@@ -55,7 +58,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   };
 
   return (
-    <header className="h-16 border-b border-border px-4 flex items-center justify-between bg-background">
+    <header className={cn(
+      "h-16 border-b border-border/60 px-4 flex items-center justify-between bg-background",
+      "shadow-sm backdrop-blur-sm bg-background/80 sticky top-0 z-10",
+      className
+    )}>
       {/* Левая часть с заголовком и кнопкой мобильного меню */}
       <div className="flex items-center">
         <Button
@@ -76,20 +83,36 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Поиск..."
-            className="w-full pl-9 bg-background"
+            className="w-full pl-9 bg-background/70 hover:bg-background focus:bg-background"
           />
         </div>
       </div>
 
       {/* Правая часть с действиями */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center gap-1 md:gap-2">
         {/* Дополнительные действия, если есть */}
         {actions && <div className="hidden md:flex">{actions}</div>}
+        
+        {/* Кнопка создания */}
+        <div className="md:hidden">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <PlusCircle className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>Новая заметка</DropdownMenuItem>
+              <DropdownMenuItem>Новая задача</DropdownMenuItem>
+              <DropdownMenuItem>Новое событие</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         {/* Кнопка смены темы */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="flex md:hidden">
               {theme === "dark" ? (
                 <Moon className="h-5 w-5" />
               ) : (
@@ -114,23 +137,31 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </DropdownMenuContent>
         </DropdownMenu>
 
+        {/* Кнопка темы для десктопа */}
+        <Button 
+          variant="ghost" 
+          size="icon"
+          className="hidden md:flex"
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        >
+          {theme === "dark" ? (
+            <Sun className="h-5 w-5" />
+          ) : (
+            <Moon className="h-5 w-5" />
+          )}
+        </Button>
+
         {/* Кнопка уведомлений */}
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="sr-only">Уведомления</span>
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+          <Badge className="absolute top-1 right-1.5 h-2 w-2 p-0 bg-red-500" />
         </Button>
 
         {/* Кнопка помощи */}
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" className="hidden sm:flex">
           <HelpCircle className="h-5 w-5" />
           <span className="sr-only">Помощь</span>
-        </Button>
-
-        {/* GitHub кнопка */}
-        <Button variant="ghost" size="icon" className="hidden sm:flex">
-          <Github className="h-5 w-5" />
-          <span className="sr-only">GitHub</span>
         </Button>
       </div>
     </header>

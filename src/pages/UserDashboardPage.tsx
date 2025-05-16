@@ -1,213 +1,172 @@
 
 import React from "react";
 import DashboardLayout from "@/components/dashboard/layout/DashboardLayout";
-import { useAuth } from '@/context/auth';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, CheckSquare, Calendar, MessageSquare, PlusCircle, Clock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useAuth } from "@/context/auth";
+import { 
+  NotepadText, 
+  CheckSquare, 
+  Calendar as CalendarIcon, 
+  Clock, 
+  BarChart3, 
+  Star
+} from "lucide-react";
+import StatCard from "@/components/dashboard/widgets/StatCard";
 
 const UserDashboardPage: React.FC = () => {
   const { profile } = useAuth();
-
-  // Пример данных для пользователя
-  const userStats = [
+  
+  // Демо данные для статистики
+  const stats = [
     { 
       title: "Заметки", 
-      count: 23, 
-      icon: <FileText className="w-4 h-4" />,
-      color: "bg-emerald-500/10 text-emerald-500",
-      link: "/notes"
+      value: "12", 
+      icon: <NotepadText className="h-4 w-4" />,
+      change: "3 новых",
+      className: "bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-900/20 dark:to-violet-800/20"
     },
     { 
       title: "Задачи", 
-      count: 15, 
-      icon: <CheckSquare className="w-4 h-4" />,
-      color: "bg-blue-500/10 text-blue-500",
-      link: "/tasks"
+      value: "8", 
+      icon: <CheckSquare className="h-4 w-4" />,
+      change: "5 активных",
+      className: "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20"
     },
     { 
       title: "События", 
-      count: 4, 
-      icon: <Calendar className="w-4 h-4" />,
-      color: "bg-amber-500/10 text-amber-500",
-      link: "/calendar"
+      value: "3", 
+      icon: <CalendarIcon className="h-4 w-4" />,
+      change: "Сегодня",
+      className: "bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20"
     },
     { 
-      title: "Чаты", 
-      count: 2, 
-      icon: <MessageSquare className="w-4 h-4" />,
-      color: "bg-pink-500/10 text-pink-500",
-      link: "/chat"
-    }
-  ];
-
-  // Последние активности пользователя (заглушка)
-  const recentActivities = [
-    { id: 1, type: "note", title: "План проекта", time: "15 минут назад" },
-    { id: 2, type: "task", title: "Завершить дизайн", time: "2 часа назад" },
-    { id: 3, type: "chat", title: "Обсуждение требований", time: "Вчера" },
-    { id: 4, type: "note", title: "Идеи для презентации", time: "2 дня назад" },
-  ];
-
-  // Ближайшие задачи (заглушка)
-  const upcomingTasks = [
-    { id: 1, title: "Созвон с командой", dueDate: "Сегодня, 15:00", priority: "high" },
-    { id: 2, title: "Завершить прототип", dueDate: "Завтра", priority: "medium" },
-    { id: 3, title: "Обновить документацию", dueDate: "Через 2 дня", priority: "low" },
+      title: "Время работы", 
+      value: "3.5ч", 
+      icon: <Clock className="h-4 w-4" />,
+      change: "Сегодня",
+      className: "bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20"
+    },
   ];
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 animate-fade-in">
         {/* Приветствие */}
-        <div className="flex flex-col space-y-4">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Привет, {profile?.display_name || profile?.email?.split('@')[0] || 'пользователь'}!
+        <div className="bg-gradient-to-r from-primary/10 to-primary/5 border p-6 rounded-xl shadow-sm">
+          <h1 className="text-2xl font-bold mb-2">
+            Добро пожаловать, {profile?.display_name || 'Пользователь'}!
           </h1>
           <p className="text-muted-foreground">
-            Добро пожаловать в ваш персональный дашборд KIRA AI. Здесь вы можете управлять всеми своими заметками, задачами и многим другим.
+            Ваш персональный дашборд с актуальной информацией.
           </p>
         </div>
-
-        {/* Статистика пользователя */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {userStats.map((stat, index) => (
-            <Card key={index} className="overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {stat.title}
-                </CardTitle>
-                <div className={`h-8 w-8 rounded-md flex items-center justify-center ${stat.color}`}>
-                  {stat.icon}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.count}</div>
-              </CardContent>
-              <CardFooter className="p-2">
-                <Link to={stat.link} className="text-xs text-primary hover:underline w-full text-right">
-                  Посмотреть все →
-                </Link>
-              </CardFooter>
-            </Card>
+        
+        {/* Статистика */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((stat, index) => (
+            <StatCard
+              key={index}
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+              change={stat.change}
+              className={stat.className}
+            />
           ))}
         </div>
-
-        {/* Основной контент */}
-        <div className="grid grid-cols-1 md:grid-cols-7 gap-6">
-          {/* Левая колонка (4/7) */}
-          <div className="md:col-span-4 space-y-6">
-            <Card>
+        
+        {/* Вкладки */}
+        <Tabs defaultValue="recent" className="w-full">
+          <TabsList className="w-full grid grid-cols-3 mb-4">
+            <TabsTrigger value="recent">Недавние</TabsTrigger>
+            <TabsTrigger value="favorites">Избранное</TabsTrigger>
+            <TabsTrigger value="activity">Активность</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="recent" className="animate-fade-in">
+            <Card className="border-border/40 shadow-sm">
               <CardHeader>
-                <CardTitle>Что нового?</CardTitle>
-                <CardDescription>Обзор вашей активности</CardDescription>
+                <CardTitle>Недавно изменённые заметки</CardTitle>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="activities">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="activities">Активности</TabsTrigger>
-                    <TabsTrigger value="analytics">Аналитика</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="activities" className="pt-4">
-                    <div className="space-y-4">
-                      {recentActivities.map((activity) => (
-                        <div key={activity.id} className="flex items-start space-x-4">
-                          <div className={`mt-1 ${
-                            activity.type === "note" 
-                              ? "text-emerald-500" 
-                              : activity.type === "task" 
-                              ? "text-blue-500" 
-                              : "text-pink-500"
-                          }`}>
-                            {activity.type === "note" ? (
-                              <FileText className="h-5 w-5" />
-                            ) : activity.type === "task" ? (
-                              <CheckSquare className="h-5 w-5" />
-                            ) : (
-                              <MessageSquare className="h-5 w-5" />
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">{activity.title}</p>
-                            <div className="flex items-center text-xs text-muted-foreground">
-                              <Clock className="mr-1 h-3 w-3" />
-                              {activity.time}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                <div className="space-y-2">
+                  <div className="flex items-center p-2 rounded-md hover:bg-muted">
+                    <NotepadText className="h-4 w-4 mr-2" />
+                    <div className="flex-1">
+                      <p className="font-medium">Заметка по проекту</p>
+                      <p className="text-xs text-muted-foreground">Обновлено 2 часа назад</p>
                     </div>
-                  </TabsContent>
-                  <TabsContent value="analytics" className="pt-4">
-                    <div className="flex flex-col items-center justify-center space-y-3 py-12">
-                      <p className="text-muted-foreground text-center">
-                        Аналитика будет доступна после накопления достаточного количества данных.
-                      </p>
+                  </div>
+                  <div className="flex items-center p-2 rounded-md hover:bg-muted">
+                    <NotepadText className="h-4 w-4 mr-2" />
+                    <div className="flex-1">
+                      <p className="font-medium">Идеи для развития</p>
+                      <p className="text-xs text-muted-foreground">Обновлено вчера</p>
                     </div>
-                  </TabsContent>
-                </Tabs>
+                  </div>
+                  <div className="flex items-center p-2 rounded-md hover:bg-muted">
+                    <NotepadText className="h-4 w-4 mr-2" />
+                    <div className="flex-1">
+                      <p className="font-medium">План работы на неделю</p>
+                      <p className="text-xs text-muted-foreground">Обновлено 3 дня назад</p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Правая колонка (3/7) */}
-          <div className="md:col-span-3 space-y-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Предстоящие задачи</CardTitle>
-                  <CardDescription>Что нужно сделать в ближайшее время</CardDescription>
+          </TabsContent>
+          
+          <TabsContent value="favorites" className="animate-fade-in">
+            <Card className="border-border/40 shadow-sm">
+              <CardHeader>
+                <CardTitle>Избранные элементы</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex items-center p-2 rounded-md hover:bg-muted">
+                    <Star className="h-4 w-4 text-amber-500 mr-2" />
+                    <div className="flex-1">
+                      <p className="font-medium">Важный документ</p>
+                      <p className="text-xs text-muted-foreground">Заметка</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center p-2 rounded-md hover:bg-muted">
+                    <Star className="h-4 w-4 text-amber-500 mr-2" />
+                    <div className="flex-1">
+                      <p className="font-medium">Встреча с клиентом</p>
+                      <p className="text-xs text-muted-foreground">Событие</p>
+                    </div>
+                  </div>
                 </div>
-                <Link to="/tasks">
-                  <Button size="sm" variant="outline">
-                    <PlusCircle className="w-4 h-4 mr-2" />
-                    Новая задача
-                  </Button>
-                </Link>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="activity" className="animate-fade-in">
+            <Card className="border-border/40 shadow-sm">
+              <CardHeader>
+                <CardTitle>Недавняя активность</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {upcomingTasks.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-8 text-center">
-                      <p className="text-muted-foreground">У вас пока нет предстоящих задач</p>
-                    </div>
-                  ) : (
-                    upcomingTasks.map((task) => (
-                      <div key={task.id} className="flex items-center space-x-4">
-                        <div>
-                          <div className={`h-2 w-2 rounded-full ${
-                            task.priority === "high" 
-                              ? "bg-red-500" 
-                              : task.priority === "medium" 
-                              ? "bg-yellow-500" 
-                              : "bg-green-500"
-                          }`} />
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          <p className="text-sm font-medium">{task.title}</p>
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <Calendar className="mr-1 h-3 w-3" />
-                            {task.dueDate}
-                          </div>
-                        </div>
-                        <Button size="sm" variant="ghost">
-                          <CheckSquare className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))
-                  )}
+                  <div className="border-l-2 border-primary pl-4 ml-2">
+                    <p className="text-sm">Создана новая задача: "Подготовить отчет"</p>
+                    <p className="text-xs text-muted-foreground">15:30, сегодня</p>
+                  </div>
+                  <div className="border-l-2 border-primary pl-4 ml-2">
+                    <p className="text-sm">Обновлена заметка: "Планы на квартал"</p>
+                    <p className="text-xs text-muted-foreground">12:45, сегодня</p>
+                  </div>
+                  <div className="border-l-2 border-primary pl-4 ml-2">
+                    <p className="text-sm">Добавлено событие: "Еженедельная встреча"</p>
+                    <p className="text-xs text-muted-foreground">09:15, сегодня</p>
+                  </div>
                 </div>
               </CardContent>
-              <CardFooter className="border-t bg-muted/50 px-6 py-3">
-                <Link to="/tasks" className="text-xs text-primary hover:underline w-full text-center">
-                  Просмотреть все задачи
-                </Link>
-              </CardFooter>
             </Card>
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );

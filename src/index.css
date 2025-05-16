@@ -46,10 +46,10 @@
   }
 
   .dark {
-    --background: 260 25% 10%;
+    --background: 260 25% 8%;
     --foreground: 0 0% 95%;
 
-    --card: 260 25% 12%;
+    --card: 260 25% 10%;
     --card-foreground: 0 0% 95%;
 
     --popover: 260 25% 12%;
@@ -58,10 +58,10 @@
     --primary: 260 84% 63%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 260 25% 18%;
+    --secondary: 260 25% 16%;
     --secondary-foreground: 0 0% 95%;
 
-    --muted: 260 25% 18%;
+    --muted: 260 25% 16%;
     --muted-foreground: 260 10% 70%;
 
     --accent: 190 70% 50%;
@@ -70,17 +70,17 @@
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 95%;
 
-    --border: 260 25% 20%;
-    --input: 260 25% 20%;
+    --border: 260 25% 18%;
+    --input: 260 25% 18%;
     --ring: 260 84% 63%;
 
-    --sidebar-background: 260 25% 15%;
+    --sidebar-background: 260 25% 12%;
     --sidebar-foreground: 0 0% 95%;
     --sidebar-primary: 260 84% 63%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 260 25% 20%;
+    --sidebar-accent: 260 25% 18%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 260 25% 25%;
+    --sidebar-border: 260 25% 22%;
     --sidebar-ring: 260 84% 63%;
   }
 }
@@ -93,6 +93,28 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
   }
 }
 
@@ -119,5 +141,21 @@
 
   .kira-dashboard-item-header {
     @apply flex justify-between items-center mb-2 pb-2 border-b;
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out forwards;
+  }
+  
+  .animate-slide-in {
+    animation: slide-in 0.3s ease-out forwards;
+  }
+  
+  .glass-card {
+    @apply bg-white/50 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 rounded-xl shadow-sm;
+  }
+  
+  .shimmer {
+    @apply relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent;
   }
 }

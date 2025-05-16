@@ -14,12 +14,14 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
   title?: string;
   actions?: React.ReactNode;
+  className?: string;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
   title,
   actions,
+  className,
 }) => {
   const { isLoading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -51,8 +53,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           mobileMenuToggle={toggleMobileMenu}
         />
 
-        <main className="flex-1 overflow-y-auto py-6">
-          <div className="px-4 md:px-6 max-w-7xl mx-auto">
+        <main className="flex-1 overflow-y-auto py-6 animate-fade-in">
+          <div className={cn("px-4 md:px-6 max-w-7xl mx-auto", className)}>
             {children}
           </div>
         </main>

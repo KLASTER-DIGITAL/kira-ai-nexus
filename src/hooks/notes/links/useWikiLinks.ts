@@ -48,12 +48,12 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
       try {
         const createdNoteResult = await createNote(newNoteData as any);
         
-        // Исправлено: больше не проверяем createWikiLink на truthiness
-        // Check that we have a valid note with an ID before proceeding
+        // Fixed: Don't check truthiness on void expression
+        // Instead, check if we have a note ID and only then perform operations
         if (createdNoteResult && typeof createdNoteResult === 'object' && 'id' in createdNoteResult) {
           const createdNote = createdNoteResult as Note;
           
-          // Create a link if we have a current note ID - делаем вызов отдельно
+          // Create a link if we have a current note ID
           if (noteId) {
             await createWikiLink(cleanTitle);
           }

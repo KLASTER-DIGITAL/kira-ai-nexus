@@ -6,10 +6,12 @@ import { cn } from "@/lib/utils";
 interface StatCardProps {
   title: string;
   value: string | number;
-  icon?: React.ReactNode;
+  icon: React.ReactNode;
   change?: string;
+  trend?: "up" | "down" | "neutral";
   className?: string;
-  iconColor?: string;
+  iconClassName?: string;
+  valueClassName?: string;
 }
 
 const StatCard: React.FC<StatCardProps> = ({
@@ -17,30 +19,38 @@ const StatCard: React.FC<StatCardProps> = ({
   value,
   icon,
   change,
+  trend = "up",
   className,
-  iconColor = "text-primary bg-primary/10",
+  iconClassName,
+  valueClassName,
 }) => {
-  // Определение класса для изменения (положительное зеленое, отрицательное красное)
-  const changeClass = change?.startsWith("+")
-    ? "text-green-600 dark:text-green-400"
-    : change?.startsWith("-")
-    ? "text-red-600 dark:text-red-400"
-    : "text-muted-foreground";
-
   return (
-    <Card className={cn("overflow-hidden", className)}>
+    <Card className={cn(
+      "overflow-hidden transition-all hover:shadow-md", 
+      className
+    )}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {icon && (
-          <div className={cn("h-8 w-8 rounded-md flex items-center justify-center", iconColor)}>
-            {icon}
-          </div>
-        )}
+        <div className={cn(
+          "h-8 w-8 rounded-md flex items-center justify-center",
+          iconClassName || "bg-primary/10 text-primary"
+        )}>
+          {icon}
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className={cn("text-2xl font-bold", valueClassName)}>
+          {value}
+        </div>
         {change && (
-          <p className={cn("text-xs mt-1", changeClass)}>{change}</p>
+          <p className={cn(
+            "text-xs mt-1",
+            trend === "up" ? "text-green-500" : 
+            trend === "down" ? "text-red-500" : 
+            "text-muted-foreground"
+          )}>
+            {change}
+          </p>
         )}
       </CardContent>
     </Card>
