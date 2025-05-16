@@ -178,7 +178,6 @@ export function AppSidebar() {
         <SheetContent 
           side="left" 
           className="p-0 w-[280px] border-r"
-          closeButton={false}
         >
           <div className="flex h-full flex-col">
             {sidebarContent}
