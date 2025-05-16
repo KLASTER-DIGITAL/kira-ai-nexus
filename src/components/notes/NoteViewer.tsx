@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Note } from "@/types/notes";
+import { Note, NoteContent } from "@/types/notes";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import TipTapEditor from "./TipTapEditor";
 import { useNoteLinks } from "@/hooks/notes/useNoteLinks";
@@ -30,6 +30,16 @@ const NoteViewer: React.FC<NoteViewerProps> = ({ note, onNoteSelect }) => {
     }
   })) || [];
   
+  // Get content as string
+  const getNoteContent = (): string => {
+    if (typeof note.content === 'string') {
+      return note.content;
+    } else if (note.content && typeof note.content === 'object') {
+      return note.content.text || '';
+    }
+    return '';
+  };
+  
   return (
     <Card className="w-full">
       <CardHeader>
@@ -37,7 +47,7 @@ const NoteViewer: React.FC<NoteViewerProps> = ({ note, onNoteSelect }) => {
       </CardHeader>
       <CardContent>
         <TipTapEditor
-          content={note.content || ""}
+          content={getNoteContent()}
           onChange={() => {}}
           editable={false}
           noteId={note.id}

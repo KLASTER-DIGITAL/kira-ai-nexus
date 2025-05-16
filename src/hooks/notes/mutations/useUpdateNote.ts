@@ -30,14 +30,14 @@ export const useUpdateNote = () => {
         }
         
         // Safely handle the content field
-        let currentContent: NoteContent = {
+        let currentContent: Record<string, any> = {
           text: '',
           tags: [],
           color: ''
         };
         
         if (currentNote.content && typeof currentNote.content === 'object') {
-          // Safely extract values using typecasting when we know it's an object
+          // Extract values from current content
           const contentObj = currentNote.content as Record<string, any>;
           currentContent = {
             text: typeof contentObj.text === 'string' ? contentObj.text : '',
@@ -46,30 +46,53 @@ export const useUpdateNote = () => {
           };
         }
         
-        // If we have new content, prepare it for update
-        let newContent: string | null = null;
+        // Prepare new content
+        const newContent: Record<string, any> = {
+          text: currentContent.text,
+          tags: currentContent.tags,
+          color: currentContent.color
+        };
+        
+        // Update with new values if they exist
         if (typeof noteData.content === 'string') {
           // If content is a string, update text only
-          updateData.content = {
-            text: noteData.content,
-            tags: noteData.tags !== undefined ? noteData.tags : currentContent.tags,
-            color: noteData.color !== undefined ? noteData.color : currentContent.color
-          };
+          newContent.text = noteData.content;
+          
+          // Если есть новые теги/цвет, обновляем их тоже
+          if (noteData.tags !== undefined) {
+            newContent.tags = noteData.tags;
+          }
+          
+          if (noteData.color !== undefined) {
+            newContent.color = noteData.color;
+          }
+          
         } else if (typeof noteData.content === 'object') {
           // If content is an object, use its properties
-          updateData.content = {
-            text: noteData.content.text || currentContent.text,
-            tags: noteData.content.tags || currentContent.tags,
-            color: noteData.content.color || currentContent.color
-          };
+          if (noteData.content.text !== undefined) {
+            newContent.text = noteData.content.text;
+          }
+          
+          if (Array.isArray(noteData.content.tags)) {
+            newContent.tags = noteData.content.tags;
+          }
+          
+          if (noteData.content.color !== undefined) {
+            newContent.color = noteData.content.color;
+          }
         } else {
-          // If no content update, use any tags or color updates
-          updateData.content = {
-            text: currentContent.text,
-            tags: noteData.tags !== undefined ? noteData.tags : currentContent.tags,
-            color: noteData.color !== undefined ? noteData.color : currentContent.color
-          };
+          // Если контент не передан, проверяем наличие тегов и цвета
+          if (noteData.tags !== undefined) {
+            newContent.tags = noteData.tags;
+          }
+          
+          if (noteData.color !== undefined) {
+            newContent.color = noteData.color;
+          }
         }
+        
+        // Установим обновленный контент
+        updateData.content = newContent;
         
         // Perform the update
         const { data, error } = await supabase

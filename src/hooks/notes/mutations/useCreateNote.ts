@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Note, NoteContent } from "@/types/notes";
@@ -15,19 +16,19 @@ export const useCreateNote = () => {
         throw new Error('User not authenticated');
       }
       
-      // Prepare content data as object for DB storage
-      let contentData: NoteContent;
+      // Подготовка данных для сохранения в БД
+      let dbContent: Record<string, any> = {};
       
+      // Если контент уже объект NoteContent
       if (typeof noteData.content === 'object') {
-        // If content is already an object with the right structure, use it
-        contentData = {
+        dbContent = {
           text: noteData.content.text || '',
           tags: noteData.content.tags || noteData.tags || [],
           color: noteData.content.color || noteData.color || ''
         };
       } else {
-        // Otherwise construct the content object from separate fields
-        contentData = {
+        // Если контент строка - создаем структуру
+        dbContent = {
           text: noteData.content || '',
           tags: noteData.tags || [],
           color: noteData.color || ''
@@ -39,7 +40,7 @@ export const useCreateNote = () => {
         .from('nodes')
         .insert({
           title: noteData.title,
-          content: contentData,
+          content: dbContent, // Теперь это всегда объект для Supabase JSON
           type: 'note',
           user_id: user.id
         })

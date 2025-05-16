@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Note } from "@/types/notes";
+import { Note, NoteContent } from "@/types/notes";
 import { Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -27,10 +27,19 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete }) => {
     return doc.body.textContent || "";
   };
 
+  // Get content as string
+  const getNoteContent = (): string => {
+    if (typeof note.content === 'string') {
+      return note.content;
+    } else if (note.content && typeof note.content === 'object') {
+      return note.content.text || '';
+    }
+    return '';
+  };
+
   // Truncate content for preview by stripping HTML
-  const contentPreview = note.content 
-    ? stripHtml(note.content).substring(0, 150) + (stripHtml(note.content).length > 150 ? "..." : "")
-    : "";
+  const contentPreview = stripHtml(getNoteContent()).substring(0, 150) 
+    + (stripHtml(getNoteContent()).length > 150 ? "..." : "");
 
   // Check if note has tags
   const hasTags = note.tags && Array.isArray(note.tags) && note.tags.length > 0;

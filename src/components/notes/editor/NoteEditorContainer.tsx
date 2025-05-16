@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Note } from "@/types/notes";
+import { Note, NoteContent } from "@/types/notes";
 import { useNoteLinks } from "@/hooks/notes/links/useNoteLinks";
 import NoteMetadataComponent from "./NoteMetadata";
 import NoteContent from "./NoteContent";
@@ -40,28 +40,24 @@ const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({
       // Правильно обрабатываем контент заметки в зависимости от его структуры
       if (typeof note.content === 'string') {
         setContent(note.content || "");
+        setTags(note.tags || []);
+        setColor(note.color || "");
       } else if (note.content && typeof note.content === 'object') {
-        // Если content - это объект, извлекаем текст
+        // Если content - это объект, извлекаем текст, теги и цвет
         setContent(note.content.text || "");
-        
-        // И также извлекаем теги и цвет, если они есть
-        if (note.content.tags) {
-          setTags(Array.isArray(note.content.tags) ? note.content.tags : []);
-        } else {
-          setTags(note.tags || []);
-        }
-        
-        if (note.content.color) {
-          setColor(note.content.color);
-        } else {
-          setColor(note.color || "");
-        }
+        setTags(Array.isArray(note.content.tags) ? note.content.tags : (note.tags || []));
+        setColor(note.content.color || note.color || "");
       } else {
         // Если content отсутствует или null, используем пустую строку
         setContent("");
         setTags(note.tags || []);
         setColor(note.color || "");
       }
+    } else {
+      setTitle("");
+      setContent("");
+      setTags([]);
+      setColor("");
     }
   }, [note]);
 
@@ -92,7 +88,7 @@ const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({
       
       await onSave({
         title,
-        content, // Передаем только текст контента
+        content, // Передаем текст контента
         tags     // Теги передаются отдельно
       });
       

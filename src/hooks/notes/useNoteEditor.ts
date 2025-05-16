@@ -10,8 +10,8 @@ import { toast } from "sonner";
  */
 export const useNoteEditor = (note?: Note, onSuccess?: () => void) => {
   const [title, setTitle] = useState(note?.title || "");
-  const [content, setContent] = useState(note?.content && typeof note.content === 'object' ? note.content.text : (note?.content || ""));
-  const [tags, setTags] = useState(note?.tags || []);
+  const [content, setContent] = useState("");
+  const [tags, setTags] = useState<string[]>(note?.tags || []);
   const [color, setColor] = useState(note?.color || "");
   const { createNote, updateNote, isCreating, isUpdating } = useNotesMutations();
   
@@ -54,8 +54,7 @@ export const useNoteEditor = (note?: Note, onSuccess?: () => void) => {
           id: note.id,
           title,
           content: contentObject,
-          user_id: note.user_id,
-          type: "note"
+          tags // необходимо для типизации
         });
         toast.success("Заметка обновлена");
       } else {
@@ -69,8 +68,7 @@ export const useNoteEditor = (note?: Note, onSuccess?: () => void) => {
         const result = await createNote({
           title,
           content: contentObject,
-          user_id: "", // Will be filled by backend
-          type: "note"
+          tags // необходимо для типизации
         });
         console.log("Заметка создана:", result);
         toast.success("Заметка создана");

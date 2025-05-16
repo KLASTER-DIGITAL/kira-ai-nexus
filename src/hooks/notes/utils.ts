@@ -5,17 +5,34 @@ import { Note, NoteContent } from "@/types/notes";
  * Преобразует сырые данные заметки из БД в тип Note
  */
 export const transformNoteData = (data: any): Note => {
-  let content = "";
+  let content: string | NoteContent = "";
   let tags: string[] = [];
   let color = "";
   
   // Handle content based on its type
   if (data.content) {
     if (typeof data.content === 'object') {
-      // Extract content from the content object
-      content = data.content.text || "";
-      tags = Array.isArray(data.content.tags) ? data.content.tags : [];
-      color = data.content.color || "";
+      // Если у нас есть структурированный контент
+      if (data.content.text !== undefined) {
+        // У нас уже есть структурированный объект NoteContent
+        content = {
+          text: data.content.text || "",
+          tags: Array.isArray(data.content.tags) ? data.content.tags : [],
+          color: data.content.color || ""
+        };
+        tags = content.tags;
+        color = content.color;
+      } else {
+        // У нас какой-то другой объект
+        content = JSON.stringify(data.content);
+        // Try to extract tags if present
+        if (Array.isArray(data.content.tags)) {
+          tags = data.content.tags;
+        }
+        if (data.content.color) {
+          color = data.content.color;
+        }
+      }
     } else if (typeof data.content === 'string') {
       content = data.content;
     }

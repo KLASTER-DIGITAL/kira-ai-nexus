@@ -18,25 +18,39 @@ export interface UpdateNoteInput {
 
 // Helper function to format notes from DB (shared across mutations)
 export const formatNoteFromDb = (data: any): Note => {
-  let content = '';
+  let content: string | NoteContent = '';
   let tags: string[] = [];
   let color: string | undefined = undefined;
   
   if (data.content) {
     // Handle content being potentially a string or object
     if (typeof data.content === 'object') {
-      const contentObj = data.content as Record<string, any>;
-      content = typeof contentObj.text === 'string' ? contentObj.text : '';
-      
-      // Ensure tags is always an array of strings
-      if (Array.isArray(contentObj.tags)) {
-        tags = contentObj.tags.map((tag: any) => String(tag));
+      // Если у нас есть объект контента с полями
+      if (data.content.text !== undefined) {
+        content = {
+          text: data.content.text || '',
+          tags: Array.isArray(data.content.tags) ? data.content.tags : [],
+          color: data.content.color || ''
+        };
+        tags = content.tags;
+        color = content.color;
+      } else {
+        // Если другой формат объекта
+        content = JSON.stringify(data.content);
       }
-      
-      color = typeof contentObj.color === 'string' ? contentObj.color : undefined;
     } else if (typeof data.content === 'string') {
       content = data.content;
     }
+  }
+  
+  // If no tags in content, check root level tags
+  if (tags.length === 0 && Array.isArray(data.tags)) {
+    tags = data.tags;
+  }
+  
+  // If no color in content, check root level color
+  if (!color && data.color) {
+    color = data.color;
   }
   
   return {
@@ -45,7 +59,7 @@ export const formatNoteFromDb = (data: any): Note => {
     content,
     tags,
     color,
-    type: data.type,
+    type: data.type || 'note',
     user_id: data.user_id,
     created_at: data.created_at,
     updated_at: data.updated_at

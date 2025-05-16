@@ -30,8 +30,7 @@ export const useNotesMutation = () => {
           id: activeNote.id,
           title: noteData.title,
           content: contentObject,
-          user_id: activeNote.user_id,
-          type: activeNote.type
+          tags: noteData.tags // необходимо для типизации
         });
         toast.success("Заметка обновлена");
       } else {
@@ -45,8 +44,7 @@ export const useNotesMutation = () => {
         const result = await createNote({
           title: noteData.title,
           content: contentObject,
-          user_id: "", // Will be filled by backend
-          type: "note"
+          tags: noteData.tags // необходимо для типизации
         });
         
         console.log("Заметка создана:", result);

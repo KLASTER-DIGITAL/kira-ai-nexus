@@ -1,257 +1,246 @@
-
-import React, { useState, useMemo, useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  ReactFlow,
-  MiniMap,
-  Controls,
-  Background,
+import React, { useCallback, useState, useEffect } from 'react';
+import ReactFlow, {
+  Edge,
+  Node,
   useNodesState,
   useEdgesState,
-  Node,
-  NodeTypes,
-  useReactFlow,
-  ReactFlowProvider
-} from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
-import { useNotes } from "@/hooks/useNotes";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/context/auth";
-import GraphToolbar from "./components/GraphToolbar";
-import GraphControls from "./components/GraphControls";
-import NoteNode from "./NoteNode";
-import { useGraphHotkeys } from "./hooks/useGraphHotkeys";
-import { generateNodesAndEdges } from "./utils/graphUtils";
-import { LinksData, NotesGraphProps } from "./types";
+  Panel,
+  Background,
+  BackgroundVariant,
+  useReactFlow
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import NoteNode from './NoteNode';
+import { Note } from '@/types/notes';
+import { graphLayout } from './utils/graphUtils';
+import GraphFilterPopover from './components/GraphFilterPopover';
+import GraphSearchBar from './components/GraphSearchBar';
+import GraphControls from './components/GraphControls';
+import GraphToolbar from './components/GraphToolbar';
+import { useGraphHotkeys } from './hooks/useGraphHotkeys';
 
-const nodeTypes: NodeTypes = {
-  noteNode: NoteNode,
+// Получение контента для поиска
+const getNoteSearchContent = (note: Note): string => {
+  let textContent = '';
+  
+  if (typeof note.content === 'object') {
+    textContent = note.content.text || '';
+  } else if (typeof note.content === 'string') {
+    textContent = note.content;
+  }
+  
+  return textContent;
 };
 
-const NotesGraphContent: React.FC<NotesGraphProps> = ({ nodeId, onNodeClick: externalOnNodeClick }) => {
-  const [searchTerm, setSearchTerm] = useState("");
+interface NotesGraphProps {
+  nodeId?: string;
+  onNodeClick?: (nodeId: string) => void;
+}
+
+const NotesGraph: React.FC<NotesGraphProps> = ({ nodeId, onNodeClick }) => {
+  const { disableHotkeys } = useGraphHotkeys();
+  const [isLayouting, setIsLayouting] = useState(false);
+  
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [showIsolatedNodes, setShowIsolatedNodes] = useState(true);
-  const { user } = useAuth();
-  const { notes, isLoading: isLoadingNotes } = useNotes();
-  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [zoom, setZoom] = useState(1);
+  const [center, setCenter] = useState({ x: 0, y: 0 });
+  const [notesData, setNotesData] = useState<Note[]>([]);
+  const [linksData, setLinksData] = useState<Edge[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
   const reactFlowInstance = useReactFlow();
 
-  // Горячие клавиши для управления графом
-  const hotKeyActions = useMemo(() => ({
-    zoomIn: () => reactFlowInstance.zoomIn({ duration: 300 }),
-    zoomOut: () => reactFlowInstance.zoomOut({ duration: 300 }),
-    fitView: () => reactFlowInstance.fitView({ duration: 500 }),
-    reset: () => {
-      setNodes(initialNodes);
-      setEdges(initialEdges);
-      setTimeout(() => reactFlowInstance.fitView({ duration: 500 }), 50);
-    }
-  }), [reactFlowInstance]);
-
-  useGraphHotkeys(hotKeyActions);
-
-  // Fetch links
-  const { data: links, isLoading: isLoadingLinks } = useQuery({
-    queryKey: ["note-links-graph"],
-    queryFn: async () => {
-      if (!user) return [];
-
-      const { data, error } = await supabase
-        .from("links")
-        .select("source_id, target_id")
-        .eq("type", "wikilink");
-
-      if (error) {
-        throw error;
-      }
-
-      // Transform the data to match our interface
-      return (data || []).map(link => ({
-        sourceId: link.source_id,
-        targetId: link.target_id
-      })) as LinksData[];
-    },
-    enabled: !!user,
-  });
-
-  // Set up realtime subscriptions for graph updates
+  // Load graph data from local storage on mount
   useEffect(() => {
-    if (!user) return;
+    const storedNotes = localStorage.getItem('graphNotes');
+    const storedLinks = localStorage.getItem('graphLinks');
+    const storedTags = localStorage.getItem('graphTags');
+    
+    if (storedNotes) setNotesData(JSON.parse(storedNotes));
+    if (storedLinks) setLinksData(JSON.parse(storedLinks));
+    if (storedTags) setAllTags(JSON.parse(storedTags));
+  }, []);
 
-    const linksChannel = supabase
-      .channel('graph-links-changes')
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'links'
-      }, () => {
-        // Invalidate the query to refresh the graph data
-        // Just refreshing the query will update our graph via reactivity
-      })
-      .subscribe();
+  // Save graph data to local storage on changes
+  useEffect(() => {
+    localStorage.setItem('graphNotes', JSON.stringify(notesData));
+    localStorage.setItem('graphLinks', JSON.stringify(linksData));
+    localStorage.setItem('graphTags', JSON.stringify(allTags));
+  }, [notesData, linksData, allTags]);
 
-    const notesChannel = supabase
-      .channel('graph-notes-changes')
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'nodes',
-        filter: "type=eq.note" 
-      }, () => {
-        // Invalidate the query to refresh the graph data
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(linksChannel);
-      supabase.removeChannel(notesChannel);
+  // Load initial data if nodeId is provided
+  useEffect(() => {
+    if (!nodeId) return;
+    
+    const fetchInitialData = async () => {
+      try {
+        const notesResponse = await fetch(`/api/graph/nodes?nodeId=${nodeId}`);
+        const notesData = await notesResponse.json();
+        setNotesData(notesData);
+        
+        const linksResponse = await fetch(`/api/graph/links?nodeId=${nodeId}`);
+        const linksData = await linksResponse.json();
+        setLinksData(linksData);
+        
+        // Extract all unique tags from nodes
+        if (notesData && notesData.length > 0) {
+          const tagsSet = new Set<string>();
+          notesData.forEach(node => {
+            if (node.tags && Array.isArray(node.tags)) {
+              node.tags.forEach(tag => tagsSet.add(tag));
+            }
+          });
+          setAllTags(Array.from(tagsSet));
+        }
+      } catch (error) {
+        console.error("Failed to fetch initial graph data:", error);
+      }
     };
-  }, [user]);
-
-  const isLoading = isLoadingNotes || isLoadingLinks;
-
-  // Extract all unique tags from notes
-  const allTags = useMemo(() => {
-    if (!notes) return [];
-    const tagSet = new Set<string>();
-    notes.forEach(note => {
-      if (note.tags) {
-        note.tags.forEach(tag => tagSet.add(tag));
-      }
-    });
-    return Array.from(tagSet);
-  }, [notes]);
-
-  // Toggle tag selection
-  const toggleTag = (tag: string) => {
-    if (tag === "") {
-      // Reset all tags when empty tag is passed
-      setSelectedTags([]);
-      return;
-    }
     
-    if (selectedTags.includes(tag)) {
-      setSelectedTags(selectedTags.filter(t => t !== tag));
-    } else {
-      setSelectedTags([...selectedTags, tag]);
-    }
-  };
+    fetchInitialData();
+  }, [nodeId]);
 
-  // Filter notes by search term and tags
-  const filteredNotes = useMemo(() => {
-    if (!notes) return [];
-    
-    let filtered = notes;
-    
-    // Filter by search term
-    if (searchTerm) {
-      const lowerSearch = searchTerm.toLowerCase();
-      filtered = filtered.filter(note => 
-        note.title.toLowerCase().includes(lowerSearch) || 
-        (note.content && note.content.toLowerCase().includes(lowerSearch))
-      );
-    }
-    
-    // Filter by selected tags
-    if (selectedTags.length > 0) {
-      filtered = filtered.filter(note => 
-        note.tags && selectedTags.some(tag => note.tags.includes(tag))
-      );
-    }
-    
-    return filtered;
-  }, [notes, searchTerm, selectedTags]);
-
-  // Generate nodes and edges for ReactFlow
-  const { initialNodes, initialEdges } = useMemo(() => {
-    const { nodes, edges } = generateNodesAndEdges(filteredNotes, links, showIsolatedNodes);
-    return { initialNodes: nodes, initialEdges: edges };
-  }, [filteredNotes, links, showIsolatedNodes]);
-
-  // Setup ReactFlow state
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-
-  // Update nodes and edges when data changes
-  useEffect(() => {
-    setNodes(initialNodes);
-    setEdges(initialEdges);
-  }, [initialNodes, initialEdges, setNodes, setEdges]);
-
-  // Handle node click to navigate to note
-  const onNodeClick = useCallback(
-    (_: React.MouseEvent, node: Node) => {
-      // Find the note and open it in the edit dialog
-      const noteId = node.id;
+  // Set up the flow data
+  const setupFlowData = useCallback((notes: Note[], links: Edge[]) => {
+    // Create nodes from notes
+    const noteNodes: Node[] = notes.map((note) => {
+      // Extract tags for filtering
+      const tags = note.tags || [];
       
-      if (externalOnNodeClick) {
-        externalOnNodeClick(noteId);
-      } else {
-        navigate(`/notes?note=${noteId}`);
+      // Apply tag filtering if any tags are selected
+      if (selectedTags.length > 0 && !tags.some(tag => selectedTags.includes(tag))) {
+        return null; // Skip this note if it doesn't have any of the selected tags
       }
-    },
-    [navigate, externalOnNodeClick]
-  );
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <p>Загрузка графа заметок...</p>
-      </div>
+      
+      // Apply search filtering
+      if (searchQuery) {
+        const noteTitle = note.title.toLowerCase();
+        const noteContent = getNoteSearchContent(note);
+        const searchLower = searchQuery.toLowerCase();
+        
+        // Skip if neither title nor content match the search
+        if (!noteTitle.includes(searchLower) && !noteContent.toLowerCase().includes(searchLower)) {
+          return null;
+        }
+      }
+      
+      return {
+        id: note.id,
+        type: 'noteNode',
+        position: { x: 0, y: 0 }, // Will be calculated by layout algorithm
+        data: { note }
+      };
+    }).filter(Boolean) as Node[];
+    
+    // Filter edges to only include visible nodes
+    const visibleNodeIds = noteNodes.map(node => node.id);
+    const visibleEdges = links.filter(
+      edge => visibleNodeIds.includes(edge.source) && visibleNodeIds.includes(edge.target)
     );
-  }
+    
+    // Apply layout algorithm
+    const { nodes: layoutedNodes, edges: layoutedEdges } = graphLayout(noteNodes, visibleEdges);
+    
+    setNodes(layoutedNodes);
+    setEdges(layoutedEdges);
+  }, [selectedTags, searchQuery, setNodes, setEdges]);
+
+  // Effect to set up flow data when notes or links change
+  useEffect(() => {
+    if (notesData && linksData) {
+      setupFlowData(notesData, linksData);
+    }
+  }, [notesData, linksData, setupFlowData]);
+
+  // Tag filtering
+  const toggleTag = useCallback((tag: string) => {
+    setSelectedTags(prevTags =>
+      prevTags.includes(tag) ? prevTags.filter(t => t !== tag) : [...prevTags, tag]
+    );
+  }, []);
+
+  const clearFilters = useCallback(() => {
+    setSelectedTags([]);
+    setSearchQuery('');
+  }, []);
+
+  // Graph view centering
+  const centerGraph = useCallback(() => {
+    if (reactFlowInstance) {
+      reactFlowInstance.setCenter(center.x, center.y, { zoom });
+    }
+  }, [reactFlowInstance, center, zoom]);
+
+  // Reset view
+  const resetView = useCallback(() => {
+    setZoom(1);
+    setCenter({ x: 0, y: 0 });
+    centerGraph();
+  }, [centerGraph]);
+
+  // Apply layout
+  const applyLayout = useCallback(() => {
+    if (notesData && linksData) {
+      setIsLayouting(true);
+      setupFlowData(notesData, linksData);
+      setIsLayouting(false);
+    }
+  }, [notesData, linksData, setupFlowData]);
+
+  const nodeTypes = { noteNode: NoteNode };
 
   return (
-    <div className="h-[calc(100vh-150px)] w-full">
-      <GraphToolbar 
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedTags={selectedTags}
-        toggleTag={toggleTag}
-        allTags={allTags}
-        showIsolatedNodes={showIsolatedNodes}
-        setShowIsolatedNodes={setShowIsolatedNodes}
-      />
-
-      <div className="h-full w-full rounded-md border bg-background relative">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          nodeTypes={nodeTypes}
-          onNodeClick={onNodeClick}
-          fitView
-          attributionPosition="bottom-right"
-        >
-          <Background />
-          <Controls />
-          <MiniMap
-            nodeStrokeWidth={3}
-            zoomable
-            pannable
+    <div className="w-full h-full">
+      <ReactFlow 
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        nodeTypes={nodeTypes}
+        onNodeClick={(_, node) => onNodeClick && onNodeClick(node.id)}
+        fitView
+        minZoom={0.1}
+        maxZoom={2}
+      >
+        <Panel position="top-left">
+          <GraphSearchBar 
+            value={searchQuery}
+            onChange={setSearchQuery}
+            clearSearch={() => setSearchQuery('')}
           />
-          
-          <GraphControls 
-            onZoomIn={hotKeyActions.zoomIn}
-            onZoomOut={hotKeyActions.zoomOut}
-            onFitView={hotKeyActions.fitView}
-            onReset={hotKeyActions.reset}
+        </Panel>
+        
+        <Panel position="top-right">
+          <GraphFilterPopover 
+            tags={allTags}
+            selectedTags={selectedTags}
+            onSelectTag={toggleTag}
+            onClearFilters={clearFilters}
           />
-        </ReactFlow>
-      </div>
+        </Panel>
+        
+        <Panel position="bottom-center">
+          <GraphToolbar
+            onCenterGraph={centerGraph}
+            onResetView={resetView}
+            onLayoutGraph={applyLayout}
+          />
+        </Panel>
+        
+        <Panel position="bottom-right">
+          <GraphControls />
+        </Panel>
+        
+        <Background 
+          variant={BackgroundVariant.Dots} 
+          gap={12} 
+          size={1} 
+          color="#88888833" 
+        />
+      </ReactFlow>
     </div>
-  );
-};
-
-// Wrapper component to provide ReactFlow context
-const NotesGraph: React.FC<NotesGraphProps> = (props) => {
-  return (
-    <ReactFlowProvider>
-      <NotesGraphContent {...props} />
-    </ReactFlowProvider>
   );
 };
 
