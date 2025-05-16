@@ -57,7 +57,7 @@ const NavItem: React.FC<NavItemProps> = ({
 
           {/* Admin indicator */}
           {admin && (
-            <Badge variant="primary" className="h-5 px-1.5 flex items-center justify-center text-[10px]">
+            <Badge variant="default" className="h-5 px-1.5 flex items-center justify-center text-[10px]">
               ADMIN
             </Badge>
           )}
@@ -81,7 +81,7 @@ const NavItem: React.FC<NavItemProps> = ({
           <TooltipContent side="right" className="flex items-center gap-2">
             <span>{title}</span>
             {badge && <Badge variant="secondary">{badge}</Badge>}
-            {admin && <Badge variant="primary" className="text-[10px]">ADMIN</Badge>}
+            {admin && <Badge variant="default" className="text-[10px]">ADMIN</Badge>}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

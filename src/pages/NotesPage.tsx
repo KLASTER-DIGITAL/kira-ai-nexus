@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import DashboardLayout from "@/components/dashboard/layout/DashboardLayout";
+import { Layout } from "@/components/layout";
 import NotesContent from "@/components/notes/content/NotesContent";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
@@ -65,7 +65,7 @@ const NotesPage: React.FC = () => {
   );
 
   return (
-    <DashboardLayout title="Заметки" actions={actions}>
+    <Layout title="Заметки" actions={actions}>
       <div className="container mx-auto pb-20">
         <NotesContent 
           notes={notes || []}
@@ -91,7 +91,7 @@ const NotesPage: React.FC = () => {
           onNoteSelect={handleNoteSelect}
         />
       </div>
-    </DashboardLayout>
+    </Layout>
   );
 };
 
