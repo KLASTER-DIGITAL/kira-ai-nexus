@@ -5,9 +5,8 @@ import {
   useEdgesState,
 } from '@xyflow/react';
 
-// Update import to use default import
-import useGraphHotkeys from './hooks/useGraphHotkeys';
-import { useGraphData } from './hooks/useGraphData';
+// Update imports to use the index file
+import { useGraphData, useGraphHotkeys } from './hooks';
 import { useGraphFiltering } from './hooks/useGraphFiltering';
 import GraphLayout from './components/GraphLayout';
 import { useGraphSettings } from '@/hooks/useGraphSettings';
