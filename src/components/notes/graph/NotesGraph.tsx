@@ -6,12 +6,13 @@ import {
   useEdgesState,
 } from '@xyflow/react';
 
-import { useGraphHotkeys } from './hooks/useGraphHotkeys';
+import useGraphHotkeys from './hooks/useGraphHotkeys';
 import { useGraphData } from './hooks/useGraphData';
 import { useGraphFiltering } from './hooks/useGraphFiltering';
 import GraphLayout from './components/GraphLayout';
 import { useGraphSettings } from '@/hooks/useGraphSettings';
 import { useGraphData as useGlobalGraphData } from '@/hooks/useGraphData';
+import { LayoutType } from '@/hooks/useGraphSettings';
 
 interface NotesGraphProps {
   nodeId?: string;
@@ -35,7 +36,11 @@ const NotesGraphInner: React.FC<NotesGraphProps> = ({
   } = useGraphFiltering();
   
   // Use graph settings for persistent user preferences
-  const { settings, toggleIsolatedNodesVisibility } = useGraphSettings();
+  const { 
+    settings, 
+    toggleIsolatedNodesVisibility,
+    changeLayout,
+  } = useGraphSettings();
   
   // Set up nodes and edges state
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -45,6 +50,41 @@ const NotesGraphInner: React.FC<NotesGraphProps> = ({
   // Fetch graph data - either from global or local source
   const { graphData: globalGraphData, isLoading: isGlobalDataLoading } = useGlobalGraphData();
   const { applyLayout, processGraphData } = useGraphData();
+  
+  // Handle layout change
+  const handleLayoutChange = useCallback((newLayout: LayoutType) => {
+    changeLayout(newLayout);
+
+    // Re-apply layout with new layout type
+    setIsLoading(true);
+    setTimeout(() => {
+      if (localOnly && nodeId) {
+        processGraphData(
+          nodeId,
+          searchQuery, 
+          selectedTags,
+          showIsolatedNodes,
+          newLayout
+        ).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
+          setNodes(layoutedNodes);
+          setEdges(layoutedEdges);
+          setIsLoading(false);
+        });
+      } else if (globalGraphData) {
+        const { nodes: layoutedNodes, edges: layoutedEdges } = applyLayout(
+          globalGraphData.nodes,
+          globalGraphData.links,
+          searchQuery, 
+          selectedTags,
+          showIsolatedNodes,
+          newLayout
+        );
+        setNodes(layoutedNodes);
+        setEdges(layoutedEdges);
+        setIsLoading(false);
+      }
+    }, 100);
+  }, [nodeId, globalGraphData, searchQuery, selectedTags, showIsolatedNodes, localOnly, applyLayout, processGraphData, changeLayout]);
   
   // Load graph data based on props
   useEffect(() => {
@@ -57,7 +97,8 @@ const NotesGraphInner: React.FC<NotesGraphProps> = ({
             nodeId,
             searchQuery, 
             selectedTags,
-            showIsolatedNodes
+            showIsolatedNodes,
+            settings.layout
           );
           setNodes(layoutedNodes);
           setEdges(layoutedEdges);
@@ -69,7 +110,8 @@ const NotesGraphInner: React.FC<NotesGraphProps> = ({
               globalGraphData.links,
               searchQuery, 
               selectedTags,
-              showIsolatedNodes
+              showIsolatedNodes,
+              settings.layout
             );
             setNodes(layoutedNodes);
             setEdges(layoutedEdges);
@@ -83,20 +125,46 @@ const NotesGraphInner: React.FC<NotesGraphProps> = ({
     };
     
     fetchData();
-  }, [nodeId, globalGraphData, searchQuery, selectedTags, showIsolatedNodes, localOnly, applyLayout, processGraphData]);
+  }, [nodeId, globalGraphData, searchQuery, selectedTags, showIsolatedNodes, localOnly, applyLayout, processGraphData, settings.layout]);
+  
+  // Reset graph layout
+  const handleReset = useCallback(() => {
+    setIsLoading(true);
+    setTimeout(() => {
+      if (localOnly && nodeId) {
+        processGraphData(
+          nodeId,
+          searchQuery, 
+          selectedTags,
+          showIsolatedNodes,
+          settings.layout
+        ).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
+          setNodes(layoutedNodes);
+          setEdges(layoutedEdges);
+          setIsLoading(false);
+        });
+      } else if (globalGraphData) {
+        const { nodes: layoutedNodes, edges: layoutedEdges } = applyLayout(
+          globalGraphData.nodes,
+          globalGraphData.links,
+          searchQuery, 
+          selectedTags,
+          showIsolatedNodes,
+          settings.layout
+        );
+        setNodes(layoutedNodes);
+        setEdges(layoutedEdges);
+        setIsLoading(false);
+      }
+    }, 100);
+  }, [nodeId, globalGraphData, searchQuery, selectedTags, showIsolatedNodes, localOnly, applyLayout, processGraphData, settings.layout]);
   
   // Set up hotkeys for graph navigation
   useGraphHotkeys({
     zoomIn: () => {},
     zoomOut: () => {},
     fitView: () => {},
-    reset: () => applyLayout(
-      globalGraphData?.nodes || [], 
-      globalGraphData?.links || [], 
-      searchQuery, 
-      selectedTags, 
-      showIsolatedNodes
-    )
+    reset: handleReset
   });
 
   // Handle node click
@@ -124,6 +192,9 @@ const NotesGraphInner: React.FC<NotesGraphProps> = ({
         toggleIsolatedNodes={toggleIsolatedNodesVisibility}
         isLoading={isLoading || isGlobalDataLoading}
         clearFilters={clearFilters}
+        layoutType={settings.layout}
+        onChangeLayout={handleLayoutChange}
+        onReset={handleReset}
       />
     </div>
   );

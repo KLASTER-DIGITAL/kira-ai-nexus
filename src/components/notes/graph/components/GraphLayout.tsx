@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   ReactFlow,
   Background,
@@ -9,11 +9,12 @@ import {
   Controls
 } from '@xyflow/react';
 import NoteNode from '../NoteNode';
-import GraphControls from './GraphControls';
 import GraphSearchBar from './GraphSearchBar';
 import GraphFilterPopover from './GraphFilterPopover';
 import GraphToolbar from './GraphToolbar';
+import GraphViewControls from './GraphViewControls';
 import { Spinner } from "@/components/ui/spinner";
+import { LayoutType } from '@/hooks/useGraphSettings';
 
 interface GraphLayoutProps {
   nodes: any[];
@@ -30,6 +31,9 @@ interface GraphLayoutProps {
   toggleIsolatedNodes: () => void;
   isLoading: boolean;
   clearFilters: () => void;
+  layoutType: LayoutType;
+  onChangeLayout: (layout: LayoutType) => void;
+  onReset: () => void;
 }
 
 const GraphLayout: React.FC<GraphLayoutProps> = ({
@@ -46,13 +50,17 @@ const GraphLayout: React.FC<GraphLayoutProps> = ({
   showIsolatedNodes,
   toggleIsolatedNodes,
   isLoading,
-  clearFilters
+  clearFilters,
+  layoutType,
+  onChangeLayout,
+  onReset
 }) => {
   const reactFlowInstance = useReactFlow();
   const nodeTypes = { noteNode: NoteNode };
+  const containerRef = useRef<HTMLDivElement>(null);
   
   return (
-    <div className="w-full h-full relative">
+    <div ref={containerRef} className="w-full h-full relative">
       {isLoading && (
         <div className="absolute inset-0 bg-background/50 z-50 flex items-center justify-center">
           <Spinner size="lg" />
@@ -106,11 +114,11 @@ const GraphLayout: React.FC<GraphLayoutProps> = ({
         </Panel>
         
         <Panel position="bottom-right">
-          <GraphControls
-            onZoomIn={() => reactFlowInstance.zoomIn()}
-            onZoomOut={() => reactFlowInstance.zoomOut()}
-            onFitView={() => reactFlowInstance.fitView()}
-            onReset={() => reactFlowInstance.fitView({ duration: 800 })}
+          <GraphViewControls
+            containerRef={containerRef}
+            selectedLayout={layoutType}
+            onChangeLayout={onChangeLayout}
+            onReset={onReset}
           />
         </Panel>
         
