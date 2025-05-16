@@ -53,16 +53,6 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
-				},
 				kira: {
 					purple: '#8B5CF6',
 					'purple-light': '#A78BFA',
@@ -107,7 +97,17 @@ export default {
 				'fade-in': 'fade-in 0.3s ease-out',
 				'slide-in': 'slide-in 0.4s ease-out',
 				'pulse-slow': 'pulse-slow 3s infinite'
-			}
+			},
+			fontFamily: {
+				sans: ['Inter', 'system-ui', 'sans-serif'],
+			},
+			typography: {
+				DEFAULT: {
+					css: {
+						maxWidth: 'none',
+					},
+				},
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

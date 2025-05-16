@@ -3,12 +3,11 @@ import React from 'react';
 import { Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from './context/auth';
 import { Toaster } from '@/components/ui/toaster';
-import { useToast } from '@/hooks/use-toast';
 
-// Layouts
-import AppLayout from '@/components/layout/AppLayout';
+// Новый основной макет
+import { MainLayout } from '@/components/layouts/MainLayout';
 
-// Pages
+// Страницы
 import {
   HomePage,
   NotesPage,
@@ -31,24 +30,22 @@ import {
 import { ProtectedRoute } from '@/components/features/auth';
 
 function App() {
-  const { toast } = useToast();
-  
   return (
     <>
       <Routes>
-        {/* Public routes */}
+        {/* Публичные маршруты */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/index" element={<Index />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         
-        {/* Protected routes with AppLayout */}
+        {/* Защищенные маршруты с новым макетом */}
         <Route element={
           <ProtectedRoute>
-            <AppLayout />
+            <MainLayout />
           </ProtectedRoute>
         }>
-          {/* Dashboard routes */}
+          {/* Маршруты дашборда */}
           <Route path="/dashboard" element={<Navigate to="/dashboard/user" replace />} />
           <Route path="/dashboard/user" element={<UserDashboardPage />} />
           <Route path="/dashboard/admin" element={
@@ -57,7 +54,7 @@ function App() {
             </ProtectedRoute>
           } />
           
-          {/* Feature pages */}
+          {/* Функциональные страницы */}
           <Route path="/notes" element={<NotesPage />} />
           <Route path="/notes/:id" element={<NotesPage />} />
           <Route path="/notes-graph" element={<NotesGraphPage />} />
@@ -71,6 +68,12 @@ function App() {
               <AISettingsPage />
             </ProtectedRoute>
           } />
+          
+          {/* Добавим маршруты для новых страниц */}
+          <Route path="/activity" element={<UnderConstructionPage title="Активность" />} />
+          <Route path="/notifications" element={<UnderConstructionPage title="Уведомления" />} />
+          <Route path="/settings" element={<UnderConstructionPage title="Настройки" />} />
+          <Route path="/profile" element={<UnderConstructionPage title="Профиль" />} />
         </Route>
         
         {/* Not found */}
@@ -80,5 +83,23 @@ function App() {
     </>
   );
 }
+
+// Временная страница для новых разделов, которые еще в разработке
+function UnderConstructionPage({ title }: { title: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center h-[70vh] text-center">
+      <div className="rounded-full bg-primary/10 p-6 mb-4">
+        <Settings className="h-10 w-10 text-primary" />
+      </div>
+      <h1 className="text-2xl font-semibold mb-2">{title}</h1>
+      <p className="text-muted-foreground max-w-md">
+        Эта страница находится в разработке и скоро будет доступна.
+      </p>
+    </div>
+  );
+}
+
+// Добавим импорт иконки Settings
+import { Settings } from "lucide-react";
 
 export default App;
