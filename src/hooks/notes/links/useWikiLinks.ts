@@ -55,7 +55,7 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
           
           // Create a link if we have a current note
           if (noteId) {
-            // Simply await the void function without trying to check its result
+            // Simply await the void function without treating its return value
             await createWikiLink(cleanTitle);
           }
           
