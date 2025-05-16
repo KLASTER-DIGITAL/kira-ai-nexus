@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { BellIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -13,77 +13,40 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useNotificationsCount } from "@/hooks/notifications/useNotificationsCount";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-
-interface Notification {
-  id: number;
-  title: string;
-  description: string;
-  time: string;
-  unread: boolean;
-}
-
-const getDefaultNotifications = (): Notification[] => [
-  {
-    id: 1,
-    title: "Новая задача назначена",
-    description: "Вам была назначена новая задача.",
-    time: "2 минуты назад",
-    unread: true,
-  },
-  {
-    id: 2,
-    title: "Напоминание о событии",
-    description: "Встреча с командой через 30 минут.",
-    time: "30 минут назад",
-    unread: true,
-  },
-  {
-    id: 3,
-    title: "Обновление заметки",
-    description: "Кто-то прокомментировал вашу заметку.",
-    time: "2 часа назад",
-    unread: false,
-  },
-];
+import { useNotifications } from "@/hooks/notifications/useNotifications";
+import { useNotificationsRealtime } from "@/hooks/notifications/useNotificationsRealtime";
+import { formatDistanceToNow } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 const NotificationMenu = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const { data: notificationsCount = 0, refetch } = useNotificationsCount();
+  const { data: notificationsCount = 0 } = useNotificationsCount();
+  const { 
+    notifications, 
+    isLoading, 
+    markAsRead, 
+    markAllAsRead 
+  } = useNotifications(5); // Получаем последние 5 уведомлений
   
-  useEffect(() => {
-    // В реальном приложении здесь будет запрос к API для получения уведомлений
-    // Пока используем демонстрационные данные
-    const fetchNotifications = async () => {
-      try {
-        // Проверяем авторизацию пользователя
-        const { data: authData, error: authError } = await supabase.auth.getUser();
-        if (authError || !authData.user) {
-          console.error("Ошибка авторизации:", authError || "Пользователь не авторизован");
-          setNotifications([]);
-          return;
-        }
-        
-        // Здесь будет реальный запрос к таблице уведомлений
-        // Пока используем демо-данные
-        setNotifications(getDefaultNotifications().slice(0, notificationsCount));
-      } catch (error) {
-        console.error("Ошибка при загрузке уведомлений:", error);
-        setNotifications([]);
-      }
-    };
-    
-    fetchNotifications();
-  }, [notificationsCount]);
-  
-  const unreadCount = notifications.filter(n => n.unread).length;
+  // Подключаем обработку уведомлений в реальном времени
+  useNotificationsRealtime();
   
   const handleMarkAllAsRead = () => {
-    // В реальном приложении здесь будет запрос к API для обновления статусов уведомлений
-    setNotifications(notifications.map(n => ({ ...n, unread: false })));
-    toast.success("Все уведомления отмечены как прочитанные");
-    refetch(); // Обновляем счетчик уведомлений
+    markAllAsRead.mutate();
+  };
+  
+  const handleNotificationClick = (notificationId: string) => {
+    markAsRead.mutate(notificationId);
+  };
+  
+  const formatTimeAgo = (dateString: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), { 
+        addSuffix: true,
+        locale: ru 
+      });
+    } catch (e) {
+      return "недавно";
+    }
   };
   
   return (
@@ -91,12 +54,12 @@ const NotificationMenu = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <BellIcon className="h-5 w-5" />
-          {unreadCount > 0 && (
+          {notificationsCount > 0 && (
             <Badge 
               variant="destructive" 
               className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
             >
-              {unreadCount}
+              {notificationsCount}
             </Badge>
           )}
         </Button>
@@ -109,34 +72,55 @@ const NotificationMenu = () => {
             size="sm" 
             className="h-auto p-0"
             onClick={handleMarkAllAsRead}
-            disabled={unreadCount === 0}
+            disabled={notificationsCount === 0 || markAllAsRead.isPending}
           >
             Отметить все как прочитанные
           </Button>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {notifications.length === 0 ? (
+        
+        {isLoading ? (
+          <div className="py-4 text-center text-muted-foreground">
+            Загрузка уведомлений...
+          </div>
+        ) : notifications.length === 0 ? (
           <div className="py-4 text-center text-muted-foreground">
             Нет уведомлений
           </div>
         ) : (
           notifications.map((notification) => (
-            <DropdownMenuItem key={notification.id} className="cursor-pointer p-0">
+            <DropdownMenuItem 
+              key={notification.id} 
+              className="cursor-pointer p-0"
+              onClick={() => handleNotificationClick(notification.id)}
+            >
               <div 
                 className={cn(
                   "flex flex-col w-full p-3 gap-1",
-                  notification.unread && "bg-accent/50"
+                  !notification.is_read && "bg-accent/50"
                 )}
               >
                 <div className="flex items-start justify-between">
                   <span className="font-semibold">{notification.title}</span>
-                  <span className="text-xs text-muted-foreground">{notification.time}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatTimeAgo(notification.created_at)}
+                  </span>
                 </div>
-                <span className="text-xs text-muted-foreground">{notification.description}</span>
+                {notification.description && (
+                  <span className="text-xs text-muted-foreground">
+                    {notification.description}
+                  </span>
+                )}
+                {!notification.is_read && (
+                  <span className="ml-auto mt-1">
+                    <Badge variant="secondary" className="text-[10px]">Новое</Badge>
+                  </span>
+                )}
               </div>
             </DropdownMenuItem>
           ))
         )}
+        
         <DropdownMenuSeparator />
         <DropdownMenuItem className="cursor-pointer justify-center font-medium">
           Просмотреть все уведомления

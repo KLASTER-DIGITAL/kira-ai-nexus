@@ -14,10 +14,19 @@ export const useNotificationsCount = () => {
           return 0;
         }
         
-        // В реальном приложении здесь будет запрос к таблице уведомлений
-        // Пока возвращаем случайное число от 0 до 3 для демонстрации
-        // Когда будет готова таблица уведомлений, заменить на реальный запрос
-        return Math.floor(Math.random() * 4);
+        // Получаем количество непрочитанных уведомлений
+        const { count, error } = await supabase
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', authData.user.id)
+          .eq('is_read', false);
+
+        if (error) {
+          console.error("Ошибка при получении количества уведомлений:", error);
+          return 0;
+        }
+
+        return count || 0;
       } catch (error) {
         console.error("Ошибка в useNotificationsCount:", error);
         return 0;

@@ -25,24 +25,26 @@ export const transformNoteData = (rawData: any): Note => {
       const contentObj = rawData.content;
       
       // Извлекаем текст из объекта содержимого
-      const text = contentObj.text || '';
+      const text = contentObj.text || contentObj.content || '';
       
-      // Используем теги из объекта содержимого или запасной вариант - теги на корневом уровне
-      tags = Array.isArray(contentObj.tags) ? contentObj.tags : (rawData.tags || []);
+      // Извлекаем теги из объекта содержимого или из корневого уровня
+      tags = Array.isArray(contentObj.tags) 
+        ? contentObj.tags 
+        : (Array.isArray(rawData.tags) ? rawData.tags : []);
       
       // Извлекаем цвет, если доступен
-      color = contentObj.color || '';
+      color = contentObj.color || contentObj.backgroundColor || '';
       
-      // Мы сохраним текстовое содержимое в свойство note.content
+      // Сохраняем текстовое содержимое в свойство note.content
       content = text;
     } else if (typeof rawData.content === 'string') {
       // Если содержимое является строкой, используем его напрямую
       content = rawData.content;
-      tags = rawData.tags || [];
+      tags = Array.isArray(rawData.tags) ? rawData.tags : [];
     } else {
       // Запасной вариант по умолчанию
       content = '';
-      tags = rawData.tags || [];
+      tags = Array.isArray(rawData.tags) ? rawData.tags : [];
     }
 
     // Создаем правильно структурированный объект Note

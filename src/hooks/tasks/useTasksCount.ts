@@ -19,8 +19,9 @@ export const useTasksCount = () => {
           .from('nodes')
           .select('*', { count: 'exact', head: true })
           .eq('type', 'task')
-          .eq('user_id', authData.user.id);
-
+          .eq('user_id', authData.user.id)
+          .eq('content->completed', false); // Фильтр по незавершенным задачам
+        
         if (error) {
           console.error("Ошибка при получении количества задач:", error);
           return 0;

@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import { toast } from "sonner";
 
 export const useNotesRealtime = () => {
   const queryClient = useQueryClient();
@@ -22,22 +22,36 @@ export const useNotesRealtime = () => {
             filter: `type=eq.note` // Фильтруем только заметки
           },
           (payload) => {
-            console.log('Получено событие реального времени:', payload);
+            console.log('Получено событие реального времени для заметок:', payload);
+            
             // Инвалидируем кэш при любых изменениях данных
             queryClient.invalidateQueries({ queryKey: ['notes'] });
+            
+            // Показываем уведомление в зависимости от типа события
+            if (payload.eventType === 'INSERT') {
+              toast.info('Создана новая заметка', { 
+                description: payload.new.title
+              });
+            } else if (payload.eventType === 'UPDATE') {
+              toast.info('Заметка обновлена', {
+                description: payload.new.title
+              });
+            } else if (payload.eventType === 'DELETE') {
+              toast.info('Заметка удалена');
+            }
           }
         )
         .subscribe((status) => {
-          console.log('Статус подписки на реальное время:', status);
+          console.log('Статус подписки на реальное время для заметок:', status);
         });
       
       // Возвращаем функцию отписки для использования в useEffect
       return () => {
-        console.log('Отписка от канала реального времени');
+        console.log('Отписка от канала реального времени заметок');
         supabase.removeChannel(channel);
       };
     } catch (error) {
-      console.error('Ошибка при настройке подписки реального времени:', error);
+      console.error('Ошибка при настройке подписки реального времени для заметок:', error);
       return () => {}; // Возвращаем пустую функцию в случае ошибки
     }
   };

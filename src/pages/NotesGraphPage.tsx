@@ -29,12 +29,13 @@ const NotesGraphPage: React.FC = () => {
     setupRealtimeSubscription
   } = useNotesListState();
 
+  // Настраиваем слушателя реального времени при монтировании компонента
   useEffect(() => {
     const unsubscribe = setupRealtimeSubscription();
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, []);
+  }, [setupRealtimeSubscription]);
 
   const handleCreateNote = () => {
     console.log("Создаём новую заметку");

@@ -31,18 +31,20 @@ const NotesPage: React.FC = () => {
     activeNote,
     handleNoteSelect,
     updateNote,
-    deleteNote
+    deleteNote,
+    setupRealtimeSubscription
   } = notesState;
   
   // Get note groups if needed
   const noteGroups = useNotesGrouping(notes || [], groupByOption);
 
+  // Настраиваем слушателя реального времени при монтировании компонента
   useEffect(() => {
-    const unsubscribe = notesState.setupRealtimeSubscription();
+    const unsubscribe = setupRealtimeSubscription();
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, []);
+  }, [setupRealtimeSubscription]);
 
   const handleCreateNote = () => {
     console.log("Создаём новую заметку");

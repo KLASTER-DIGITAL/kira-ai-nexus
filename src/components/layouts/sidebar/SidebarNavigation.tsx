@@ -19,7 +19,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({ collapsed 
   const location = useLocation();
   const queryClient = useQueryClient();
   
-  // Получаем количество задач и уведомлений
+  // Получаем количество задач и уведомлений с использованием react-query
   const { data: tasksCount = 0 } = useTasksCount();
   const { data: notificationsCount = 0 } = useNotificationsCount();
   
