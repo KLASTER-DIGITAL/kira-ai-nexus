@@ -31,8 +31,6 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
       
       // If we have a current note ID, create a link between the notes
       if (noteId) {
-        // Just call createWikiLink without checking its return value
-        // since it returns Promise<void>
         await createWikiLink(targetNote.title);
       }
       
@@ -56,7 +54,6 @@ export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) =
           
           // Create a link if we have a current note
           if (noteId) {
-            // Just call createWikiLink without checking its return value
             await createWikiLink(cleanTitle);
           }
           
