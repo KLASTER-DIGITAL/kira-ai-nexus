@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Note, NoteContent } from "@/types/notes";
+import { Note, NoteContent as NoteContentType } from "@/types/notes";
 import { useNoteLinks } from "@/hooks/notes/links/useNoteLinks";
 import NoteMetadataComponent from "./NoteMetadata";
-import NoteContent from "./NoteContent";
+import NoteContentEditor from "./NoteContent";
 import NoteEditorActions from "./NoteEditorActions";
 import { LocalGraphView } from "@/components/graph";
 
@@ -113,7 +112,7 @@ const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({
         />
       </CardHeader>
       <CardContent className="flex-grow">
-        <NoteContent
+        <NoteContentEditor
           content={content}
           onContentChange={handleContentChange}
           noteId={note?.id}

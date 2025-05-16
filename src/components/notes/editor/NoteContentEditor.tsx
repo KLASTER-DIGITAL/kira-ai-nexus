@@ -5,7 +5,7 @@ import BacklinksList from "../BacklinksList";
 import TagManager from "../TagManager";
 import ColorPicker from "../ColorPicker";
 
-interface NoteContentProps {
+interface NoteContentEditorProps {
   content: string;
   onContentChange: (content: string) => void;
   noteId?: string;
@@ -26,7 +26,7 @@ interface NoteContentProps {
   };
 }
 
-const NoteContent: React.FC<NoteContentProps> = ({
+const NoteContentEditor: React.FC<NoteContentEditorProps> = ({
   content,
   onContentChange,
   noteId,
@@ -70,4 +70,4 @@ const NoteContent: React.FC<NoteContentProps> = ({
   );
 };
 
-export default NoteContent;
+export default NoteContentEditor;
