@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Note } from "@/types/notes";
 import { supabase } from "@/integrations/supabase/client";
+import { transformNoteData } from "../utils";
 
 /**
  * Hook for handling navigation related to notes
@@ -17,16 +18,29 @@ export const useNotesNavigation = () => {
       try {
         console.log("Creating new note with data:", data);
         
-        // Insert the new note into the database
+        // Get current user from supabase session
+        const { data: sessionData } = await supabase.auth.getSession();
+        const userId = sessionData.session?.user?.id;
+        
+        if (!userId) {
+          throw new Error("User is not authenticated");
+        }
+        
+        // Prepare note content as JSON to store tags properly
+        const noteContent = {
+          text: data.content || "",
+          tags: data.tags || [],
+          color: data.color || ""
+        };
+        
+        // Insert the new note into the database with user_id
         const { data: newNote, error } = await supabase
           .from("nodes")
           .insert({
             title: data.title,
-            content: data.content || "",
+            content: noteContent,
             type: "note",
-            // Safely handle tags and color by checking if they exist
-            ...(data.tags ? { tags: data.tags } : {}),
-            ...(data.color ? { color: data.color } : {})
+            user_id: userId // Fix: Add the required user_id field
           })
           .select()
           .single();
@@ -41,7 +55,8 @@ export const useNotesNavigation = () => {
         // Navigate to the newly created note
         if (newNote && newNote.id) {
           navigate(`/notes/${newNote.id}`);
-          return newNote as Note;
+          // Fix: Transform the data to match Note type before returning
+          return transformNoteData(newNote) as Note;
         }
         
         return null;

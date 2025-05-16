@@ -37,8 +37,8 @@ export const useNotesListState = () => {
   // Set up mutations
   const mutations = useNotesMutation();
   
-  // Set up navigation
-  const navigation = useNotesNavigation(dialogs.handleEditNote, notes);
+  // Set up navigation - Fix: Remove the extra arguments
+  const navigation = useNotesNavigation();
   
   // Extract all unique tags from notes
   const allTags = extractUniqueTags(notes);
@@ -59,6 +59,11 @@ export const useNotesListState = () => {
       dialogs.setIsDeleteDialogOpen(false);
     }
     return result;
+  };
+
+  // Handle note selection - this function will navigate to the note
+  const handleNoteSelect = (noteId: string) => {
+    navigation.navigateToNote(noteId);
   };
 
   return {
@@ -91,7 +96,7 @@ export const useNotesListState = () => {
     handleDeletePrompt: (noteId: string) => dialogs.handleDeletePrompt(noteId)(notes),
     handleSaveNote,
     handleConfirmDelete,
-    handleNoteSelect: navigation.handleNoteSelect,
+    handleNoteSelect, // Fix: Add the proper handleNoteSelect function
     toggleTag: filters.toggleTag,
     clearFilters: filters.clearFilters,
     setupRealtimeSubscription: realtime.setupRealtimeSubscription
