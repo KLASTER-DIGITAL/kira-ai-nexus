@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useNotesGrouping } from "@/hooks/notes/useNotesGrouping";
 import { useNotesKeyboardShortcuts } from "@/hooks/notes/useNotesKeyboardShortcuts";
@@ -6,7 +5,8 @@ import NotesHeader from "./header/NotesHeader";
 import FilterBar from "./filters/FilterBar";
 import NotesContent from "./content/NotesContent";
 import NotesPagination from "./pagination/NotesPagination";
-import NotesDialogs from "./dialogs/NotesDialogs";
+import { NoteSidebar } from "./sidebar";
+import DeleteNoteDialog from "./DeleteNoteDialog";
 import { useNotesListState } from "@/hooks/notes/useNotesListState";
 
 const NotesList: React.FC = () => {
@@ -15,8 +15,8 @@ const NotesList: React.FC = () => {
     notes,
     isLoading,
     activeNote,
-    isEditorOpen,
-    setIsEditorOpen,
+    isEditorOpen: isDialogOpen,
+    setIsEditorOpen: setIsDialogOpen,
     isDeleteDialogOpen,
     setIsDeleteDialogOpen,
     searchText,
@@ -41,17 +41,25 @@ const NotesList: React.FC = () => {
     handleNoteSelect,
     toggleTag,
     clearFilters,
-    setupRealtimeSubscription
+    setupRealtimeSubscription,
+    updateNote,
+    deleteNote
   } = useNotesListState();
+  
+  // State for sidebar visibility
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   
   // Use our notes grouping hook
   const noteGroups = useNotesGrouping(notes || [], groupByOption);
 
-  // Set up keyboard shortcuts
+  // Setup keyboard shortcuts
   useNotesKeyboardShortcuts({
-    onNewNote: handleNewNote,
-    isEditorOpen,
-    onCloseEditor: () => setIsEditorOpen(false),
+    onNewNote: () => {
+      handleNewNote();
+      setIsSidebarOpen(true);
+    },
+    isEditorOpen: isSidebarOpen,
+    onCloseEditor: () => setIsSidebarOpen(false),
     onNextPage: () => {
       if (currentPage < totalPages) {
         setCurrentPage(prev => prev + 1);
@@ -70,10 +78,22 @@ const NotesList: React.FC = () => {
   useEffect(() => {
     return setupRealtimeSubscription();
   }, []);
+  
+  // Handle note creation
+  const handleCreateNote = () => {
+    handleNewNote();
+    setIsSidebarOpen(true);
+  };
+  
+  // Handle note editing
+  const handleNoteEdit = (note) => {
+    handleEditNote(note);
+    setIsSidebarOpen(true);
+  };
 
   return (
     <div>
-      <NotesHeader onNewNote={handleNewNote} />
+      <NotesHeader onNewNote={handleCreateNote} />
 
       <FilterBar
         searchText={searchText}
@@ -94,9 +114,9 @@ const NotesList: React.FC = () => {
         hasActiveFilters={hasActiveFilters}
         groupByOption={groupByOption}
         noteGroups={noteGroups}
-        onEdit={handleEditNote}
+        onEdit={handleNoteEdit}
         onDelete={handleDeletePrompt}
-        onNewNote={handleNewNote}
+        onNewNote={handleCreateNote}
         onClearFilters={clearFilters}
         totalCount={totalCount}
       />
@@ -109,15 +129,30 @@ const NotesList: React.FC = () => {
         />
       )}
 
-      <NotesDialogs
-        isEditorOpen={isEditorOpen}
-        setIsEditorOpen={setIsEditorOpen}
-        isDeleteDialogOpen={isDeleteDialogOpen}
-        setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+      {/* Note Sidebar */}
+      <NoteSidebar
+        open={isSidebarOpen}
+        onOpenChange={setIsSidebarOpen}
         activeNote={activeNote}
+        isNew={!activeNote}
         onSaveNote={handleSaveNote}
-        onConfirmDelete={handleConfirmDelete}
+        onUpdateNote={updateNote}
+        onDeleteNote={deleteNote}
         onNoteSelect={handleNoteSelect}
+      />
+
+      {/* Keep existing dialogs for compatibility */}
+      <DeleteNoteDialog
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirmDelete={async () => {
+          const success = await handleConfirmDelete();
+          if (success) {
+            setIsDeleteDialogOpen(false);
+          }
+          return success;
+        }}
+        noteTitle={activeNote?.title}
       />
     </div>
   );

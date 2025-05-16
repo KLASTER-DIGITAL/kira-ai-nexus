@@ -7,11 +7,11 @@ import { useNotesGrouping } from "@/hooks/notes/useNotesGrouping";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layouts/PageHeader";
 import NotesContent from "@/components/notes/content/NotesContent";
-import NotesDialogs from "@/components/notes/dialogs/NotesDialogs";
+import { NoteSidebar } from "@/components/notes/sidebar";
+import DeleteNoteDialog from "@/components/notes/DeleteNoteDialog";
 
 const NotesPage: React.FC = () => {
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   // Use the hooks for managing notes state
@@ -46,11 +46,16 @@ const NotesPage: React.FC = () => {
     console.log("Создаём новую заметку");
     try {
       handleNewNote();
-      setIsEditorOpen(true);
+      setIsSidebarOpen(true);
     } catch (error) {
       console.error("Ошибка при создании заметки:", error);
       toast.error("Не удалось создать заметку. Попробуйте еще раз.");
     }
+  };
+  
+  const onEditNote = (note) => {
+    handleEditNote(note);
+    setIsSidebarOpen(true);
   };
 
   const actions = (
@@ -77,22 +82,36 @@ const NotesPage: React.FC = () => {
         hasActiveFilters={hasActiveFilters}
         groupByOption={groupByOption}
         noteGroups={noteGroups}
-        onEdit={handleEditNote}
+        onEdit={onEditNote}
         onDelete={handleDeletePrompt}
         onNewNote={handleCreateNote}
         onClearFilters={clearFilters}
         totalCount={totalCount}
       />
       
-      <NotesDialogs
-        isEditorOpen={isEditorOpen}
-        setIsEditorOpen={setIsEditorOpen}
-        isDeleteDialogOpen={isDeleteDialogOpen}
-        setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+      {/* Note Sidebar Editor */}
+      <NoteSidebar
+        open={isSidebarOpen}
+        onOpenChange={setIsSidebarOpen}
         activeNote={activeNote}
+        isNew={!activeNote}
         onSaveNote={handleSaveNote}
-        onConfirmDelete={handleConfirmDelete}
+        onUpdateNote={notesState.updateNote}
+        onDeleteNote={notesState.deleteNote}
         onNoteSelect={handleNoteSelect}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteNoteDialog
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirmDelete={async () => {
+          const success = await handleConfirmDelete();
+          if (success) {
+            setIsDeleteDialogOpen(false);
+          }
+        }}
+        noteTitle={activeNote?.title}
       />
     </div>
   );

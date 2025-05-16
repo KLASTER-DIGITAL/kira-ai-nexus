@@ -10,9 +10,11 @@ interface NotesDialogsProps {
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (open: boolean) => void;
   activeNote?: Note;
-  onSaveNote: (noteData: { title: string; content: string; tags: string[] }) => void;
-  onConfirmDelete: () => void;
+  onSaveNote: (noteData: { title: string; content: string; tags: string[] }) => Promise<boolean>;
+  onConfirmDelete: () => Promise<boolean>;
   onNoteSelect: (noteId: string) => void;
+  onUpdateNote: (note: Note) => Promise<void>;
+  onDeleteNote: (noteId: string) => Promise<void>;
 }
 
 const NotesDialogs: React.FC<NotesDialogsProps> = ({
@@ -24,6 +26,8 @@ const NotesDialogs: React.FC<NotesDialogsProps> = ({
   onSaveNote,
   onConfirmDelete,
   onNoteSelect,
+  onUpdateNote,
+  onDeleteNote
 }) => {
   return (
     <>
@@ -34,13 +38,21 @@ const NotesDialogs: React.FC<NotesDialogsProps> = ({
         activeNote={activeNote}
         onSaveNote={onSaveNote}
         onNoteSelect={onNoteSelect}
+        onUpdateNote={onUpdateNote}
+        onDeleteNote={onDeleteNote}
       />
 
       {/* Delete Confirmation Dialog */}
       <DeleteNoteDialog
         isOpen={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        onConfirmDelete={onConfirmDelete}
+        onConfirmDelete={async () => {
+          const success = await onConfirmDelete();
+          if (success) {
+            setIsDeleteDialogOpen(false);
+          }
+          return success;
+        }}
         noteTitle={activeNote?.title}
       />
     </>

@@ -37,7 +37,7 @@ export const useNotesListState = () => {
   // Set up mutations
   const mutations = useNotesMutation();
   
-  // Set up navigation - Fix: Remove the extra arguments
+  // Set up navigation
   const navigation = useNotesNavigation();
   
   // Extract all unique tags from notes
@@ -46,24 +46,47 @@ export const useNotesListState = () => {
   // Handle saving notes
   const handleSaveNote = async (noteData: { title: string; content: string; tags: string[] }) => {
     const result = await mutations.handleSaveNote(noteData, dialogs.activeNote);
-    if (result) {
-      dialogs.setIsEditorOpen(false);
-    }
     return result;
   };
 
   // Handle confirming deletion
   const handleConfirmDelete = async () => {
     const result = await mutations.handleConfirmDelete(dialogs.activeNote);
-    if (result) {
-      dialogs.setIsDeleteDialogOpen(false);
-    }
     return result;
   };
 
   // Handle note selection - this function will navigate to the note
   const handleNoteSelect = (noteId: string) => {
     navigation.navigateToNote(noteId);
+  };
+
+  // Direct access to mutation functions for component usage
+  const updateNote = async (note: Note) => {
+    if (!note?.id) return;
+    try {
+      await mutations.updateNote({
+        noteId: note.id,
+        noteData: {
+          title: note.title,
+          content: typeof note.content === 'string' ? note.content : note.content?.text || '',
+          tags: note.tags || []
+        }
+      });
+      return true;
+    } catch (error) {
+      console.error('Error updating note:', error);
+      return false;
+    }
+  };
+  
+  const deleteNote = async (noteId: string) => {
+    try {
+      await mutations.deleteNote(noteId);
+      return true;
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      return false;
+    }
   };
 
   return {
@@ -96,9 +119,13 @@ export const useNotesListState = () => {
     handleDeletePrompt: (noteId: string) => dialogs.handleDeletePrompt(noteId)(notes),
     handleSaveNote,
     handleConfirmDelete,
-    handleNoteSelect, // Fix: Add the proper handleNoteSelect function
+    handleNoteSelect,
     toggleTag: filters.toggleTag,
     clearFilters: filters.clearFilters,
-    setupRealtimeSubscription: realtime.setupRealtimeSubscription
+    setupRealtimeSubscription: realtime.setupRealtimeSubscription,
+    
+    // Direct mutation functions
+    updateNote,
+    deleteNote
   };
 };

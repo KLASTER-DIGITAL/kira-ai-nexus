@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Note } from "@/types/notes";
@@ -14,7 +15,7 @@ interface NoteEditorContainerProps {
   isNew?: boolean;
   onCancel?: () => void;
   onNoteSelect?: (noteId: string) => void;
-  onSave: (noteData: { title: string; content: string; tags: string[] }) => void;
+  onSave: (noteData: { title: string; content: string; tags: string[] }) => Promise<boolean>;
 }
 
 const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({ 
@@ -22,13 +23,16 @@ const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({
   onSave, 
   onCancel, 
   isNew = false,
-  onNoteSelect
+  onNoteSelect,
+  onUpdateNote,
+  onDeleteNote
 }) => {
   const [title, setTitle] = useState(note?.title || "");
   const [content, setContent] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [color, setColor] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   
   const { links } = useNoteLinks(note?.id);
 
@@ -78,20 +82,24 @@ const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({
 
   const handleSave = async () => {
     if (!title.trim()) {
-      return;
+      return false;
     }
     
     try {
       setIsSaving(true);
       console.log("Сохраняем заметку:", { title, content, tags });
       
-      await onSave({
+      const success = await onSave({
         title,
         content, // Передаем текст контента
         tags     // Теги передаются отдельно
       });
       
-      return true;
+      if (success) {
+        setLastSavedAt(new Date());
+      }
+      
+      return success;
     } catch (error) {
       console.error("Ошибка при сохранении заметки:", error);
       return false;
@@ -109,6 +117,7 @@ const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({
           color={color}
           onColorChange={handleColorChange}
           isSaving={isSaving}
+          lastSavedAt={lastSavedAt}
         />
       </CardHeader>
       <CardContent className="flex-grow">

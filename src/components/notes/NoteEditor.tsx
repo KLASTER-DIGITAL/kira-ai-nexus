@@ -2,7 +2,6 @@
 import React from "react";
 import { Note } from "@/types/notes";
 import NoteEditorContainer from "./editor/NoteEditorContainer";
-import { toast } from "sonner";
 
 interface NoteEditorProps {
   note?: Note;
@@ -11,7 +10,7 @@ interface NoteEditorProps {
   isNew?: boolean;
   onCancel?: () => void;
   onNoteSelect?: (noteId: string) => void;
-  onSave: (noteData: { title: string; content: string; tags: string[] }) => void;
+  onSave: (noteData: { title: string; content: string; tags: string[] }) => Promise<boolean>;
 }
 
 const NoteEditor: React.FC<NoteEditorProps> = ({ 
@@ -23,23 +22,10 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
   onUpdateNote,
   onDeleteNote
 }) => {
-  // Wrap onSave with toast notifications
-  const handleSave = async (noteData: { title: string; content: string; tags: string[] }) => {
-    try {
-      await onSave(noteData);
-      toast.success(isNew ? "Заметка создана" : "Заметка сохранена");
-      return true;
-    } catch (error) {
-      console.error("Ошибка при сохранении заметки:", error);
-      toast.error("Не удалось сохранить заметку");
-      return false;
-    }
-  };
-
   return (
     <NoteEditorContainer
       note={note}
-      onSave={handleSave}
+      onSave={onSave}
       onCancel={onCancel}
       isNew={isNew}
       onNoteSelect={onNoteSelect}

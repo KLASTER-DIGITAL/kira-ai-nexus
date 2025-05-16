@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { format } from "date-fns";
+import ColorPicker from "@/components/notes/ColorPicker";
 
 interface NoteMetadataProps {
   title: string;
@@ -21,22 +21,30 @@ const NoteMetadata: React.FC<NoteMetadataProps> = ({
   lastSavedAt,
 }) => {
   return (
-    <div className="flex justify-between items-center">
-      <Input
-        value={title}
-        onChange={(e) => onTitleChange(e.target.value)}
-        placeholder="Заголовок заметки"
-        className="font-medium text-lg"
-        autoFocus
-      />
-      <div className="text-sm text-muted-foreground ml-2">
-        {isSaving ? (
-          <span className="animate-pulse">Сохраняется...</span>
-        ) : lastSavedAt ? (
-          <span>
-            Сохранено: {lastSavedAt.toLocaleTimeString()}
-          </span>
-        ) : null}
+    <div className="flex flex-col gap-2">
+      <div className="flex justify-between items-center">
+        <Input
+          value={title}
+          onChange={(e) => onTitleChange(e.target.value)}
+          placeholder="Заголовок заметки"
+          className="font-medium text-lg"
+          autoFocus
+        />
+      </div>
+      
+      <div className="flex justify-between items-center">
+        <div className="flex gap-2 items-center">
+          <ColorPicker selectedColor={color} onColorChange={onColorChange} />
+        </div>
+        <div className="text-xs text-muted-foreground">
+          {isSaving ? (
+            <span className="animate-pulse">Сохраняется...</span>
+          ) : lastSavedAt ? (
+            <span>
+              Сохранено: {lastSavedAt.toLocaleTimeString()}
+            </span>
+          ) : null}
+        </div>
       </div>
     </div>
   );

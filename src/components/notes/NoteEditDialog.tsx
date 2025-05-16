@@ -13,8 +13,10 @@ interface NoteEditDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   activeNote?: Note;
-  onSaveNote: (noteData: { title: string; content: string; tags: string[] }) => void;
+  onSaveNote: (noteData: { title: string; content: string; tags: string[] }) => Promise<boolean>;
   onNoteSelect?: (noteId: string) => void;
+  onUpdateNote: (note: Note) => Promise<void>;
+  onDeleteNote: (noteId: string) => Promise<void>;
 }
 
 const NoteEditDialog: React.FC<NoteEditDialogProps> = ({
@@ -23,18 +25,9 @@ const NoteEditDialog: React.FC<NoteEditDialogProps> = ({
   activeNote,
   onSaveNote,
   onNoteSelect,
+  onUpdateNote,
+  onDeleteNote
 }) => {
-  // These are placeholder implementations for required props
-  const handleUpdateNote = async (note: Note) => {
-    console.log("Update note:", note);
-    return Promise.resolve();
-  };
-
-  const handleDeleteNote = async (noteId: string) => {
-    console.log("Delete note:", noteId);
-    return Promise.resolve();
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
@@ -45,12 +38,18 @@ const NoteEditDialog: React.FC<NoteEditDialogProps> = ({
         </DialogHeader>
         <NoteEditor
           note={activeNote}
-          onSave={onSaveNote}
+          onSave={async (noteData) => {
+            const result = await onSaveNote(noteData);
+            if (result) {
+              onOpenChange(false);
+            }
+            return result;
+          }}
           onCancel={() => onOpenChange(false)}
           isNew={!activeNote}
           onNoteSelect={onNoteSelect}
-          onUpdateNote={handleUpdateNote}
-          onDeleteNote={handleDeleteNote}
+          onUpdateNote={onUpdateNote}
+          onDeleteNote={onDeleteNote}
         />
       </DialogContent>
     </Dialog>
