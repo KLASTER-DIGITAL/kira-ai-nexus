@@ -9,11 +9,12 @@ import {
   Settings,
   Users,
 } from "lucide-react";
+import { ReactNode } from "react";
 
 type NavItem = {
   title: string;
   href: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   role?: "user" | "superadmin" | "all";
   badge?: string | number;
   submenu?: NavItem[];
