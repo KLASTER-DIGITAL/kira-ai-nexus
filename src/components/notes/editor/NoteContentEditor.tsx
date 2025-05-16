@@ -1,44 +1,40 @@
+
 import React from 'react';
+import { Card } from '@/components/ui/card';
 import { LinkData } from '@/hooks/notes/links/types';
 
 interface NoteContentEditorProps {
   content: string;
-  onContentChange: (value: string) => void;
+  onContentChange: (content: string) => void;
   noteId?: string;
-  onNoteSelect?: (noteId: string) => void;
   tags: string[];
   onTagsChange: (tags: string[]) => void;
   color: string;
   onColorChange: (color: string) => void;
-  links?: LinkData;
+  links?: LinkData[];
+  onNoteSelect?: (noteId: string) => void;
 }
 
 const NoteContentEditor: React.FC<NoteContentEditorProps> = ({
   content,
   onContentChange,
   noteId,
-  onNoteSelect,
   tags,
   onTagsChange,
   color,
   onColorChange,
   links,
+  onNoteSelect
 }) => {
-  // Simple editor for now, can be enhanced with TipTap or other rich editors
   return (
-    <div className="flex flex-col h-full">
+    <Card className="w-full h-full bg-background p-4 min-h-[300px] border-0">
       <textarea
-        className="w-full h-full resize-none border rounded p-2"
+        className="w-full h-full min-h-[280px] bg-transparent border-0 outline-none resize-none"
         value={content}
         onChange={(e) => onContentChange(e.target.value)}
         placeholder="Введите текст заметки..."
       />
-      
-      {/* Tags will go here */}
-      <div className="mt-2">
-        {/* Tag editing UI */}
-      </div>
-    </div>
+    </Card>
   );
 };
 

@@ -1,19 +1,43 @@
 
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useMemo } from 'react';
 import { Node, Edge } from '@xyflow/react';
 import { Note } from '@/types/notes';
+import { LinksData } from '@/components/notes/graph/types';
+import { supabase } from '@/integrations/supabase/client';
 
-// Utility function for layout
-const graphLayout = (nodes: Node[], edges: Edge[]) => {
-  // Simple layout function - in a real app, you might use a more sophisticated algorithm
+// Improved layout function with better positioning for large graphs
+const calculateOptimalLayout = (nodes: Node[], edges: Edge[]) => {
+  // Simple force-directed layout algorithm
   const nodeMap = new Map();
-  nodes.forEach((node, index) => {
-    const position = {
-      x: 100 + (index % 5) * 200,
-      y: 100 + Math.floor(index / 5) * 150
-    };
-    nodeMap.set(node.id, { ...node, position });
-  });
+  const nodeRadius = 100;
+  const centerX = 0;
+  const centerY = 0;
+  
+  // For large graphs, use a radial layout
+  if (nodes.length > 50) {
+    const angleStep = (2 * Math.PI) / nodes.length;
+    nodes.forEach((node, index) => {
+      const angle = index * angleStep;
+      const radius = Math.sqrt(nodes.length) * nodeRadius;
+      const position = {
+        x: centerX + radius * Math.cos(angle),
+        y: centerY + radius * Math.sin(angle)
+      };
+      nodeMap.set(node.id, { ...node, position });
+    });
+  } else {
+    // For smaller graphs, use a grid layout
+    const gridSize = Math.ceil(Math.sqrt(nodes.length));
+    nodes.forEach((node, index) => {
+      const row = Math.floor(index / gridSize);
+      const col = index % gridSize;
+      const position = {
+        x: centerX - ((gridSize - 1) * nodeRadius) / 2 + col * nodeRadius,
+        y: centerY - ((gridSize - 1) * nodeRadius) / 2 + row * nodeRadius
+      };
+      nodeMap.set(node.id, { ...node, position });
+    });
+  }
   
   return { 
     nodes: Array.from(nodeMap.values()),
@@ -21,98 +45,161 @@ const graphLayout = (nodes: Node[], edges: Edge[]) => {
   };
 };
 
-export const useGraphData = (
-  notesData: Note[],
-  linksData: Edge[],
-  searchQuery: string,
-  selectedTags: string[]
-) => {
-  const [nodes, setNodes] = useState<Node[]>([]);
-  const [edges, setEdges] = useState<Edge[]>([]);
-  const [isLayouting, setIsLayouting] = useState(false);
-
-  // Set up the flow data
-  const setupFlowData = useCallback((notes: Note[], links: Edge[]) => {
-    // Create nodes from notes
-    const noteNodes: Node[] = notes.map((note) => {
-      // Extract tags for filtering
-      const tags = note.tags || [];
-      
-      // Apply tag filtering if any tags are selected
-      if (selectedTags.length > 0 && !tags.some(tag => selectedTags.includes(tag))) {
-        return null; // Skip this note if it doesn't have any of the selected tags
+// Chunking function for processing large datasets in batches
+const processInChunks = <T,>(items: T[], chunkSize: number, processor: (chunk: T[]) => void): Promise<void> => {
+  return new Promise((resolve) => {
+    const chunks = Math.ceil(items.length / chunkSize);
+    let processed = 0;
+    
+    const processNextChunk = () => {
+      if (processed >= chunks) {
+        resolve();
+        return;
       }
       
+      const start = processed * chunkSize;
+      const end = Math.min(start + chunkSize, items.length);
+      const chunk = items.slice(start, end);
+      
+      processor(chunk);
+      processed++;
+      
+      setTimeout(processNextChunk, 0); // Allow UI to update between chunks
+    };
+    
+    processNextChunk();
+  });
+};
+
+export const useGraphData = () => {
+  // Process and filter graph data
+  const applyLayout = useCallback((
+    notesData: Note[],
+    linksData: LinksData[],
+    searchQuery: string,
+    selectedTags: string[],
+    showIsolatedNodes: boolean
+  ) => {
+    // Filter notes based on search and tags
+    const filteredNotes = notesData.filter(note => {
       // Apply search filtering
       if (searchQuery) {
         const noteTitle = note.title.toLowerCase();
-        const noteContent = getNoteSearchContent(note);
+        const noteContent = typeof note.content === 'string' 
+          ? note.content.toLowerCase() 
+          : (note.content?.text || '').toLowerCase();
         const searchLower = searchQuery.toLowerCase();
         
         // Skip if neither title nor content match the search
-        if (!noteTitle.includes(searchLower) && !noteContent.toLowerCase().includes(searchLower)) {
-          return null;
+        if (!noteTitle.includes(searchLower) && !noteContent.includes(searchLower)) {
+          return false;
         }
       }
       
-      return {
-        id: note.id,
-        type: 'noteNode',
-        position: { x: 0, y: 0 }, // Will be calculated by layout algorithm
-        data: { note }
-      };
-    }).filter(Boolean) as Node[];
+      // Apply tag filtering
+      if (selectedTags.length > 0) {
+        const noteTags = Array.isArray(note.tags) ? note.tags : [];
+        if (!noteTags.some(tag => selectedTags.includes(tag))) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+
+    // Create nodes
+    const noteNodes: Node[] = filteredNotes.map((note) => ({
+      id: note.id,
+      type: 'noteNode',
+      position: { x: 0, y: 0 }, // Will be calculated by layout algorithm
+      data: { note }
+    }));
     
-    // Filter edges to only include visible nodes
-    const visibleNodeIds = noteNodes.map(node => node.id);
-    const visibleEdges = links.filter(
-      edge => visibleNodeIds.includes(edge.source) && visibleNodeIds.includes(edge.target)
-    );
+    // For large graphs, we need to be efficient with edge creation
+    const visibleNodeIds = new Set(noteNodes.map(node => node.id));
+    
+    // Filter links to only include visible nodes
+    const visibleEdges = linksData.filter(
+      edge => visibleNodeIds.has(edge.sourceId) && visibleNodeIds.has(edge.targetId)
+    ).map(link => ({
+      id: `e-${link.sourceId}-${link.targetId}`,
+      source: link.sourceId,
+      target: link.targetId,
+      animated: false,
+      style: { stroke: "#9d5cff", strokeWidth: 2 },
+    }));
     
     // Apply layout algorithm
-    const { nodes: layoutedNodes, edges: layoutedEdges } = graphLayout(noteNodes, visibleEdges);
+    const { nodes: layoutedNodes, edges: layoutedEdges } = calculateOptimalLayout(noteNodes, visibleEdges);
     
-    setNodes(layoutedNodes);
-    setEdges(layoutedEdges);
-  }, [selectedTags, searchQuery]);
+    return {
+      nodes: layoutedNodes,
+      edges: layoutedEdges
+    };
+  }, []);
 
-  // Update nodes and edges when data changes
-  useEffect(() => {
-    if (notesData && linksData) {
-      setIsLayouting(true);
-      setupFlowData(notesData, linksData);
-      setIsLayouting(false);
+  // Process graph data specifically for a single node and its connections
+  const processGraphData = useCallback(async (
+    nodeId: string,
+    searchQuery: string,
+    selectedTags: string[],
+    showIsolatedNodes: boolean
+  ) => {
+    try {
+      // Fetch the central node
+      const { data: nodeData, error: nodeError } = await supabase
+        .from('nodes')
+        .select('*')
+        .eq('id', nodeId)
+        .single();
+        
+      if (nodeError) throw nodeError;
+      
+      // Get connected nodes (1-2 levels deep is usually enough for local view)
+      const { data: linkedNodeIds, error: linkError } = await supabase
+        .rpc('get_connected_nodes', { node_id: nodeId, depth: 1 });
+        
+      if (linkError) throw linkError;
+      
+      // Efficiently fetch all related nodes
+      const { data: relatedNodes, error: relatedError } = await supabase
+        .from('nodes')
+        .select('*')
+        .in('id', linkedNodeIds);
+        
+      if (relatedError) throw relatedError;
+      
+      // Get links between these nodes
+      const { data: links, error: linksError } = await supabase
+        .from('links')
+        .select('*')
+        .or(`source_id.in.(${linkedNodeIds.join(',')}),target_id.in.(${linkedNodeIds.join(',')})`);
+        
+      if (linksError) throw linksError;
+      
+      // Format nodes and links for graph layout
+      const formattedLinks = links.map(link => ({
+        sourceId: link.source_id,
+        targetId: link.target_id,
+        id: link.id
+      }));
+      
+      // Apply filters and layout
+      return applyLayout(
+        [nodeData, ...relatedNodes],
+        formattedLinks,
+        searchQuery,
+        selectedTags,
+        showIsolatedNodes
+      );
+    } catch (error) {
+      console.error("Error fetching local graph data:", error);
+      return { nodes: [], edges: [] };
     }
-  }, [notesData, linksData, setupFlowData]);
-
-  // Apply layout
-  const applyLayout = useCallback(() => {
-    if (notesData && linksData) {
-      setIsLayouting(true);
-      setupFlowData(notesData, linksData);
-      setIsLayouting(false);
-    }
-  }, [notesData, linksData, setupFlowData]);
+  }, [applyLayout]);
 
   return {
-    nodes,
-    edges,
-    isLayouting,
-    setNodes,
-    setEdges,
-    applyLayout
+    applyLayout,
+    processGraphData
   };
-};
-
-// Utility function for search
-const getNoteSearchContent = (note: Note): string => {
-  let textContent = '';
-  
-  if (typeof note.content === 'object') {
-    textContent = note.content.text || '';
-  } else if (typeof note.content === 'string') {
-    textContent = note.content;
-  }
-  
-  return textContent;
 };

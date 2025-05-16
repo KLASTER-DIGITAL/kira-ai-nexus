@@ -1,6 +1,8 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { X } from "lucide-react";
 
 interface GraphToolbarProps {
   searchTerm: string;
@@ -10,6 +12,8 @@ interface GraphToolbarProps {
   allTags: string[];
   showIsolatedNodes: boolean;
   setShowIsolatedNodes: (value: boolean) => void;
+  hasFilters: boolean;
+  clearFilters: () => void;
 }
 
 const GraphToolbar: React.FC<GraphToolbarProps> = ({
@@ -20,31 +24,40 @@ const GraphToolbar: React.FC<GraphToolbarProps> = ({
   allTags,
   showIsolatedNodes,
   setShowIsolatedNodes,
+  hasFilters,
+  clearFilters
 }) => {
   return (
-    <div className="flex gap-2">
-      <Button 
-        variant="outline" 
-        size="sm"
-        onClick={() => setSearchTerm('')}
-        disabled={!searchTerm}
-      >
-        Очистить поиск
-      </Button>
-      
-      <Button 
-        variant="outline" 
-        size="sm"
-        onClick={() => {
-          const tags = [...selectedTags];
-          tags.forEach(tag => toggleTag(tag));
-          setSearchTerm('');
-        }}
-        disabled={selectedTags.length === 0 && !searchTerm}
-      >
-        Сбросить фильтры
-      </Button>
-    </div>
+    <Card className="w-auto shadow-md">
+      <CardContent className="p-2 flex items-center gap-2">
+        {selectedTags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {selectedTags.map((tag) => (
+              <Button
+                key={tag}
+                variant="secondary"
+                size="sm"
+                className="h-7 px-2 py-1 text-xs"
+                onClick={() => toggleTag(tag)}
+              >
+                {tag} <X className="ml-1 h-3 w-3" />
+              </Button>
+            ))}
+          </div>
+        )}
+
+        {hasFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7"
+            onClick={clearFilters}
+          >
+            Clear filters
+          </Button>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
