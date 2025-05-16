@@ -9,8 +9,8 @@ const createNote = async (noteData: { title: string; content: string; tags: stri
     console.log("Creating note with data:", noteData);
     
     // Проверяем авторизацию пользователя
-    const { data: user } = await supabase.auth.getUser();
-    if (!user?.user) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       console.error("User not authenticated");
       throw new Error("User not authenticated");
     }
@@ -25,7 +25,7 @@ const createNote = async (noteData: { title: string; content: string; tags: stri
           tags: noteData.tags,
           color: noteData.color || ''
         },
-        user_id: user.user.id,
+        user_id: user.id,
         type: 'note'
       })
       .select();
@@ -52,8 +52,8 @@ const updateNote = async (noteData: { noteId: string; noteData: { title: string;
     console.log("Updating note with data:", noteData);
     
     // Проверяем авторизацию пользователя
-    const { data: user } = await supabase.auth.getUser();
-    if (!user?.user) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       console.error("User not authenticated");
       throw new Error("User not authenticated");
     }
@@ -71,6 +71,7 @@ const updateNote = async (noteData: { noteId: string; noteData: { title: string;
         updated_at: new Date().toISOString()
       })
       .eq('id', noteData.noteId)
+      .eq('user_id', user.id)  // Добавлена проверка user_id для усиления безопасности
       .select();
 
     if (error) {
@@ -96,8 +97,8 @@ const deleteNote = async (noteId: string) => {
     console.log("Deleting note:", noteId);
     
     // Проверяем авторизацию пользователя
-    const { data: user } = await supabase.auth.getUser();
-    if (!user?.user) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       console.error("User not authenticated");
       throw new Error("User not authenticated");
     }
@@ -105,7 +106,8 @@ const deleteNote = async (noteId: string) => {
     const { error } = await supabase
       .from('nodes')
       .delete()
-      .eq('id', noteId);
+      .eq('id', noteId)
+      .eq('user_id', user.id);  // Добавлена проверка user_id для усиления безопасности
 
     if (error) {
       console.error('Error deleting note:', error);

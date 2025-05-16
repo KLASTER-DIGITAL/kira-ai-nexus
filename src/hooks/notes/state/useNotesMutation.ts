@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Note, NoteContent } from "@/types/notes";
 import { useNotesMutations } from "@/hooks/notes/useNotesMutations";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Hook for managing note mutations (create, update, delete)
@@ -17,6 +18,14 @@ export const useNotesMutation = () => {
   ) => {
     console.log("Сохраняем заметку:", noteData);
     try {
+      // Проверяем авторизацию пользователя перед сохранением
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData.user) {
+        console.error("Ошибка авторизации:", authError || "Пользователь не авторизован");
+        toast.error("Требуется авторизация для сохранения заметки");
+        return false;
+      }
+      
       // Убедимся, что цвет сохраняется правильно
       const colorToSave = noteData.color || '';
       
@@ -57,6 +66,10 @@ export const useNotesMutation = () => {
         // Если у нас есть более конкретное сообщение, покажем его
         if (error.message.includes("User not authenticated")) {
           errorMessage = "Требуется авторизация для сохранения заметки";
+        } else if (error.message.includes("JWT")) {
+          errorMessage = "Ошибка аутентификации. Пожалуйста, войдите снова";
+        } else if (error.message.includes("violates row-level security")) {
+          errorMessage = "Нет прав для выполнения этого действия";
         }
       }
       
@@ -69,12 +82,28 @@ export const useNotesMutation = () => {
   const handleConfirmDelete = async (activeNote?: Note) => {
     if (activeNote) {
       try {
+        // Проверяем авторизацию пользователя перед удалением
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError || !authData.user) {
+          console.error("Ошибка авторизации:", authError || "Пользователь не авторизован");
+          toast.error("Требуется авторизация для удаления заметки");
+          return false;
+        }
+        
         await deleteNote(activeNote.id);
         toast.success("Заметка удалена");
         return true;
       } catch (error) {
         console.error("Ошибка при удалении заметки:", error);
-        toast.error("Не удалось удалить заметку");
+        let errorMessage = "Не удалось удалить заметку";
+        
+        if (error instanceof Error) {
+          if (error.message.includes("User not authenticated")) {
+            errorMessage = "Требуется авторизация для удаления заметки";
+          }
+        }
+        
+        toast.error(errorMessage);
         return false;
       }
     }

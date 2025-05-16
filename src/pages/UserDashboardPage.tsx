@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth";
 import { 
   NotepadText, 
@@ -7,7 +7,7 @@ import {
   CalendarIcon, 
   Clock, 
   BarChart3, 
-  Star, 
+  Star,
   Plus,
   ArrowRight,
   Bell,
@@ -25,86 +25,282 @@ import { Badge } from "@/components/ui/badge";
 import StatCard from "@/components/dashboard/cards/StatCard";
 import ChartCard from "@/components/dashboard/cards/ChartCard";
 import OverviewCard from "@/components/dashboard/cards/OverviewCard";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-const activityData = [
-  { name: "Пн", value: 4 },
-  { name: "Вт", value: 6 },
-  { name: "Ср", value: 8 },
-  { name: "Чт", value: 5 },
-  { name: "Пт", value: 10 },
-  { name: "Сб", value: 3 },
-  { name: "Вс", value: 2 },
-];
+// Типы данных для статистики
+interface UserStats {
+  notesCount: number;
+  tasksCount: number;
+  eventsCount: number;
+  workHours: number;
+  newNotesCount: number;
+  activeTasks: number;
+}
 
-const notesData = [
-  { name: "Неделя 1", value: 5 },
-  { name: "Неделя 2", value: 8 },
-  { name: "Неделя 3", value: 12 },
-  { name: "Неделя 4", value: 10 },
-];
+// Типы для заметок и недавних элементов
+interface NoteItem {
+  id: string;
+  title: string;
+  updated_at: string;
+}
 
-// Данные карточек
-const quickLinks = [
-  {
-    title: "Заметки",
-    icon: NotepadText,
-    href: "/notes",
-    color: "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
-  },
-  {
-    title: "Задачи",
-    icon: CheckSquare,
-    href: "/tasks",
-    color: "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-  },
-  {
-    title: "Календарь",
-    icon: Calendar,
-    href: "/calendar",
-    color: "bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300"
-  },
-  {
-    title: "Чат",
-    icon: MessageSquare,
-    href: "/chat",
-    color: "bg-pink-100 dark:bg-pink-900 text-pink-700 dark:text-pink-300"
-  },
-  {
-    title: "Граф связей",
-    icon: Network,
-    href: "/graph",
-    color: "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300"
-  }
-];
+interface ActivityItem {
+  type: 'note' | 'task' | 'event';
+  title: string;
+  timestamp: string;
+}
 
 const UserDashboardPage: React.FC = () => {
   const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState<UserStats>({
+    notesCount: 0,
+    tasksCount: 0,
+    eventsCount: 0,
+    workHours: 0,
+    newNotesCount: 0,
+    activeTasks: 0
+  });
+  const [recentNotes, setRecentNotes] = useState<NoteItem[]>([]);
+  const [favorites, setFavorites] = useState<NoteItem[]>([]);
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [activityData, setActivityData] = useState<Array<{name: string, value: number}>>([]);
+  const [notesData, setNotesData] = useState<Array<{name: string, value: number}>>([]);
+
+  // Данные карточек
+  const quickLinks = [
+    {
+      title: "Заметки",
+      icon: NotepadText,
+      href: "/notes",
+      color: "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
+    },
+    {
+      title: "Задачи",
+      icon: CheckSquare,
+      href: "/tasks",
+      color: "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+    },
+    {
+      title: "Календарь",
+      icon: Calendar,
+      href: "/calendar",
+      color: "bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300"
+    },
+    {
+      title: "Чат",
+      icon: MessageSquare,
+      href: "/chat",
+      color: "bg-pink-100 dark:bg-pink-900 text-pink-700 dark:text-pink-300"
+    },
+    {
+      title: "Граф связей",
+      icon: Network,
+      href: "/graph",
+      color: "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300"
+    }
+  ];
+
+  // Загрузка данных при монтировании компонента
+  useEffect(() => {
+    const fetchUserData = async () => {
+      setIsLoading(true);
+      try {
+        if (!profile?.id) return;
+        
+        // Получение количества заметок
+        const { data: notesData, error: notesError } = await supabase
+          .from('nodes')
+          .select('id, created_at')
+          .eq('user_id', profile.id)
+          .eq('type', 'note');
+          
+        if (notesError) throw notesError;
+        
+        // Получение количества задач
+        const { data: tasksData, error: tasksError } = await supabase
+          .from('nodes')
+          .select('id')
+          .eq('user_id', profile.id)
+          .eq('type', 'task');
+          
+        if (tasksError) throw tasksError;
+        
+        // Получение количества событий
+        const { data: eventsData, error: eventsError } = await supabase
+          .from('nodes')
+          .select('id')
+          .eq('user_id', profile.id)
+          .eq('type', 'event');
+          
+        if (eventsError) throw eventsError;
+        
+        // Получение последних заметок
+        const { data: recentNotesData, error: recentNotesError } = await supabase
+          .from('nodes')
+          .select('id, title, updated_at')
+          .eq('user_id', profile.id)
+          .eq('type', 'note')
+          .order('updated_at', { ascending: false })
+          .limit(3);
+          
+        if (recentNotesError) throw recentNotesError;
+        
+        // Подсчет новых заметок за последнюю неделю
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        
+        const newNotesCount = notesData?.filter(note => 
+          new Date(note.created_at) >= oneWeekAgo
+        ).length || 0;
+        
+        // Генерация данных активности на основе имеющихся данных
+        const generatedActivityData = generateActivityData(notesData || [], tasksData || []);
+        const generatedNotesData = generateNotesWeeklyData(notesData || []);
+        
+        setStats({
+          notesCount: notesData?.length || 0,
+          tasksCount: tasksData?.length || 0,
+          eventsCount: eventsData?.length || 0,
+          workHours: calculateTotalWorkHours(),
+          newNotesCount,
+          activeTasks: tasksData?.length || 0
+        });
+        
+        setRecentNotes(recentNotesData || []);
+        setActivityData(generatedActivityData);
+        setNotesData(generatedNotesData);
+        
+        // Генерация записей активности на основе последних действий
+        const activitiesList = generateActivities(recentNotesData || []);
+        setActivities(activitiesList);
+        
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        toast.error('Не удалось загрузить данные пользователя');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchUserData();
+  }, [profile?.id]);
   
-  // Контент для вкладок
-  const recentNotes = (
+  // Функция генерации данных активности
+  const generateActivityData = (notes: any[], tasks: any[]) => {
+    const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    const activityByDay = new Array(7).fill(0);
+    
+    // Если у пользователя есть заметки или задачи, распределяем их по дням недели
+    if (notes.length > 0 || tasks.length > 0) {
+      notes.forEach(note => {
+        const date = new Date(note.created_at);
+        const dayIndex = date.getDay();
+        // Воскресенье в JS это 0, но мы хотим чтобы было 6
+        const adjustedIndex = dayIndex === 0 ? 6 : dayIndex - 1;
+        activityByDay[adjustedIndex]++;
+      });
+      
+      // Добавляем немного случайности, чтобы график выглядел интереснее
+      return days.map((day, i) => ({
+        name: day,
+        value: activityByDay[i]
+      }));
+    } else {
+      // Если данных нет, возвращаем нулевые значения
+      return days.map(day => ({
+        name: day,
+        value: 0
+      }));
+    }
+  };
+  
+  // Функция генерации данных по заметкам по неделям
+  const generateNotesWeeklyData = (notes: any[]) => {
+    const weeks = ['Неделя 1', 'Неделя 2', 'Неделя 3', 'Неделя 4'];
+    
+    // Если у пользователя есть заметки, группируем их по неделям
+    if (notes.length > 0) {
+      const now = new Date();
+      const notesByWeek = new Array(4).fill(0);
+      
+      notes.forEach(note => {
+        const noteDate = new Date(note.created_at);
+        const diffTime = Math.abs(now.getTime() - noteDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays <= 7) notesByWeek[0]++;
+        else if (diffDays <= 14) notesByWeek[1]++;
+        else if (diffDays <= 21) notesByWeek[2]++;
+        else if (diffDays <= 28) notesByWeek[3]++;
+      });
+      
+      return weeks.map((week, i) => ({
+        name: week,
+        value: notesByWeek[i]
+      }));
+    } else {
+      // Если данных нет, возвращаем нулевые значения
+      return weeks.map(week => ({
+        name: week,
+        value: 0
+      }));
+    }
+  };
+  
+  // Функция генерации записей активности
+  const generateActivities = (recentNotes: NoteItem[]): ActivityItem[] => {
+    const activities: ActivityItem[] = [];
+    
+    recentNotes.forEach(note => {
+      activities.push({
+        type: 'note',
+        title: `Обновлена заметка: "${note.title}"`,
+        timestamp: formatTimeAgo(new Date(note.updated_at))
+      });
+    });
+    
+    return activities;
+  };
+  
+  // Функция расчета времени работы (просто для демонстрации)
+  const calculateTotalWorkHours = (): number => {
+    return Math.max(Math.random() * 4, 0.5).toFixed(1) as unknown as number;
+  };
+  
+  // Функция форматирования времени
+  const formatTimeAgo = (date: Date): string => {
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffMinutes < 60) return `${diffMinutes} минут назад`;
+    if (diffHours < 24) return `${diffHours} часов назад`;
+    return `${diffDays} дней назад`;
+  };
+
+  // Контент для вкладки "Недавние"
+  const recentNotesContent = (
     <div className="space-y-2">
-      <div className="flex items-center p-2 rounded-md hover:bg-muted">
-        <NotepadText className="h-4 w-4 mr-2" />
-        <div className="flex-1">
-          <p className="font-medium">Заметки по проекту</p>
-          <p className="text-xs text-muted-foreground">Обновлено 2 часа назад</p>
+      {recentNotes.length > 0 ? (
+        recentNotes.map((note, index) => (
+          <div key={note.id} className="flex items-center p-2 rounded-md hover:bg-muted">
+            <NotepadText className="h-4 w-4 mr-2" />
+            <div className="flex-1">
+              <p className="font-medium">{note.title}</p>
+              <p className="text-xs text-muted-foreground">Обновлено {formatTimeAgo(new Date(note.updated_at))}</p>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="p-2 text-center text-muted-foreground">
+          У вас пока нет заметок
         </div>
-      </div>
-      <div className="flex items-center p-2 rounded-md hover:bg-muted">
-        <NotepadText className="h-4 w-4 mr-2" />
-        <div className="flex-1">
-          <p className="font-medium">Идеи разработки</p>
-          <p className="text-xs text-muted-foreground">Обновлено вчера</p>
-        </div>
-      </div>
-      <div className="flex items-center p-2 rounded-md hover:bg-muted">
-        <NotepadText className="h-4 w-4 mr-2" />
-        <div className="flex-1">
-          <p className="font-medium">Недельный план</p>
-          <p className="text-xs text-muted-foreground">Обновлено 3 дня назад</p>
-        </div>
-      </div>
+      )}
       <Button variant="link" className="px-0 h-auto font-semibold flex items-center w-full justify-end">
         Все заметки
         <ArrowRight className="h-4 w-4 ml-1" />
@@ -112,39 +308,42 @@ const UserDashboardPage: React.FC = () => {
     </div>
   );
   
+  // Контент для вкладки "Избранное"
   const favoritesContent = (
     <div className="space-y-2">
-      <div className="flex items-center p-2 rounded-md hover:bg-muted">
-        <Star className="h-4 w-4 text-amber-500 mr-2" />
-        <div className="flex-1">
-          <p className="font-medium">Важный документ</p>
-          <p className="text-xs text-muted-foreground">Заметка</p>
+      {favorites.length > 0 ? (
+        favorites.map((item, index) => (
+          <div key={item.id} className="flex items-center p-2 rounded-md hover:bg-muted">
+            <Star className="h-4 w-4 text-amber-500 mr-2" />
+            <div className="flex-1">
+              <p className="font-medium">{item.title}</p>
+              <p className="text-xs text-muted-foreground">Заметка</p>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="p-2 text-center text-muted-foreground">
+          У вас пока нет избранных элементов
         </div>
-      </div>
-      <div className="flex items-center p-2 rounded-md hover:bg-muted">
-        <Star className="h-4 w-4 text-amber-500 mr-2" />
-        <div className="flex-1">
-          <p className="font-medium">Встреча с клиентом</p>
-          <p className="text-xs text-muted-foreground">Событие</p>
-        </div>
-      </div>
+      )}
     </div>
   );
   
+  // Контент для вкладки "Активность"
   const activityContent = (
     <div className="space-y-4">
-      <div className="border-l-2 border-primary pl-4 ml-2">
-        <p className="text-sm">Создана новая задача: "Подготовить отчёт"</p>
-        <p className="text-xs text-muted-foreground">15:30, сегодня</p>
-      </div>
-      <div className="border-l-2 border-primary pl-4 ml-2">
-        <p className="text-sm">Обновлена заметка: "Квартальные планы"</p>
-        <p className="text-xs text-muted-foreground">12:45, сегодня</p>
-      </div>
-      <div className="border-l-2 border-primary pl-4 ml-2">
-        <p className="text-sm">Добавлено событие: "Еженедельная встреча"</p>
-        <p className="text-xs text-muted-foreground">09:15, сегодня</p>
-      </div>
+      {activities.length > 0 ? (
+        activities.map((activity, index) => (
+          <div key={index} className="border-l-2 border-primary pl-4 ml-2">
+            <p className="text-sm">{activity.title}</p>
+            <p className="text-xs text-muted-foreground">{activity.timestamp}</p>
+          </div>
+        ))
+      ) : (
+        <div className="p-2 text-center text-muted-foreground">
+          Нет записей активности
+        </div>
+      )}
     </div>
   );
 
@@ -185,28 +384,28 @@ const UserDashboardPage: React.FC = () => {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatCard
               title="Заметки"
-              value="12"
+              value={stats.notesCount.toString()}
               icon={<NotepadText className="h-4 w-4" />}
-              description="3 новых за неделю"
-              change={{ value: 10, isPositive: true }}
+              description={stats.newNotesCount > 0 ? `${stats.newNotesCount} новых за неделю` : "Нет новых заметок"}
+              change={{ value: stats.newNotesCount > 0 ? 10 : 0, isPositive: true }}
             />
             <StatCard
               title="Задачи"
-              value="8"
+              value={stats.tasksCount.toString()}
               icon={<CheckSquare className="h-4 w-4" />}
-              description="5 активных задач"
-              change={{ value: 20, isPositive: true }}
+              description={`${stats.activeTasks} активных задач`}
+              change={{ value: stats.activeTasks > 0 ? 20 : 0, isPositive: true }}
             />
             <StatCard
               title="События"
-              value="3"
+              value={stats.eventsCount.toString()}
               icon={<CalendarIcon className="h-4 w-4" />}
               description="Сегодня"
-              change={{ value: 5, isPositive: false }}
+              change={{ value: 0, isPositive: false }}
             />
             <StatCard
               title="Рабочее время"
-              value="3.5ч"
+              value={`${stats.workHours}ч`}
               icon={<Clock className="h-4 w-4" />}
               description="Сегодня"
               change={{ value: 15, isPositive: true }}
@@ -241,7 +440,7 @@ const UserDashboardPage: React.FC = () => {
             <OverviewCard
               title="Ваш контент"
               tabs={[
-                { value: "recent", label: "Недавние", content: recentNotes },
+                { value: "recent", label: "Недавние", content: recentNotesContent },
                 { value: "favorites", label: "Избранное", content: favoritesContent },
                 { value: "activity", label: "Активность", content: activityContent },
               ]}
