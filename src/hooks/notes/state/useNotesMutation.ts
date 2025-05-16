@@ -30,8 +30,8 @@ export const useNotesMutation = () => {
       const colorToSave = noteData.color || '';
       
       if (activeNote) {
-        // Update existing note - правильно формируем формат контента
-        await updateNote({
+        // Update existing note
+        const result = await updateNote({
           noteId: activeNote.id,
           noteData: {
             title: noteData.title,
@@ -41,7 +41,7 @@ export const useNotesMutation = () => {
           }
         });
         
-        console.log("Заметка обновлена");
+        console.log("Заметка обновлена:", result);
         toast.success("Заметка обновлена");
         return true;
       } else {

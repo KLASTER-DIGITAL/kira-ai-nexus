@@ -15,18 +15,22 @@ const createNote = async (noteData: { title: string; content: string; tags: stri
       throw new Error("User not authenticated");
     }
     
-    // В таблице nodes нет колонки tags, поэтому сохраняем теги в content
+    // Подготовка данных для сохранения в БД
+    // В таблице nodes контент хранится как JSON-объект
+    const noteContent = {
+      text: noteData.content || '',
+      tags: noteData.tags || [],
+      color: noteData.color || ''
+    };
+    
     const { data, error } = await supabase
       .from('nodes')
       .insert({
         title: noteData.title,
-        content: {
-          text: noteData.content,
-          tags: noteData.tags,
-          color: noteData.color || ''
-        },
+        content: noteContent,
         user_id: user.id,
-        type: 'note'
+        type: 'note',
+        tags: noteData.tags || [] // Duplicating tags at the root level for easier querying
       })
       .select();
 
@@ -58,16 +62,19 @@ const updateNote = async (noteData: { noteId: string; noteData: { title: string;
       throw new Error("User not authenticated");
     }
     
-    // В таблице nodes нет колонки tags, поэтому сохраняем теги в content
+    // Подготовка данных для обновления
+    const noteContent = {
+      text: noteData.noteData.content || '',
+      tags: noteData.noteData.tags || [],
+      color: noteData.noteData.color || ''
+    };
+    
     const { data, error } = await supabase
       .from('nodes')
       .update({
         title: noteData.noteData.title,
-        content: {
-          text: noteData.noteData.content,
-          tags: noteData.noteData.tags,
-          color: noteData.noteData.color || ''
-        },
+        content: noteContent,
+        tags: noteData.noteData.tags || [], // Обновляем теги в корне для удобства запросов
         updated_at: new Date().toISOString()
       })
       .eq('id', noteData.noteId)

@@ -1,56 +1,65 @@
 
-import { Note, NoteContent } from "@/types/notes";
+import { Note } from "@/types/notes";
 
-// Преобразование данных из БД в формат заметки для фронтенда
-export const transformNoteData = (data: any): Note => {
-  if (!data) {
-    throw new Error("Cannot transform null or undefined data to Note");
-  }
+/**
+ * Transforms raw database note data into a structured Note object
+ * @param rawData Raw data from the database
+ * @returns Formatted Note object
+ */
+export const transformNoteData = (rawData: any): Note => {
+  try {
+    // Extract content
+    let content: any;
+    let tags: string[] = [];
+    let color: string = '';
 
-  let noteContent: string | NoteContent = '';
-  let noteTags: string[] = [];
-  let noteColor: string = '';
-
-  // Обрабатываем content в зависимости от его формата
-  if (data.content) {
-    if (typeof data.content === 'object') {
-      // Если content - объект, проверяем его структуру
-      if (data.content.text !== undefined) {
-        // Если в объекте есть поле text, это структурированный контент
-        noteContent = {
-          text: data.content.text || '',
-          tags: Array.isArray(data.content.tags) ? data.content.tags : [],
-          color: data.content.color || ''
-        };
-        noteTags = noteContent.tags;
-        noteColor = noteContent.color;
-      } else {
-        // Если структура объекта не соответствует ожидаемой, преобразуем в строку
-        noteContent = JSON.stringify(data.content);
-      }
-    } else if (typeof data.content === 'string') {
-      // Если content - строка, используем как есть
-      noteContent = data.content;
+    // Handle content based on its structure
+    if (typeof rawData.content === 'object' && rawData.content !== null) {
+      const contentObj = rawData.content;
+      // Extract the text from the content object
+      const text = contentObj.text || '';
+      // Use tags from the content object or fall back to the ones at the root level
+      tags = Array.isArray(contentObj.tags) ? contentObj.tags : (rawData.tags || []);
+      // Extract color if available
+      color = contentObj.color || '';
+      
+      // We'll store the actual content text in the note.content property
+      content = text;
+    } else if (typeof rawData.content === 'string') {
+      // If content is somehow a string, use it directly
+      content = rawData.content;
+      tags = rawData.tags || [];
+    } else {
+      // Default fallback
+      content = '';
+      tags = rawData.tags || [];
     }
-  }
 
-  return {
-    id: data.id,
-    title: data.title || '',
-    content: noteContent,
-    tags: noteTags,
-    color: noteColor,
-    user_id: data.user_id,
-    type: data.type || 'note',
-    created_at: data.created_at,
-    updated_at: data.updated_at
-  };
-};
+    // Create a properly structured Note object
+    const note: Note = {
+      id: rawData.id,
+      title: rawData.title || '',
+      content: content,  // This is now the text content
+      tags: tags,
+      color: color,
+      user_id: rawData.user_id,
+      created_at: rawData.created_at,
+      updated_at: rawData.updated_at,
+      type: rawData.type || 'note',
+    };
 
-// Вспомогательная функция для extract текста из контента (если он в формате объекта)
-export const getNoteContentText = (content: string | NoteContent): string => {
-  if (typeof content === 'string') {
-    return content;
+    return note;
+  } catch (error) {
+    console.error("Error transforming note data:", error, rawData);
+    
+    // Return a minimal valid note object to prevent crashes
+    return {
+      id: rawData.id || 'unknown',
+      title: rawData.title || 'Error loading note',
+      content: '',
+      tags: [],
+      user_id: rawData.user_id || '',
+      type: 'note',
+    };
   }
-  return content.text || '';
 };
