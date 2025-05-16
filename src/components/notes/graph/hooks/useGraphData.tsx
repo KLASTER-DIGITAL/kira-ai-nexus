@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { Node, Edge } from '@xyflow/react';
 import { supabase } from '@/integrations/supabase/client';
@@ -312,46 +311,38 @@ export const useGraphData = () => {
         
       if (nodeError) throw nodeError;
       
-      // Use RPC function to get connected nodes if available, otherwise fallback
-      const { data: linkedNodeIds, error: linkError } = await supabase
-        .rpc('get_connected_nodes', { node_id: nodeId, depth: 1 })
-        .catch(() => {
-          // Fallback if RPC not available: manually fetch links
-          console.log("Falling back to manual link fetching");
-          return supabase
-            .from('links')
-            .select('source_id, target_id')
-            .or(`source_id.eq.${nodeId},target_id.eq.${nodeId}`);
-        });
+      // Since we don't have a get_connected_nodes RPC function, 
+      // let's use a direct query to get connected nodes
+      const { data: linkData, error: linkError } = await supabase
+        .from('links')
+        .select('source_id, target_id')
+        .or(`source_id.eq.${nodeId},target_id.eq.${nodeId}`);
         
       if (linkError) throw linkError;
       
       // Process the result to extract node IDs
-      let connectedNodeIds: string[] = [];
-      if (Array.isArray(linkedNodeIds)) {
-        // If RPC returned array of IDs directly
-        connectedNodeIds = linkedNodeIds as unknown as string[];
-      } else if (linkedNodeIds && typeof linkedNodeIds === 'object') {
-        // If we used fallback and got links
-        const links = linkedNodeIds as unknown as { source_id: string, target_id: string }[];
-        const ids = new Set<string>();
-        links.forEach(link => {
-          if (link.source_id !== nodeId) ids.add(link.source_id);
-          if (link.target_id !== nodeId) ids.add(link.target_id);
+      const connectedNodeIds = new Set<string>();
+      
+      if (linkData && Array.isArray(linkData)) {
+        linkData.forEach(link => {
+          if (link.source_id === nodeId) {
+            connectedNodeIds.add(link.target_id);
+          } else {
+            connectedNodeIds.add(link.source_id);
+          }
         });
-        connectedNodeIds = Array.from(ids);
       }
       
       // Always include the central node
-      if (!connectedNodeIds.includes(nodeId)) {
-        connectedNodeIds.push(nodeId);
-      }
+      connectedNodeIds.add(nodeId);
+      
+      const connectedNodesArray = Array.from(connectedNodeIds);
       
       // Efficiently fetch all related nodes
       const { data: relatedNodes, error: relatedError } = await supabase
         .from('nodes')
         .select('*')
-        .in('id', connectedNodeIds);
+        .in('id', connectedNodesArray);
         
       if (relatedError) throw relatedError;
       
@@ -359,7 +350,7 @@ export const useGraphData = () => {
       const { data: links, error: linksError } = await supabase
         .from('links')
         .select('*')
-        .or(`source_id.in.(${connectedNodeIds.join(',')}),target_id.in.(${connectedNodeIds.join(',')})`);
+        .or(`source_id.in.(${connectedNodesArray.join(',')}),target_id.in.(${connectedNodesArray.join(',')})`);
         
       if (linksError) throw linksError;
       
@@ -376,10 +367,23 @@ export const useGraphData = () => {
           // Remove duplicates
           index === self.findIndex(n => n.id === node.id)
         )
-        .map(node => ({
-          ...node,
-          tags: node.content?.tags || []
-        }));
+        .map(node => {
+          // Extract tags from content
+          let nodeTags: string[] = [];
+          const nodeContent = node.content;
+          
+          if (nodeContent) {
+            if (typeof nodeContent === 'object') {
+              // If content is an object, try to get tags from it
+              nodeTags = Array.isArray(nodeContent.tags) ? nodeContent.tags : [];
+            }
+          }
+          
+          return {
+            ...node,
+            tags: nodeTags
+          };
+        });
       
       // Apply filters and layout
       return applyLayout(

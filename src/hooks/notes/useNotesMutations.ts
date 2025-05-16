@@ -2,6 +2,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Note } from "@/types/notes";
+import { transformNoteData } from "./utils";
 
 const createNote = async (noteData: { title: string; content: string; tags: string[] }) => {
   try {
@@ -25,7 +26,12 @@ const createNote = async (noteData: { title: string; content: string; tags: stri
       throw error;
     }
 
-    return data ? data[0] as Note : null;
+    if (!data || data.length === 0) {
+      throw new Error('No data returned from createNote');
+    }
+
+    // Transform the returned data to ensure it has the correct shape
+    return transformNoteData(data[0]);
   } catch (error) {
     console.error('Error in createNote:', error);
     throw error;
@@ -55,31 +61,9 @@ const updateNote = async (noteData: { noteId: string; noteData: { title: string;
     }
 
     // Process the returned data to ensure it matches our Note type
-    if (data && data[0]) {
-      const updatedNote = data[0];
-      const content = updatedNote.content;
-      
-      // Handle different content structures safely
-      let noteContent = '';
-      let noteTags = noteData.noteData.tags;
-      let noteColor = '';
-      
-      if (typeof content === 'object' && content !== null) {
-        // Cast to any to avoid TypeScript errors
-        const contentObj = content as any;
-        noteContent = contentObj.text || '';
-        noteTags = Array.isArray(contentObj.tags) ? contentObj.tags : (updatedNote.tags || []);
-        noteColor = contentObj.color || '';
-      } else if (typeof content === 'string') {
-        noteContent = content;
-      }
-
-      return {
-        ...updatedNote,
-        content: noteContent,
-        tags: noteTags,
-        color: noteColor
-      };
+    if (data && data.length > 0) {
+      // Transform the returned data to ensure it has the correct shape
+      return transformNoteData(data[0]);
     }
     
     return null;

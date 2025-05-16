@@ -23,6 +23,7 @@ export interface GraphLink {
 export interface GraphData {
   nodes: GraphNode[];
   links: GraphLink[];
+  tags: string[]; // Added tags array to the interface
 }
 
 export const useGraphData = () => {
@@ -53,12 +54,14 @@ export const useGraphData = () => {
       // Format data for graph visualization
       const formattedNodes: GraphNode[] = nodes.map((node: any) => {
         const content = node.content as any;
+        const tags = typeof content === 'object' ? content?.tags || [] : [];
+        
         return {
           id: node.id,
           title: node.title || "",
           type: node.type || "note",
-          content: typeof content === 'object' ? content?.content : content,
-          tags: typeof content === 'object' ? content?.tags || [] : [],
+          content: typeof content === 'object' ? content?.text : content,
+          tags: tags,
           created_at: node.created_at,
           updated_at: node.updated_at,
         };
@@ -70,9 +73,13 @@ export const useGraphData = () => {
         target: link.target_id,
       }));
       
+      // Extract all unique tags
+      const allTags = Array.from(new Set(formattedNodes.flatMap(node => node.tags)));
+      
       return {
         nodes: formattedNodes,
         links: formattedLinks,
+        tags: allTags, // Include all unique tags in the returned data
       };
     },
     staleTime: 5 * 60 * 1000, // 5 minutes

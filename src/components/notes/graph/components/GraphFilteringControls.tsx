@@ -45,6 +45,8 @@ const GraphFilteringControls: React.FC<GraphFilteringControlsProps> = ({
         allTags={allTags}
         showIsolatedNodes={showIsolatedNodes}
         setShowIsolatedNodes={setShowIsolatedNodes}
+        hasFilters={searchQuery !== "" || selectedTags.length > 0}
+        clearFilters={clearFilters}
       />
     </>
   );
