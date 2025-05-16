@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/auth";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { PageHeaderProvider } from "@/context/page-header";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
 import { useSidebarStore } from "@/store/sidebarStore";
@@ -37,21 +38,23 @@ export function MainLayout() {
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <div className="flex min-h-screen w-full bg-background">
-        <AppSidebar />
-        <main 
-          className={cn(
-            "flex-1 flex flex-col transition-all duration-300 ease-in-out w-full",
-            collapsed ? "md:pl-[80px]" : "md:pl-[280px]"
-          )}
-        >
-          <AppHeader />
-          <div className="flex-1 overflow-auto p-4 md:p-6">
-            <Outlet />
-          </div>
-        </main>
-        <Toaster position="top-right" richColors />
-      </div>
+      <PageHeaderProvider>
+        <div className="flex min-h-screen w-full bg-background">
+          <AppSidebar />
+          <main 
+            className={cn(
+              "flex-1 flex flex-col transition-all duration-300 ease-in-out w-full",
+              collapsed ? "md:pl-[80px]" : "md:pl-[280px]"
+            )}
+          >
+            <AppHeader />
+            <div className="flex-1 overflow-auto p-4 md:p-6">
+              <Outlet />
+            </div>
+          </main>
+          <Toaster position="top-right" richColors />
+        </div>
+      </PageHeaderProvider>
     </ThemeProvider>
   );
 }

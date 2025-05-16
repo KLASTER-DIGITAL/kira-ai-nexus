@@ -23,9 +23,11 @@ export function PageTitle() {
     if (path.startsWith('/calendar')) return 'Календарь';
     if (path.startsWith('/chat')) return 'Чат';
     if (path.startsWith('/graph')) return 'Граф связей';
+    if (path.startsWith('/notes-graph')) return 'Граф заметок';
     if (path.startsWith('/ai-settings')) return 'Настройки AI';
     if (path.startsWith('/activity')) return 'Активность';
     if (path.startsWith('/notifications')) return 'Уведомления';
+    if (path.startsWith('/settings')) return 'Настройки';
     
     return 'KIRA AI';
   };
