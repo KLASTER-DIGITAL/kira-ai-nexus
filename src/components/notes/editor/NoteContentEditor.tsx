@@ -1,29 +1,16 @@
-
-import React from "react";
-import TipTapEditor from "../TipTapEditor";
-import BacklinksList from "../BacklinksList";
-import TagManager from "../TagManager";
-import ColorPicker from "../ColorPicker";
+import React from 'react';
+import { LinkData } from '@/hooks/notes/links/types';
 
 interface NoteContentEditorProps {
   content: string;
-  onContentChange: (content: string) => void;
+  onContentChange: (value: string) => void;
   noteId?: string;
   onNoteSelect?: (noteId: string) => void;
   tags: string[];
   onTagsChange: (tags: string[]) => void;
   color: string;
   onColorChange: (color: string) => void;
-  links?: {
-    incomingLinks: Array<{
-      id: string;
-      nodes: {
-        id: string;
-        title: string;
-      };
-    }>;
-    outgoingLinks: any[];
-  };
+  links?: LinkData;
 }
 
 const NoteContentEditor: React.FC<NoteContentEditorProps> = ({
@@ -35,38 +22,23 @@ const NoteContentEditor: React.FC<NoteContentEditorProps> = ({
   onTagsChange,
   color,
   onColorChange,
-  links
+  links,
 }) => {
-  const hasBacklinks = links?.incomingLinks && links.incomingLinks.length > 0;
-
+  // Simple editor for now, can be enhanced with TipTap or other rich editors
   return (
-    <>
-      <div className="mb-2">
-        <ColorPicker 
-          selectedColor={color} 
-          onColorChange={onColorChange} 
-        />
-      </div>
-      
-      <TipTapEditor 
-        content={content} 
-        onChange={onContentChange} 
-        placeholder="Содержание заметки..."
-        autoFocus={false}
-        noteId={noteId}
-        onLinkClick={onNoteSelect}
+    <div className="flex flex-col h-full">
+      <textarea
+        className="w-full h-full resize-none border rounded p-2"
+        value={content}
+        onChange={(e) => onContentChange(e.target.value)}
+        placeholder="Введите текст заметки..."
       />
       
-      {hasBacklinks && (
-        <div className="mt-4">
-          <BacklinksList links={links?.incomingLinks || []} onLinkClick={onNoteSelect || (() => {})} />
-        </div>
-      )}
-      
-      <div className="mt-4">
-        <TagManager tags={tags} onTagsChange={onTagsChange} />
+      {/* Tags will go here */}
+      <div className="mt-2">
+        {/* Tag editing UI */}
       </div>
-    </>
+    </div>
   );
 };
 

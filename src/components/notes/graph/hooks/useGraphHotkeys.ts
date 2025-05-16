@@ -8,7 +8,8 @@ interface HotKeyActions {
   reset: () => void;
 }
 
-export const useGraphHotkeys = (actions: HotKeyActions): void => {
+// Changed to use a default export
+const useGraphHotkeys = (actions: HotKeyActions): void => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.altKey) {
@@ -34,3 +35,5 @@ export const useGraphHotkeys = (actions: HotKeyActions): void => {
     };
   }, [actions]);
 };
+
+export default useGraphHotkeys;
