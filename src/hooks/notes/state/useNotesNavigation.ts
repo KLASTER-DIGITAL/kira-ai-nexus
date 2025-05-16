@@ -1,56 +1,75 @@
 
+import { useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Note } from "@/types/notes";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 /**
- * Hook for managing notes navigation and selection
+ * Hook for handling navigation related to notes
  */
-export const useNotesNavigation = (
-  handleEditNote: (note: Note) => void, 
-  notes?: Note[]
-) => {
-  // Handle note selection via wiki links
-  const handleNoteSelect = (noteId: string) => {
-    console.log("Выбрана заметка по ID:", noteId);
-    const selectedNote = notes?.find((note) => note.id === noteId);
-    
-    if (selectedNote) {
-      handleEditNote(selectedNote);
-    } else {
-      console.log("Заметка не найдена среди загруженных, загружаем из базы...");
-      // Если не найдена в текущем списке, получить заметку напрямую из базы
-      supabase
-        .from('nodes')
-        .select('*')
-        .eq('id', noteId)
-        .single()
-        .then(({ data, error }) => {
-          if (error) {
-            console.error("Ошибка загрузки заметки:", error);
-            toast.error("Не удалось загрузить заметку");
-          } else if (data) {
-            // Преобразовать данные в формат Note
-            const content = typeof data.content === 'object' ? data.content : { text: data.content };
-            
-            const note: Note = {
-              id: data.id,
-              title: data.title,
-              content: content?.text || "",
-              tags: content?.tags || [],
-              color: content?.color,
-              type: data.type,
-              user_id: data.user_id,
-              created_at: data.created_at,
-              updated_at: data.updated_at
-            };
-            handleEditNote(note);
-          }
-        });
-    }
-  };
+export const useNotesNavigation = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Handle creating a new note and navigate to it
+  const handleCreateNote = useCallback(
+    async (data: { title: string; content?: string; tags?: string[]; color?: string }) => {
+      try {
+        console.log("Creating new note with data:", data);
+        
+        // Insert the new note into the database
+        const { data: newNote, error } = await supabase
+          .from("nodes")
+          .insert({
+            title: data.title,
+            content: data.content || "",
+            type: "note",
+            // Safely handle tags and color by checking if they exist
+            ...(data.tags ? { tags: data.tags } : {}),
+            ...(data.color ? { color: data.color } : {})
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error("Error creating note:", error);
+          throw error;
+        }
+
+        console.log("New note created:", newNote);
+        
+        // Navigate to the newly created note
+        if (newNote && newNote.id) {
+          navigate(`/notes/${newNote.id}`);
+          return newNote as Note;
+        }
+        
+        return null;
+      } catch (error) {
+        console.error("Failed to create note:", error);
+        throw error;
+      }
+    },
+    [navigate]
+  );
+
+  // Navigate to a specific note
+  const navigateToNote = useCallback(
+    (noteId: string) => {
+      navigate(`/notes/${noteId}`);
+    },
+    [navigate]
+  );
+
+  // Navigate to notes list
+  const navigateToNotesList = useCallback(() => {
+    navigate("/notes");
+  }, [navigate]);
 
   return {
-    handleNoteSelect
+    handleCreateNote,
+    navigateToNote,
+    navigateToNotesList,
+    currentPath: location.pathname
   };
 };

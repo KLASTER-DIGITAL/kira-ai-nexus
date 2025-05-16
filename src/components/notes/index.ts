@@ -11,6 +11,7 @@ export { default as TagBadge } from "./TagBadge";
 export { default as NoteEditor } from "./NoteEditor";
 export { default as NoteViewer } from "./NoteViewer";
 export { default as TipTapEditor } from "./TipTapEditor";
+export * from "./editor";
 
 // Dialog components
 export { default as NoteEditDialog } from "./NoteEditDialog";
