@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Note, NoteContent } from "@/types/notes";
 import { useNotesMutations } from "@/hooks/notes/useNotesMutations";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Hook for managing note mutations (create, update, delete)
@@ -20,31 +19,22 @@ export const useNotesMutation = () => {
     try {
       if (activeNote) {
         // Update existing note - правильно формируем формат контента
-        const contentObject: NoteContent = {
-          text: noteData.content,
-          tags: noteData.tags,
-          color: activeNote.color || ""
-        };
-        
         await updateNote({
-          id: activeNote.id,
-          title: noteData.title,
-          content: contentObject,
-          tags: noteData.tags // необходимо для типизации
+          noteId: activeNote.id,
+          noteData: {
+            title: noteData.title,
+            content: noteData.content,
+            tags: noteData.tags
+          }
         });
+        
         toast.success("Заметка обновлена");
       } else {
-        // Create new note - правильно формируем формат контента
-        const contentObject: NoteContent = {
-          text: noteData.content,
-          tags: noteData.tags,
-          color: ""
-        };
-        
+        // Create new note
         const result = await createNote({
           title: noteData.title,
-          content: contentObject,
-          tags: noteData.tags // необходимо для типизации
+          content: noteData.content,
+          tags: noteData.tags
         });
         
         console.log("Заметка создана:", result);

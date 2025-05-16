@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState, useEffect } from 'react';
 import {
   ReactFlowProvider,
@@ -6,6 +5,7 @@ import {
   useEdgesState,
 } from '@xyflow/react';
 
+// Update import to use default import
 import useGraphHotkeys from './hooks/useGraphHotkeys';
 import { useGraphData } from './hooks/useGraphData';
 import { useGraphFiltering } from './hooks/useGraphFiltering';

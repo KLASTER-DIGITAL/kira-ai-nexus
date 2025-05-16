@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Note } from "@/types/notes";
@@ -5,7 +6,7 @@ import { Note } from "@/types/notes";
 const createNote = async (noteData: { title: string; content: string; tags: string[] }) => {
   try {
     const { data, error } = await supabase
-      .from('notes')
+      .from('nodes')  // Use 'nodes' table instead of 'notes'
       .insert({
         title: noteData.title,
         content: {
@@ -14,7 +15,7 @@ const createNote = async (noteData: { title: string; content: string; tags: stri
           color: ''
         },
         tags: noteData.tags,
-        user_id: supabase.auth.getUser().then((response) => response.data?.user?.id),
+        user_id: (await supabase.auth.getUser()).data.user?.id,
         type: 'note'
       })
       .select();
@@ -31,22 +32,21 @@ const createNote = async (noteData: { title: string; content: string; tags: stri
   }
 };
 
-const updateNote = async (noteId: string, noteData: { title: string; content: string; tags: string[] }) => {
+const updateNote = async (noteData: { noteId: string; noteData: { title: string; content: string; tags: string[] } }) => {
   try {
     const { data, error } = await supabase
-      .from('notes')
+      .from('nodes')  // Use 'nodes' table instead of 'notes'
       .update({
-        title: noteData.title,
+        title: noteData.noteData.title,
         content: {
-          // Ensure we're creating a proper object with the required properties
-          text: noteData.content,
-          tags: noteData.tags,
-          color: ''  // Default empty color
+          text: noteData.noteData.content,
+          tags: noteData.noteData.tags,
+          color: ''
         },
-        tags: noteData.tags,
+        tags: noteData.noteData.tags,
         updated_at: new Date().toISOString()
       })
-      .eq('id', noteId)
+      .eq('id', noteData.noteId)
       .select();
 
     if (error) {
@@ -61,7 +61,7 @@ const updateNote = async (noteId: string, noteData: { title: string; content: st
       
       // Handle different content structures safely
       let noteContent = '';
-      let noteTags = noteData.tags;
+      let noteTags = noteData.noteData.tags;
       let noteColor = '';
       
       if (typeof content === 'object' && content !== null) {
@@ -92,7 +92,7 @@ const updateNote = async (noteId: string, noteData: { title: string; content: st
 const deleteNote = async (noteId: string) => {
   try {
     const { error } = await supabase
-      .from('notes')
+      .from('nodes')  // Use 'nodes' table instead of 'notes'
       .delete()
       .eq('id', noteId);
 
@@ -111,34 +111,35 @@ const deleteNote = async (noteId: string) => {
 export const useNotesMutations = () => {
   const queryClient = useQueryClient();
 
-  const createNoteMutation = useMutation(createNote, {
+  // Update to use the object-style mutation configuration
+  const createNoteMutation = useMutation({
+    mutationFn: createNote,
     onSuccess: () => {
-      queryClient.invalidateQueries(['notes']);
-    },
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+    }
   });
 
-  const updateNoteMutation = useMutation(
-    (variables: { noteId: string; noteData: { title: string; content: string; tags: string[] } }) =>
-      updateNote(variables.noteId, variables.noteData),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['notes']);
-      },
-    }
-  );
-
-  const deleteNoteMutation = useMutation(deleteNote, {
+  const updateNoteMutation = useMutation({
+    mutationFn: (variables: { noteId: string; noteData: { title: string; content: string; tags: string[] } }) => 
+      updateNote(variables),
     onSuccess: () => {
-      queryClient.invalidateQueries(['notes']);
-    },
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+    }
+  });
+
+  const deleteNoteMutation = useMutation({
+    mutationFn: deleteNote,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+    }
   });
 
   return {
     createNote: createNoteMutation.mutateAsync,
     updateNote: updateNoteMutation.mutateAsync,
     deleteNote: deleteNoteMutation.mutateAsync,
-    isCreating: createNoteMutation.isLoading,
-    isUpdating: updateNoteMutation.isLoading,
-    isDeleting: deleteNoteMutation.isLoading,
+    isCreating: createNoteMutation.isPending,
+    isUpdating: updateNoteMutation.isPending,
+    isDeleting: deleteNoteMutation.isPending,
   };
 };

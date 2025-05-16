@@ -1,15 +1,15 @@
 
 import { useEffect } from "react";
 
-interface HotKeyActions {
+export interface HotKeyActions {
   zoomIn: () => void;
   zoomOut: () => void;
   fitView: () => void;
   reset: () => void;
 }
 
-// Changed to use a default export
-const useGraphHotkeys = (actions: HotKeyActions): void => {
+// Export as a named export for consistency
+export const useGraphHotkeys = (actions: HotKeyActions): void => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.altKey) {
@@ -36,4 +36,5 @@ const useGraphHotkeys = (actions: HotKeyActions): void => {
   }, [actions]);
 };
 
+// Also provide a default export for backward compatibility
 export default useGraphHotkeys;
