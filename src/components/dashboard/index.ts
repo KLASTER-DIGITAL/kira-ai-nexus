@@ -1,11 +1,10 @@
 
-// Экспортируем компоненты дашборда
-export { default as DashboardLayout } from './layout/DashboardLayout';
-export { default as AppSidebar } from './layout/AppSidebar';
-export { default as DashboardHeader } from './layout/DashboardHeader';
-export { default as StatCard } from './widgets/StatCard';
+// Export dashboard components
+export { default as StatCard } from './cards/StatCard';
+export { default as ChartCard } from './cards/ChartCard';
+export { default as OverviewCard } from './cards/OverviewCard';
 
-// Реэкспорт существующих компонентов
+// Export existing components if they're still used elsewhere
 export { default as Dashboard } from './Dashboard';
 export { default as DashboardItem } from './DashboardItem';
 export { default as DashboardConfigDialog } from './DashboardConfigDialog';

@@ -4,9 +4,13 @@ import { Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from './context/auth';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
+
+// Layouts
+import AppLayout from '@/components/layout/AppLayout';
+
+// Pages
 import {
   HomePage,
-  DashboardPage,
   NotesPage,
   GraphViewPage,
   NotesGraphPage,
@@ -32,88 +36,44 @@ function App() {
   return (
     <>
       <Routes>
+        {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/index" element={<Index />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         
-        {/* Main dashboard routes */}
-        <Route path="/dashboard" element={<Navigate to="/dashboard/user" replace />} />
-        <Route
-          path="/dashboard/user"
-          element={
-            <ProtectedRoute>
-              <UserDashboardPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard/admin"
-          element={
+        {/* Protected routes with AppLayout */}
+        <Route element={
+          <ProtectedRoute>
+            <AppLayout />
+          </ProtectedRoute>
+        }>
+          {/* Dashboard routes */}
+          <Route path="/dashboard" element={<Navigate to="/dashboard/user" replace />} />
+          <Route path="/dashboard/user" element={<UserDashboardPage />} />
+          <Route path="/dashboard/admin" element={
             <ProtectedRoute requiredRole="superadmin">
               <AdminDashboardPage />
             </ProtectedRoute>
-          }
-        />
-        
-        {/* Feature pages */}
-        <Route
-          path="/notes"
-          element={
-            <ProtectedRoute>
-              <NotesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/notes-graph"
-          element={
-            <ProtectedRoute>
-              <NotesGraphPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/graph"
-          element={
-            <ProtectedRoute>
-              <GraphViewPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/tasks"
-          element={
-            <ProtectedRoute>
-              <TasksPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/calendar"
-          element={
-            <ProtectedRoute>
-              <CalendarPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/chat"
-          element={
-            <ProtectedRoute>
-              <ChatPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/help" element={<HelpPage />} />
-        <Route
-          path="/ai-settings"
-          element={
+          } />
+          
+          {/* Feature pages */}
+          <Route path="/notes" element={<NotesPage />} />
+          <Route path="/notes/:id" element={<NotesPage />} />
+          <Route path="/notes-graph" element={<NotesGraphPage />} />
+          <Route path="/graph" element={<GraphViewPage />} />
+          <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/help" element={<HelpPage />} />
+          <Route path="/ai-settings" element={
             <ProtectedRoute requiredRole="superadmin">
               <AISettingsPage />
             </ProtectedRoute>
-          }
-        />
+          } />
+        </Route>
+        
+        {/* Not found */}
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
