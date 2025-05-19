@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Editor } from "@tiptap/react";
-import { ListOrdered, ListUnordered } from "lucide-react";
+import { ListOrdered, List } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 
 interface ListGroupProps {
@@ -21,7 +21,7 @@ export const ListGroup: React.FC<ListGroupProps> = ({ editor }) => {
         onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
         title="Маркированный список"
       >
-        <ListUnordered className="h-4 w-4" />
+        <List className="h-4 w-4" />
       </Toggle>
       <Toggle
         size="sm"

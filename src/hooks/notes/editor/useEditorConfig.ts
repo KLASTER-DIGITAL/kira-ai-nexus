@@ -39,7 +39,8 @@ export const useEditorConfig = ({
       onUpdate: ({ editor }: { editor: Editor }) => {
         onChange(editor.getHTML());
       },
-      autofocus: autoFocus ? 'end' : false,
+      // Fix: Convert string 'end' to proper focus position or use boolean
+      autofocus: autoFocus ? 'end' as const : false,
       extensions: getExtensions(),
       editorProps: {
         attributes: {
