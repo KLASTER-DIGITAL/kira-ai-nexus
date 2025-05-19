@@ -43,11 +43,12 @@ export const TaskList = Node.create<TaskListOptions>({
   
   addCommands() {
     return {
-      toggleTaskList:
-        () =>
-        ({ commands }) => {
+      // Fixed the command to use correct return type format
+      toggleTaskList: () => {
+        return ({ commands }) => {
           return commands.toggleList('taskList', 'taskItem');
-        },
+        };
+      },
     };
   },
 });
