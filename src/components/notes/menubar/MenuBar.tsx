@@ -10,6 +10,7 @@ import {
   MediaGroup, 
   HistoryGroup 
 } from "./groups";
+import { TaskGroup } from "./groups/TaskGroup";
 
 const MenuBar: React.FC<MenuBarProps> = ({ editor, noteId, onColorSelect }) => {
   if (!editor) {
@@ -27,6 +28,8 @@ const MenuBar: React.FC<MenuBarProps> = ({ editor, noteId, onColorSelect }) => {
       <MenuDivider />
       
       <ListGroup editor={editor} />
+      
+      <TaskGroup editor={editor} />
       
       <MenuDivider />
       

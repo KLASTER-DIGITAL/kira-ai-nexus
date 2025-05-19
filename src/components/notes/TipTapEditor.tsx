@@ -6,6 +6,7 @@ import { useWikiLinks } from "@/hooks/notes/links/useWikiLinks";
 import { addWikiLinkClickHandlers } from "./extensions/wiki-link/WikiLinkClickHandler";
 import EnhancedMenuBar from "./menubar/EnhancedMenuBar";
 import "@/styles/notes/tiptap.css";
+import "@/styles/notes/task-list.css";
 
 interface TipTapEditorProps {
   content: string;

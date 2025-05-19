@@ -1,0 +1,38 @@
+
+/* Task List Styling */
+.ProseMirror ul[data-type="taskList"] {
+  list-style: none;
+  padding: 0;
+}
+
+.ProseMirror ul[data-type="taskList"] li {
+  display: flex;
+  margin-top: 0.5em;
+}
+
+.ProseMirror ul[data-type="taskList"] li[data-checked="true"] {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.ProseMirror ul[data-type="taskList"] li > label {
+  flex: 0 0 auto;
+  margin-right: 0.5em;
+  user-select: none;
+}
+
+.ProseMirror ul[data-type="taskList"] li > div {
+  flex: 1 1 auto;
+}
+
+.ProseMirror .task-item[data-priority="high"] .checkbox {
+  border-color: #ef4444 !important;
+}
+
+.ProseMirror .task-item[data-priority="medium"] .checkbox {
+  border-color: #f59e0b !important;
+}
+
+.ProseMirror .task-item[data-priority="low"] .checkbox {
+  border-color: #8b5cf6 !important;
+}

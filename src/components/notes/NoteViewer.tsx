@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import TipTapEditor from "./TipTapEditor";
 import { useNoteLinks } from "@/hooks/notes/useNoteLinks";
 import BacklinksList from "./BacklinksList";
+import NoteTasks from "./NoteTasks";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Link2, ListTodo } from "lucide-react";
 
 interface NoteViewerProps {
   note: Note;
@@ -54,12 +57,35 @@ const NoteViewer: React.FC<NoteViewerProps> = ({ note, onNoteSelect }) => {
           onLinkClick={handleWikiLinkClick}
         />
         
-        {hasBacklinks && (
-          <div className="mt-4">
-            <BacklinksList 
-              links={formattedLinks}
-              onLinkClick={handleWikiLinkClick}
-            />
+        {(hasBacklinks || note.id) && (
+          <div className="mt-6">
+            <Tabs defaultValue="links" className="w-full">
+              <TabsList>
+                <TabsTrigger value="links" className="flex items-center gap-1">
+                  <Link2 className="h-4 w-4" />
+                  <span>Связи</span>
+                </TabsTrigger>
+                <TabsTrigger value="tasks" className="flex items-center gap-1">
+                  <ListTodo className="h-4 w-4" />
+                  <span>Задачи</span>
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="links">
+                {hasBacklinks ? (
+                  <BacklinksList 
+                    links={formattedLinks}
+                    onLinkClick={handleWikiLinkClick}
+                  />
+                ) : (
+                  <div className="text-center text-muted-foreground py-3">
+                    Нет входящих ссылок
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="tasks">
+                <NoteTasks noteId={note.id} />
+              </TabsContent>
+            </Tabs>
           </div>
         )}
       </CardContent>

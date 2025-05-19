@@ -1,14 +1,16 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TipTapEditor from "@/components/notes/TipTapEditor";
 import BacklinksList from "@/components/notes/BacklinksList";
 import TagManager from "@/components/notes/TagManager";
 import ColorPicker from "@/components/notes/ColorPicker";
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
+import { FileText, ListTodo } from "lucide-react";
 import TemplateSelector from "@/components/notes/templates/TemplateSelector";
 import { applyTemplate } from "@/components/notes/templates/NoteTemplate";
 import { LinkData } from "@/hooks/notes/links/types";
+import TaskExtractor from "@/components/notes/TaskExtractor";
+import { containsTasks } from "@/utils/notes/taskExtractor";
 
 interface NoteContentEditorProps {
   content: string;
@@ -47,6 +49,8 @@ const NoteContentEditor: React.FC<NoteContentEditorProps> = ({
   onTitleChange
 }) => {
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+  const [hasTasks, setHasTasks] = useState(false);
+  
   const hasBacklinks = links?.incomingLinks && links.incomingLinks.length > 0;
 
   const handleTemplateSelect = (template) => {
@@ -61,6 +65,11 @@ const NoteContentEditor: React.FC<NoteContentEditorProps> = ({
     }
     setIsTemplateDialogOpen(false);
   };
+  
+  // Check for tasks in the content
+  useEffect(() => {
+    setHasTasks(containsTasks(content));
+  }, [content]);
 
   return (
     <>
@@ -79,6 +88,18 @@ const NoteContentEditor: React.FC<NoteContentEditorProps> = ({
             <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Шаблоны</span>
           </Button>
+          
+          {hasTasks && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1"
+              onClick={() => {}}
+            >
+              <ListTodo className="h-4 w-4" />
+              <span className="hidden sm:inline">Задачи</span>
+            </Button>
+          )}
         </div>
       </div>
       
@@ -91,6 +112,10 @@ const NoteContentEditor: React.FC<NoteContentEditorProps> = ({
         onLinkClick={onNoteSelect}
         onColorChange={onColorChange}
       />
+      
+      {hasTasks && noteId && (
+        <TaskExtractor content={content} noteId={noteId} />
+      )}
       
       {hasBacklinks && (
         <div className="mt-4">

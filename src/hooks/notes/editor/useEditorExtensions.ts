@@ -14,6 +14,8 @@ import TableHeader from '@tiptap/extension-table-header';
 import Color from '@tiptap/extension-color';
 import TextStyle from '@tiptap/extension-text-style';
 import { WikiLink } from '@/components/notes/extensions/WikiLink';
+import TaskList from '@/components/notes/extensions/task-list/TaskList';
+import TaskItem from '@/components/notes/extensions/task-item/TaskItem';
 
 /**
  * Hook for configuring TipTap editor extensions
@@ -28,7 +30,17 @@ export const useEditorExtensions = (
   const getExtensions = useCallback((): Extensions => {
     // Define extensions array
     return [
-      StarterKit,
+      StarterKit.configure({
+        // Disable the built-in list types that conflict with our custom task lists
+        bulletList: {
+          keepMarks: true,
+          keepAttributes: false,
+        },
+        orderedList: {
+          keepMarks: true,
+          keepAttributes: false,
+        },
+      }),
       Placeholder.configure({
         placeholder,
       }),
@@ -54,7 +66,10 @@ export const useEditorExtensions = (
       TableHeader,
       // Text style extensions for color support
       TextStyle,
-      Color
+      Color,
+      // Task management extensions
+      TaskList,
+      TaskItem,
     ];
   }, [placeholder, validateWikiLink]);
 
