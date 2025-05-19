@@ -38,13 +38,14 @@ export const useTaskMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['tasks-count'] });
       
-      // Проверяем, является ли возвращенный объект валидным объектом задачи
-      const taskContent = typeof data.content === 'object' ? data.content : {};
+      // Проверяем данные, возвращаемые из API
+      // Безопасно обрабатываем поле completed, которое может быть как в корне объекта, так и в content
+      const isTaskCompleted = 'completed' in data ? 
+        data.completed : 
+        (data.content && typeof data.content === 'object' && 'completed' in data.content ? 
+          data.content.completed : false);
       
-      // Безопасная проверка на завершенность задачи
-      const isCompleted = data.completed || (taskContent && 'completed' in taskContent && taskContent.completed);
-      
-      if (isCompleted) {
+      if (isTaskCompleted) {
         toast.success("Задача выполнена", {
           description: `Задача "${data.title}" отмечена как выполненная`
         });
