@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Editor } from "@tiptap/react";
 import { 
@@ -190,7 +191,7 @@ const EnhancedMenuBar: React.FC<EnhancedMenuBarProps> = ({
               <ToggleGroupItem
                 value="h1"
                 size="sm"
-                pressed={editor.isActive('heading', { level: 1 })}
+                data-state={editor.isActive('heading', { level: 1 }) ? "on" : "off"}
                 onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
                 className="h-8 px-2"
                 aria-label="Заголовок 1"
@@ -206,7 +207,7 @@ const EnhancedMenuBar: React.FC<EnhancedMenuBarProps> = ({
               <ToggleGroupItem
                 value="h2"
                 size="sm"
-                pressed={editor.isActive('heading', { level: 2 })}
+                data-state={editor.isActive('heading', { level: 2 }) ? "on" : "off"}
                 onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                 className="h-8 px-2"
                 aria-label="Заголовок 2"
@@ -222,7 +223,7 @@ const EnhancedMenuBar: React.FC<EnhancedMenuBarProps> = ({
               <ToggleGroupItem
                 value="h3"
                 size="sm"
-                pressed={editor.isActive('heading', { level: 3 })}
+                data-state={editor.isActive('heading', { level: 3 }) ? "on" : "off"}
                 onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
                 className="h-8 px-2"
                 aria-label="Заголовок 3"
@@ -243,7 +244,7 @@ const EnhancedMenuBar: React.FC<EnhancedMenuBarProps> = ({
               <ToggleGroupItem
                 value="bulletList"
                 size="sm"
-                pressed={editor.isActive('bulletList')}
+                data-state={editor.isActive('bulletList') ? "on" : "off"}
                 onClick={() => editor.chain().focus().toggleBulletList().run()}
                 className="h-8 w-8 p-0"
                 aria-label="Маркированный список"
@@ -259,7 +260,7 @@ const EnhancedMenuBar: React.FC<EnhancedMenuBarProps> = ({
               <ToggleGroupItem
                 value="orderedList"
                 size="sm"
-                pressed={editor.isActive('orderedList')}
+                data-state={editor.isActive('orderedList') ? "on" : "off"}
                 onClick={() => editor.chain().focus().toggleOrderedList().run()}
                 className="h-8 w-8 p-0"
                 aria-label="Нумерованный список"
@@ -280,7 +281,7 @@ const EnhancedMenuBar: React.FC<EnhancedMenuBarProps> = ({
               <ToggleGroupItem
                 value="code"
                 size="sm"
-                pressed={editor.isActive('code')}
+                data-state={editor.isActive('code') ? "on" : "off"}
                 onClick={() => editor.chain().focus().toggleCode().run()}
                 className="h-8 w-8 p-0"
                 aria-label="Встроенный код"
@@ -296,7 +297,7 @@ const EnhancedMenuBar: React.FC<EnhancedMenuBarProps> = ({
               <ToggleGroupItem
                 value="codeBlock"
                 size="sm"
-                pressed={editor.isActive('codeBlock')}
+                data-state={editor.isActive('codeBlock') ? "on" : "off"}
                 onClick={() => editor.chain().focus().toggleCodeBlock().run()}
                 className="h-8 w-8 p-0"
                 aria-label="Блок кода"

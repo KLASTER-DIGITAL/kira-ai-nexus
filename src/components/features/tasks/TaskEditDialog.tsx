@@ -31,7 +31,7 @@ const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
     category: taskContent.category,
     reminder: taskContent.reminder || false,
     recurring: taskContent.recurring || false,
-    recurring_type: taskContent.recurring_type
+    recurring_type: (taskContent.recurring_type as "daily" | "weekly" | "monthly") || "daily"
   };
 
   const onSubmit = (data: TaskFormValues) => {

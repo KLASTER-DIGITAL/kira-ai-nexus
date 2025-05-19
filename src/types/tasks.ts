@@ -2,6 +2,7 @@
 import { UserProfile } from './auth';
 
 export type TaskPriority = 'low' | 'medium' | 'high';
+export type RecurringType = 'daily' | 'weekly' | 'monthly';
 
 export interface Task {
   id: string;
@@ -20,7 +21,7 @@ export interface Task {
     category?: string;
     reminder?: boolean;
     recurring?: boolean;
-    recurring_type?: string;
+    recurring_type?: RecurringType;
     [key: string]: any;
   };
 }

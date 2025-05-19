@@ -1,16 +1,10 @@
+
 import React, { useEffect, useRef } from "react";
 import { useEditor, EditorContent, Editor } from "@tiptap/react";
 import { useEditorConfig } from "@/hooks/notes/editor/useEditorConfig";
 import { useWikiLinks } from "@/hooks/notes/links/useWikiLinks";
 import { addWikiLinkClickHandlers } from "./extensions/wiki-link/WikiLinkClickHandler";
 import EnhancedMenuBar from "./menubar/EnhancedMenuBar";
-import TextAlign from '@tiptap/extension-text-align';
-import Table from '@tiptap/extension-table';
-import TableRow from '@tiptap/extension-table-row';
-import TableCell from '@tiptap/extension-table-cell';
-import TableHeader from '@tiptap/extension-table-header';
-import Color from '@tiptap/extension-color';
-import TextStyle from '@tiptap/extension-text-style';
 import "../styles/tiptap.css";
 
 interface TipTapEditorProps {
@@ -50,29 +44,8 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
   // Функциональность вики-ссылок 
   const { handleWikiLinkClick } = useWikiLinks(noteId, onNoteCreated);
   
-  // Расширенные возможности редактора
-  const editorConfig = {
-    ...getEditorConfig(),
-    extensions: [
-      ...(getEditorConfig().extensions || []),
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-        alignments: ['left', 'center', 'right', 'justify'],
-        defaultAlignment: 'left',
-      }),
-      Table.configure({
-        resizable: true,
-      }),
-      TableRow,
-      TableCell,
-      TableHeader,
-      Color,
-      TextStyle,
-    ]
-  };
-  
-  // Инициализируем редактор с расширенной конфигурацией
-  const editor = useEditor(editorConfig);
+  // Инициализируем редактор с конфигурацией
+  const editor = useEditor(getEditorConfig());
   
   // Сохраняем ссылку на редактор для очистки
   const editorRef = useRef<Editor | null>(null);

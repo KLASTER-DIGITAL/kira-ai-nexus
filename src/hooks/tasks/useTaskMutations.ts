@@ -38,8 +38,11 @@ export const useTaskMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['tasks-count'] });
       
-      // Проверяем, изменилось ли состояние завершенности задачи
-      const isCompleted = typeof data.content === 'object' && data.content?.completed;
+      // Проверяем, является ли возвращенный объект валидным объектом задачи
+      const taskContent = typeof data.content === 'object' ? data.content : {};
+      
+      // Безопасная проверка на завершенность задачи
+      const isCompleted = data.completed || (taskContent && 'completed' in taskContent && taskContent.completed);
       
       if (isCompleted) {
         toast.success("Задача выполнена", {
