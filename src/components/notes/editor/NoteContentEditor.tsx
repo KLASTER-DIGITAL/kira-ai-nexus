@@ -1,8 +1,13 @@
 
-import React from "react";
+import React, { useState } from "react";
 import TipTapEditor from "@/components/notes/TipTapEditor";
 import BacklinksList from "@/components/notes/BacklinksList";
 import TagManager from "@/components/notes/TagManager";
+import ColorPicker from "@/components/notes/ColorPicker";
+import { Button } from "@/components/ui/button";
+import { FileTemplate } from "lucide-react";
+import TemplateSelector from "@/components/notes/templates/TemplateSelector";
+import { applyTemplate } from "@/components/notes/templates/NoteTemplate";
 import { LinkData } from "@/hooks/notes/links/types";
 
 interface NoteContentEditorProps {
@@ -24,6 +29,8 @@ interface NoteContentEditorProps {
     }>;
     outgoingLinks: LinkData[];
   };
+  title?: string;
+  onTitleChange?: (title: string) => void;
 }
 
 const NoteContentEditor: React.FC<NoteContentEditorProps> = ({
@@ -35,12 +42,46 @@ const NoteContentEditor: React.FC<NoteContentEditorProps> = ({
   onTagsChange,
   color,
   onColorChange,
-  links
+  links,
+  title,
+  onTitleChange
 }) => {
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const hasBacklinks = links?.incomingLinks && links.incomingLinks.length > 0;
+
+  const handleTemplateSelect = (template) => {
+    const result = applyTemplate(template, title);
+    if (onTitleChange) {
+      onTitleChange(result.title);
+    }
+    onContentChange(result.content);
+    onTagsChange(result.tags);
+    if (result.color) {
+      onColorChange(result.color);
+    }
+    setIsTemplateDialogOpen(false);
+  };
 
   return (
     <>
+      <div className="mb-4 flex flex-wrap justify-between items-center gap-2">
+        <div className="flex items-center gap-2">
+          <ColorPicker 
+            selectedColor={color} 
+            onColorChange={onColorChange} 
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-1"
+            onClick={() => setIsTemplateDialogOpen(true)}
+          >
+            <FileTemplate className="h-4 w-4" />
+            <span className="hidden sm:inline">Шаблоны</span>
+          </Button>
+        </div>
+      </div>
+      
       <TipTapEditor 
         content={content} 
         onChange={onContentChange} 
@@ -48,6 +89,7 @@ const NoteContentEditor: React.FC<NoteContentEditorProps> = ({
         autoFocus={false}
         noteId={noteId}
         onLinkClick={onNoteSelect}
+        onColorChange={onColorChange}
       />
       
       {hasBacklinks && (
@@ -59,6 +101,12 @@ const NoteContentEditor: React.FC<NoteContentEditorProps> = ({
       <div className="mt-4">
         <TagManager tags={tags} onTagsChange={onTagsChange} />
       </div>
+      
+      <TemplateSelector 
+        open={isTemplateDialogOpen}
+        onOpenChange={setIsTemplateDialogOpen}
+        onSelectTemplate={handleTemplateSelect}
+      />
     </>
   );
 };

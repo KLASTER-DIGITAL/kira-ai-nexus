@@ -25,7 +25,7 @@ const TagManager: React.FC<TagManagerProps> = ({ tags, onTagsChange }) => {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && tagInput) {
+    if (e.key === 'Enter' && tagInput.trim()) {
       e.preventDefault();
       addTag();
     }
@@ -63,6 +63,7 @@ const TagManager: React.FC<TagManagerProps> = ({ tags, onTagsChange }) => {
           size="sm"
           onClick={addTag} 
           disabled={!tagInput.trim()}
+          className="whitespace-nowrap"
         >
           Добавить
         </Button>

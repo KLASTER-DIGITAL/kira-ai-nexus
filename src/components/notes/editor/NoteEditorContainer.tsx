@@ -115,7 +115,7 @@ const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({
   };
 
   return (
-    <Card className="flex flex-col h-full">
+    <Card className="flex flex-col h-full animate-fade-in">
       <CardHeader className="pb-2">
         <NoteMetadataComponent
           title={title}
@@ -137,6 +137,8 @@ const NoteEditorContainer: React.FC<NoteEditorContainerProps> = ({
           color={color} 
           onColorChange={handleColorChange}
           links={links}
+          title={title}
+          onTitleChange={handleTitleChange}
         />
       </CardContent>
       <CardFooter className="flex justify-between">

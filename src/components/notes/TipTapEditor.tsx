@@ -1,10 +1,18 @@
 
 import React, { useEffect, useRef } from "react";
 import { useEditor, EditorContent, Editor } from "@tiptap/react";
-import { MenuBar } from "./menubar";
 import { useEditorConfig } from "@/hooks/notes/editor/useEditorConfig";
 import { useWikiLinks } from "@/hooks/notes/links/useWikiLinks";
 import { addWikiLinkClickHandlers } from "./extensions/wiki-link/WikiLinkClickHandler";
+import EnhancedMenuBar from "./menubar/EnhancedMenuBar";
+import TextAlign from '@tiptap/extension-text-align';
+import Table from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
+import Color from '@tiptap/extension-color';
+import TextStyle from '@tiptap/extension-text-style';
+import "../styles/tiptap.css";
 
 interface TipTapEditorProps {
   content: string;
@@ -15,6 +23,7 @@ interface TipTapEditorProps {
   noteId?: string;
   onLinkClick?: (noteId: string) => void;
   onNoteCreated?: (noteId: string) => void;
+  onColorChange?: (color: string) => void;
 }
 
 const TipTapEditor: React.FC<TipTapEditorProps> = ({
@@ -26,8 +35,9 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
   noteId,
   onLinkClick,
   onNoteCreated,
+  onColorChange
 }) => {
-  // Set up editor configuration
+  // Базовая конфигурация редактора
   const { getEditorConfig, validateLinks } = useEditorConfig({
     content,
     onChange,
@@ -38,20 +48,41 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     onNoteCreated
   });
   
-  // Get wiki link functionality
+  // Функциональность вики-ссылок 
   const { handleWikiLinkClick } = useWikiLinks(noteId, onNoteCreated);
   
-  // Initialize the editor with our configuration
-  const editor = useEditor(getEditorConfig());
+  // Расширенные возможности редактора
+  const editorConfig = {
+    ...getEditorConfig(),
+    extensions: [
+      ...(getEditorConfig().extensions || []),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+        alignments: ['left', 'center', 'right', 'justify'],
+        defaultAlignment: 'left',
+      }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableCell,
+      TableHeader,
+      Color,
+      TextStyle,
+    ]
+  };
   
-  // Keep a reference to the editor for cleanup
+  // Инициализируем редактор с расширенной конфигурацией
+  const editor = useEditor(editorConfig);
+  
+  // Сохраняем ссылку на редактор для очистки
   const editorRef = useRef<Editor | null>(null);
 
-  // Set up editor reference and click handlers for read-only mode
+  // Настраиваем ссылку на редактор и обработчики кликов для read-only режима
   useEffect(() => {
     editorRef.current = editor;
     
-    // Add click handler for wiki links in read-only mode
+    // Добавляем обработчик кликов по вики-ссылкам в режиме чтения
     if (editor && !editable && onLinkClick) {
       const cleanup = addWikiLinkClickHandlers(
         editor,
@@ -62,7 +93,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     }
   }, [editor, editable, onLinkClick, handleWikiLinkClick]);
 
-  // Update wiki links when notes are renamed
+  // Обновляем вики-ссылки при переименовании заметок
   useEffect(() => {
     if (!editor || !noteId) return;
     
@@ -73,7 +104,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
 
   return (
     <div className="tiptap-editor border rounded-md bg-background">
-      {editor && editable && <MenuBar editor={editor} noteId={noteId} />}
+      {editor && editable && <EnhancedMenuBar editor={editor} onColorSelect={onColorChange} />}
       <EditorContent
         editor={editor}
         className="prose prose-sm dark:prose-invert max-w-none p-4"

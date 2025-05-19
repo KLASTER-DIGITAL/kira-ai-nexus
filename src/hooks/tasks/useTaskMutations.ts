@@ -1,6 +1,6 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { createTask, updateTask, deleteTask, CreateTaskInput, UpdateTaskInput } from '@/services/taskService';
 import { useAuth } from '@/context/auth';
 
@@ -16,16 +16,14 @@ export const useTaskMutations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast({
-        title: "Задача создана",
+      queryClient.invalidateQueries({ queryKey: ['tasks-count'] });
+      toast.success("Задача создана", {
         description: "Новая задача успешно добавлена"
       });
     },
     onError: (error) => {
-      toast({
-        title: "Ошибка",
-        description: `Не удалось создать задачу: ${error.message}`,
-        variant: "destructive"
+      toast.error("Ошибка", {
+        description: `Не удалось создать задачу: ${error.message}`
       });
     }
   });
@@ -36,18 +34,26 @@ export const useTaskMutations = () => {
       if (!user) throw new Error('User not authenticated');
       return updateTask(user.id, updatedTask);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast({
-        title: "Задача обновлена",
-        description: "Изменения сохранены"
-      });
+      queryClient.invalidateQueries({ queryKey: ['tasks-count'] });
+      
+      // Проверяем, изменилось ли состояние завершенности задачи
+      const isCompleted = typeof data.content === 'object' && data.content?.completed;
+      
+      if (isCompleted) {
+        toast.success("Задача выполнена", {
+          description: `Задача "${data.title}" отмечена как выполненная`
+        });
+      } else {
+        toast.success("Задача обновлена", {
+          description: "Изменения сохранены"
+        });
+      }
     },
     onError: (error) => {
-      toast({
-        title: "Ошибка",
-        description: `Не удалось обновить задачу: ${error.message}`,
-        variant: "destructive"
+      toast.error("Ошибка", {
+        description: `Не удалось обновить задачу: ${error.message}`
       });
     }
   });
@@ -60,16 +66,14 @@ export const useTaskMutations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast({
-        title: "Задача удалена",
+      queryClient.invalidateQueries({ queryKey: ['tasks-count'] });
+      toast.info("Задача удалена", {
         description: "Задача была успешно удалена"
       });
     },
     onError: (error) => {
-      toast({
-        title: "Ошибка",
-        description: `Не удалось удалить задачу: ${error.message}`,
-        variant: "destructive"
+      toast.error("Ошибка", {
+        description: `Не удалось удалить задачу: ${error.message}`
       });
     }
   });
@@ -77,6 +81,9 @@ export const useTaskMutations = () => {
   return {
     createTask: createTaskMutation.mutate,
     updateTask: updateTaskMutation.mutate,
-    deleteTask: deleteTaskMutation.mutate
+    deleteTask: deleteTaskMutation.mutate,
+    isCreating: createTaskMutation.isPending,
+    isUpdating: updateTaskMutation.isPending,
+    isDeleting: deleteTaskMutation.isPending
   };
 };
