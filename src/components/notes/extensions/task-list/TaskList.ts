@@ -42,12 +42,18 @@ export const TaskList = Node.create<TaskListOptions>({
   },
   
   addCommands() {
+    // The issue is here - we need to ensure we're returning a proper command format
+    // that matches what TipTap expects for Partial<RawCommands>
     return {
-      // Fixed the command to use correct return type format
-      toggleTaskList: () => {
-        return ({ commands }) => {
-          return commands.toggleList('taskList', 'taskItem');
-        };
+      // We need to use the same name as in the original toggleList command
+      toggleList: ({ typeOrName, itemTypeOrName }) => {
+        if (typeOrName === 'taskList' && itemTypeOrName === 'taskItem') {
+          return ({ commands }) => {
+            return commands.toggleList('taskList', 'taskItem');
+          };
+        }
+        
+        return () => false;
       },
     };
   },
