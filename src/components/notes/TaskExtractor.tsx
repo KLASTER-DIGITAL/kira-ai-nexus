@@ -34,7 +34,7 @@ const TaskExtractor: React.FC<TaskExtractorProps> = ({ content, noteId }) => {
           title: task.title,
           description: `Создано из заметки: ${noteId}`,
           priority: task.priority,
-          due_date: task.dueDate,
+          dueDate: task.dueDate, // Changed from due_date to dueDate
           content: {
             tags: task.content?.tags || [],
             source: {

@@ -42,7 +42,28 @@ const NoteTasks: React.FC<NoteTasksProps> = ({ noteId }) => {
           return;
         }
         
-        setTasks(data as Task[]);
+        // Transform the raw data to match Task type
+        const transformedTasks: Task[] = data.map((item: any) => {
+          // Extract completed and priority from the content field (or use defaults)
+          const completed = item.content?.completed || false;
+          const priority = item.content?.priority || 'medium';
+          
+          return {
+            id: item.id,
+            title: item.title,
+            description: item.content?.description || '',
+            completed,
+            priority,
+            dueDate: item.content?.dueDate,
+            user_id: item.user_id,
+            created_at: item.created_at,
+            updated_at: item.updated_at,
+            type: item.type,
+            content: item.content
+          };
+        });
+        
+        setTasks(transformedTasks);
       } catch (err) {
         console.error("Error in task fetching:", err);
       } finally {
