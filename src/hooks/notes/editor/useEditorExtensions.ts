@@ -52,6 +52,7 @@ export const useEditorExtensions = (
       TableRow,
       TableCell,
       TableHeader,
+      // Text style extensions for color support
       TextStyle,
       Color
     ];

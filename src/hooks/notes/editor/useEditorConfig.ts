@@ -1,12 +1,6 @@
 
 import { useMemo, useCallback } from "react";
-import StarterKit from "@tiptap/starter-kit";
-import Placeholder from "@tiptap/extension-placeholder";
-import Link from "@tiptap/extension-link";
-import { WikiLink } from "@/components/notes/extensions/wiki-link/WikiLink";
-import { useWikiLinks } from "../links/useWikiLinks";
-import { TagSuggestion } from "@/components/notes/extensions/tags/TagSuggestion";
-import { useTags } from "../useTags";
+import { useEditorExtensions } from "./useEditorExtensions";
 import { Editor } from '@tiptap/react';
 
 interface EditorConfigProps {
@@ -22,71 +16,22 @@ interface EditorConfigProps {
 export const useEditorConfig = ({ 
   content, 
   onChange, 
-  placeholder, 
+  placeholder = "Начните писать...", 
   editable = true, 
   autoFocus = false, 
   noteId, 
   onNoteCreated 
 }: EditorConfigProps) => {
-  const { tags } = useTags();
   
-  // Define extensions used in the editor
-  const extensions = useMemo(() => [
-    StarterKit.configure({
-      history: {
-        depth: 100,
-        newGroupDelay: 500
-      }
-    }),
-    Placeholder.configure({
-      placeholder: placeholder || 'Начните писать...'
-    }),
-    Link.configure({
-      openOnClick: false
-    }),
-    WikiLink.configure({
-      noteId: noteId || '',
-      onNoteCreated: onNoteCreated
-    }),
-    TagSuggestion.configure({
-      suggestion: {
-        items: ({ query }: { query: string; editor: Editor }) => {
-          return (tags || [])
-            .filter(tag => tag.toLowerCase().includes(query.toLowerCase()))
-            .slice(0, 5);
-        },
-        render: () => {
-          return {
-            onStart: () => {/* implementation */},
-            onUpdate: () => {/* implementation */},
-            onKeyDown: () => false,
-            onExit: () => {/* implementation */}
-          };
-        }
-      }
-    })
-  ], [placeholder, tags, noteId, onNoteCreated]);
+  // Простая проверка вики-ссылок
+  const validateWikiLink = useCallback((href: string) => {
+    return href && href.startsWith('[[') && href.endsWith(']]');
+  }, []);
 
-  // Get the wiki link functionality
-  const { handleWikiLinkClick, isCreatingLink } = useWikiLinks(noteId, onNoteCreated);
-
-  // Handle link click
-  const handleLinkClick = useCallback((href: string) => {
-    if (href.startsWith("[[")) {
-      handleWikiLinkClick(href);
-    } else {
-      window.open(href, '_blank');
-    }
-  }, [handleWikiLinkClick]);
-
-  // Only validate links when we have a note ID
-  const validateLinks = useCallback((editor: Editor) => {
-    if (!noteId) return;
-    // This functionality is currently handled separately by the wiki link extension
-    // or can be implemented here if needed
-  }, [noteId]);
-
-  // Prepare editor configuration with all extensions
+  // Получаем конфигурацию расширений
+  const { getExtensions } = useEditorExtensions(placeholder, validateWikiLink);
+  
+  // Получаем полную конфигурацию редактора
   const getEditorConfig = useCallback(() => {
     return {
       editable,
@@ -94,32 +39,22 @@ export const useEditorConfig = ({
       onUpdate: ({ editor }: { editor: Editor }) => {
         onChange(editor.getHTML());
       },
-      autofocus: autoFocus,
-      extensions,
+      autofocus: autoFocus ? 'end' : false,
+      extensions: getExtensions(),
       editorProps: {
         attributes: {
-          class: 'focus:outline-none'
-        },
-        handleClick: (view: any, pos: number, event: MouseEvent) => {
-          const { schema } = view.state;
-          
-          if (!(event.target instanceof HTMLAnchorElement)) {
-            return false;
-          }
-          
-          const element = event.target as HTMLAnchorElement;
-          const href = element.getAttribute('href');
-          
-          if (href) {
-            handleLinkClick(href);
-            return true;
-          }
-          
-          return false;
+          class: 'focus:outline-none',
         }
       }
     };
-  }, [content, extensions, editable, autoFocus, onChange, handleLinkClick]);
+  }, [content, onChange, editable, autoFocus, getExtensions]);
+
+  // Функция для проверки и обновления вики-ссылок
+  const validateLinks = useCallback((editor: Editor) => {
+    // Здесь можно реализовать логику проверки и обновления ссылок
+    // Например, проверить существование заметок, на которые есть ссылки
+    console.log("Validating links in the editor");
+  }, []);
 
   return {
     getEditorConfig,

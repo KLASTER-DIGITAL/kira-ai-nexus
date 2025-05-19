@@ -1,103 +1,82 @@
 
 import { useCallback } from "react";
-import { useNotes } from "@/hooks/useNotes";
-import { useWikiLinkCreation } from "./useWikiLinkCreation";
-import { Note } from "@/types/notes";
-import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useNotesMutations } from "../useNotesMutations";
+import { toast } from "sonner";
 
+/**
+ * Hook для обработки вики-ссылок
+ */
 export const useWikiLinks = (noteId?: string, onNoteCreated?: (noteId: string) => void) => {
-  const { notes, createNote } = useNotes({ pageSize: 100 });
-  const { createWikiLink, isCreatingLink } = useWikiLinkCreation(noteId);
-  const queryClient = useQueryClient();
+  const { createNote } = useNotesMutations();
+  
+  /**
+   * Извлекает заголовок заметки из вики-ссылки
+   */
+  const extractTitleFromLink = useCallback((href: string): string => {
+    if (!href) return '';
+    // Извлекаем текст между [[ и ]]
+    const match = href.match(/\[\[(.*?)\]\]/);
+    return match ? match[1] : href;
+  }, []);
 
-  // Handle clicking on a wiki link
-  const handleWikiLinkClick = useCallback(async (
-    title: string, 
-    onLinkClick?: (noteId: string) => void
-  ) => {
-    if (!title || !notes) return null;
-    
-    // Clean the title (remove brackets if present)
-    const cleanTitle = title.replace(/^\[\[|\]\]$/g, "");
-    
-    // Find the note by title
-    const targetNote = notes.find(note => 
-      note.title.toLowerCase() === cleanTitle.toLowerCase()
-    );
-    
-    if (targetNote) {
-      // If note exists, navigate to it
-      console.log("Found existing note:", targetNote.title);
-      
-      // If we have a current note ID, create a link between the notes
-      if (noteId) {
-        await createWikiLink(targetNote.title);
-      }
-      
-      // Navigate to the existing note
-      if (onLinkClick) {
-        onLinkClick(targetNote.id);
-      }
-      
-      return targetNote.id;
-    } else {
-      // If note doesn't exist, create a new one
-      console.log("Creating new note:", cleanTitle);
+  /**
+   * Обработка клика по вики-ссылке
+   */
+  const handleWikiLinkClick = useCallback(
+    async (href: string, onLinkClick?: (noteId: string) => void) => {
+      const title = extractTitleFromLink(href);
       
       try {
-        // Step 1: Create the note without relying on its return value
-        await createNote({
-          title: cleanTitle,
-          content: "",
-          tags: [],
-          type: "note",
-          user_id: "" // Will be filled by the backend
-        } as any);
-        
-        // Step 2: Invalidate notes query to ensure we have latest data
-        await queryClient.invalidateQueries({ queryKey: ['notes'] });
-        
-        // Step 3: Query the database directly to get the newly created note by title
-        const { data: newNoteData, error } = await supabase
+        // Проверяем существует ли заметка с таким заголовком
+        const { data: existingNotes, error } = await supabase
           .from('nodes')
           .select('id, title')
-          .eq('title', cleanTitle)
+          .eq('title', title)
           .eq('type', 'note')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
+          .limit(1);
         
-        if (error || !newNoteData) {
-          console.error("Error finding newly created note:", error);
-          return null;
+        if (error) {
+          console.error("Ошибка при проверке существования заметки:", error);
+          return;
         }
         
-        const createdNoteId = newNoteData.id;
-        console.log("Created note with ID:", createdNoteId);
-        
-        // Create a link if we have a current note ID
-        if (noteId) {
-          await createWikiLink(cleanTitle);
+        if (existingNotes && existingNotes.length > 0) {
+          // Если заметка существует, перенаправляем на нее
+          if (onLinkClick) {
+            onLinkClick(existingNotes[0].id);
+          }
+        } else {
+          // Если заметки не существует, создаем новую
+          const result = await createNote({
+            title,
+            content: '',
+            tags: []
+          });
+          
+          console.log("Создана новая заметка:", result);
+          toast.success(`Создана заметка "${title}"`, {
+            description: "Заметка успешно создана",
+          });
+          
+          if (onNoteCreated && result) {
+            onNoteCreated(result.id);
+          }
+          
+          if (onLinkClick && result) {
+            onLinkClick(result.id);
+          }
         }
-        
-        // Notify parent component
-        if (onNoteCreated) {
-          onNoteCreated(createdNoteId);
-        }
-        
-        // Navigate to the new note
-        if (onLinkClick) {
-          onLinkClick(createdNoteId);
-        }
-        
-        return createdNoteId;
       } catch (error) {
-        console.error("Error in wiki link creation flow:", error);
-        return null;
+        console.error("Ошибка при обработке вики-ссылки:", error);
+        toast.error("Ошибка при переходе по ссылке");
       }
-    }
-  }, [notes, noteId, createWikiLink, createNote, onNoteCreated, queryClient]);
-  
-  return { handleWikiLinkClick, isCreatingLink };
+    },
+    [extractTitleFromLink, createNote, onNoteCreated]
+  );
+
+  return {
+    handleWikiLinkClick,
+    isCreatingLink: false // Можно расширить для отображения состояния загрузки
+  };
 };

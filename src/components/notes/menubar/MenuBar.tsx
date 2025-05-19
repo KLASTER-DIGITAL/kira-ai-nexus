@@ -11,7 +11,7 @@ import {
   HistoryGroup 
 } from "./groups";
 
-const MenuBar: React.FC<MenuBarProps> = ({ editor, noteId }) => {
+const MenuBar: React.FC<MenuBarProps> = ({ editor, noteId, onColorSelect }) => {
   if (!editor) {
     return null;
   }

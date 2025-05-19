@@ -74,9 +74,22 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     }
   }, [editor, noteId, validateLinks]);
 
+  // Обработчик изменения цвета текста
+  const handleColorSelect = (color: string) => {
+    if (onColorChange) {
+      onColorChange(color);
+    }
+  };
+
   return (
     <div className="tiptap-editor border rounded-md bg-background">
-      {editor && editable && <EnhancedMenuBar editor={editor} onColorSelect={onColorChange} />}
+      {editor && editable && (
+        <EnhancedMenuBar 
+          editor={editor} 
+          noteId={noteId} 
+          onColorSelect={handleColorSelect} 
+        />
+      )}
       <EditorContent
         editor={editor}
         className="prose prose-sm dark:prose-invert max-w-none p-4"

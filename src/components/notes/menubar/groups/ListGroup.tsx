@@ -1,29 +1,36 @@
 
 import React from "react";
 import { Editor } from "@tiptap/react";
-import { MenuButton } from "../utils";
-import { List, ListOrdered } from "lucide-react";
+import { ListOrdered, ListUnordered } from "lucide-react";
+import { Toggle } from "@/components/ui/toggle";
 
-export const ListGroup: React.FC<{ editor: Editor }> = ({ editor }) => {
+interface ListGroupProps {
+  editor: Editor;
+}
+
+export const ListGroup: React.FC<ListGroupProps> = ({ editor }) => {
+  if (!editor) {
+    return null;
+  }
+
   return (
-    <>
-      <MenuButton
-        editor={editor}
-        isActive={editor.isActive("bulletList")}
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
+    <div className="flex gap-1">
+      <Toggle
+        size="sm"
+        pressed={editor.isActive("bulletList")}
+        onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
         title="Маркированный список"
       >
-        <List className="h-4 w-4" />
-      </MenuButton>
-
-      <MenuButton
-        editor={editor}
-        isActive={editor.isActive("orderedList")}
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        <ListUnordered className="h-4 w-4" />
+      </Toggle>
+      <Toggle
+        size="sm"
+        pressed={editor.isActive("orderedList")}
+        onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
         title="Нумерованный список"
       >
         <ListOrdered className="h-4 w-4" />
-      </MenuButton>
-    </>
+      </Toggle>
+    </div>
   );
 };

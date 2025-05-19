@@ -2,33 +2,32 @@
 import { Editor } from '@tiptap/react';
 
 /**
- * Helper function to add click handlers for wiki links in read-only mode
+ * Добавляет обработчики клика к вики-ссылкам в режиме чтения
  */
 export const addWikiLinkClickHandlers = (
-  editor: Editor, 
-  handleClick: (href: string) => void
-): (() => void) => {
-  if (!editor) return () => {};
+  editor: Editor,
+  onLinkClick: (href: string) => void
+) => {
+  // Получаем DOM-контейнер редактора
+  const editorElement = editor.view.dom;
   
-  const handleClickEvent = (event: MouseEvent) => {
-    const target = event.target as HTMLElement;
-    if (target.matches('.wiki-link') || target.closest('.wiki-link')) {
-      const wikiLink = target.closest('.wiki-link') as HTMLElement;
-      if (wikiLink) {
-        const href = wikiLink.getAttribute('href');
-        if (href) {
-          event.preventDefault();
-          handleClick(href);
-        }
-      }
+  // Функция обработки клика
+  const handleClick = (event: MouseEvent) => {
+    const element = event.target as HTMLElement;
+    
+    // Проверяем, был ли клик по ссылке с классом wiki-link
+    if (element.closest('.wiki-link')) {
+      event.preventDefault();
+      const href = element.getAttribute('href') || '';
+      onLinkClick(href);
     }
   };
   
-  const editorElement = editor.view.dom;
-  editorElement.addEventListener('click', handleClickEvent);
+  // Добавляем обработчик событий
+  editorElement.addEventListener('click', handleClick);
   
-  // Return cleanup function
+  // Возвращаем функцию для удаления обработчика (cleanup)
   return () => {
-    editorElement.removeEventListener('click', handleClickEvent);
+    editorElement.removeEventListener('click', handleClick);
   };
 };

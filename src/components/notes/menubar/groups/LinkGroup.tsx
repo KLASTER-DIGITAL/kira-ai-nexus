@@ -1,98 +1,99 @@
 
 import React, { useState } from "react";
 import { Editor } from "@tiptap/react";
-import { MenuButton } from "../utils";
-import { Link, Hash, BookOpen } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Link } from "lucide-react";
+import { Toggle } from "@/components/ui/toggle";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { 
-  Command, 
-  CommandInput, 
-  CommandEmpty, 
-  CommandGroup, 
-  CommandItem, 
-  CommandList 
-} from "@/components/ui/command";
-import { useNotes } from "@/hooks/useNotes";
-import { Note } from "@/types/notes";
 
-export const LinkGroup: React.FC<{ editor: Editor; noteId?: string }> = ({ editor, noteId }) => {
-  const [wikiLinkPopoverOpen, setWikiLinkPopoverOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const { notes } = useNotes({ pageSize: 100 });
+interface LinkGroupProps {
+  editor: Editor;
+  noteId?: string;
+}
 
-  const addLink = () => {
-    const url = window.prompt('URL');
-    if (url) {
-      editor.chain().focus().setLink({ href: url }).run();
-    } else {
+export const LinkGroup: React.FC<LinkGroupProps> = ({ editor, noteId }) => {
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+
+  if (!editor) {
+    return null;
+  }
+
+  const handleSetLink = () => {
+    if (linkUrl === "") {
       editor.chain().focus().unsetLink().run();
+      setIsLinkModalOpen(false);
+      return;
     }
-  };
 
-  const insertWikiLink = (title: string) => {
+    // Update link
     editor
       .chain()
       .focus()
-      .insertContent(`[[${title}]]`)
+      .extendMarkRange("link")
+      .setLink({ href: linkUrl })
       .run();
-    
-    setWikiLinkPopoverOpen(false);
+
+    setIsLinkModalOpen(false);
+    setLinkUrl("");
   };
 
-  const filteredNotes = searchQuery && notes
-    ? notes.filter(note => 
-        note.title.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : notes || [];
-
   return (
-    <>
-      <MenuButton
-        editor={editor}
-        isActive={editor.isActive("link")}
-        onClick={addLink}
-        title="Ссылка"
-      >
-        <Link className="h-4 w-4" />
-      </MenuButton>
-      
-      <Popover open={wikiLinkPopoverOpen} onOpenChange={setWikiLinkPopoverOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            size="sm"
-            variant="ghost"
-            className={editor.isActive("wikiLink") ? "bg-muted" : ""}
-            title="Wiki-ссылка [[название]]"
-          >
-            <Hash className="h-4 w-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="p-0" align="start" side="bottom">
-          <Command>
-            <CommandInput 
-              placeholder="Найти заметку..." 
-              value={searchQuery}
-              onValueChange={setSearchQuery}
+    <Dialog open={isLinkModalOpen} onOpenChange={setIsLinkModalOpen}>
+      <DialogTrigger asChild>
+        <Toggle
+          size="sm"
+          pressed={editor.isActive("link")}
+          onPressedChange={() => {
+            if (editor.isActive("link")) {
+              editor.chain().focus().unsetLink().run();
+            } else {
+              setLinkUrl(editor.getAttributes("link").href || "");
+              setIsLinkModalOpen(true);
+            }
+          }}
+          title="Ссылка"
+        >
+          <Link className="h-4 w-4" />
+        </Toggle>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Вставить ссылку</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-1 gap-2">
+            <Input
+              id="link"
+              placeholder="Введите URL"
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSetLink();
+                }
+              }}
             />
-            <CommandList>
-              <CommandEmpty>Заметки не найдены</CommandEmpty>
-              <CommandGroup heading="Заметки">
-                {filteredNotes.map((note: Note) => (
-                  <CommandItem
-                    key={note.id}
-                    value={note.title}
-                    onSelect={() => insertWikiLink(note.title)}
-                  >
-                    <BookOpen className="mr-2 h-4 w-4" />
-                    {note.title}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-    </>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => setIsLinkModalOpen(false)}>
+            Отмена
+          </Button>
+          <Button type="button" onClick={handleSetLink}>
+            Сохранить
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
