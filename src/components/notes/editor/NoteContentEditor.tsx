@@ -5,7 +5,7 @@ import BacklinksList from "@/components/notes/BacklinksList";
 import TagManager from "@/components/notes/TagManager";
 import ColorPicker from "@/components/notes/ColorPicker";
 import { Button } from "@/components/ui/button";
-import { FileTemplate } from "lucide-react";
+import { FileText } from "lucide-react";
 import TemplateSelector from "@/components/notes/templates/TemplateSelector";
 import { applyTemplate } from "@/components/notes/templates/NoteTemplate";
 import { LinkData } from "@/hooks/notes/links/types";
@@ -76,7 +76,7 @@ const NoteContentEditor: React.FC<NoteContentEditorProps> = ({
             className="flex items-center gap-1"
             onClick={() => setIsTemplateDialogOpen(true)}
           >
-            <FileTemplate className="h-4 w-4" />
+            <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Шаблоны</span>
           </Button>
         </div>

@@ -52,8 +52,8 @@ export const useEditorExtensions = (
       TableRow,
       TableCell,
       TableHeader,
-      Color,
       TextStyle,
+      Color
     ];
   }, [placeholder, validateWikiLink]);
 

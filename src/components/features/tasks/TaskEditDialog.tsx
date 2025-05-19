@@ -19,8 +19,8 @@ const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
   updateTask,
   categories
 }) => {
-  // Преобразуем задачу в формат, ожидаемый формой
-  const taskContent = typeof task.content === 'object' ? task.content : {};
+  // Безопасно получаем объект content, используя || {}
+  const taskContent = task.content || {};
   
   const defaultValues: Partial<TaskFormValues> = {
     title: task.title,
@@ -35,7 +35,9 @@ const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
   };
 
   const onSubmit = (data: TaskFormValues) => {
-    // Преобразуем данные формы обратно в формат задачи
+    // Сохраняем существующий контент, если он есть
+    const currentContent = task.content || {};
+    
     updateTask({
       id: task.id,
       title: data.title,
@@ -43,7 +45,7 @@ const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
       priority: data.priority,
       dueDate: data.dueDate ? data.dueDate.toISOString().split('T')[0] : undefined,
       content: {
-        ...taskContent,
+        ...currentContent,
         tags: data.tags,
         category: data.category,
         reminder: data.reminder,

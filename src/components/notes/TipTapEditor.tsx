@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from "react";
 import { useEditor, EditorContent, Editor } from "@tiptap/react";
 import { useEditorConfig } from "@/hooks/notes/editor/useEditorConfig";

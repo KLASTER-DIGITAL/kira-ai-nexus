@@ -14,6 +14,15 @@ export interface Task {
   created_at: string;
   updated_at: string;
   type: 'task';
+  content?: {
+    completed?: boolean;
+    tags?: string[];
+    category?: string;
+    reminder?: boolean;
+    recurring?: boolean;
+    recurring_type?: string;
+    [key: string]: any;
+  };
 }
 
 export interface TaskFilter {

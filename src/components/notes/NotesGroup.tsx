@@ -43,7 +43,7 @@ const NotesGroup: React.FC<NotesGroupProps> = ({ group, onEdit, onDelete }) => {
             <TagBadge 
               tag={group.title.substring(1)} 
               variant="colored"
-              size="default"
+              size="md"
               className="px-3 py-1"
             />
           ) : (

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Editor } from "@tiptap/react";
 import { 
@@ -53,7 +52,7 @@ const EnhancedMenuBar: React.FC<EnhancedMenuBarProps> = ({
               <ToggleGroupItem
                 value="bold"
                 size="sm"
-                pressed={editor.isActive('bold')}
+                data-state={editor.isActive('bold') ? "on" : "off"}
                 onClick={() => editor.chain().focus().toggleBold().run()}
                 className="h-8 w-8 p-0"
                 aria-label="Жирный текст"
@@ -69,7 +68,7 @@ const EnhancedMenuBar: React.FC<EnhancedMenuBarProps> = ({
               <ToggleGroupItem
                 value="italic"
                 size="sm"
-                pressed={editor.isActive('italic')}
+                data-state={editor.isActive('italic') ? "on" : "off"}
                 onClick={() => editor.chain().focus().toggleItalic().run()}
                 className="h-8 w-8 p-0"
                 aria-label="Курсив"
@@ -85,7 +84,7 @@ const EnhancedMenuBar: React.FC<EnhancedMenuBarProps> = ({
               <ToggleGroupItem
                 value="underline"
                 size="sm"
-                pressed={editor.isActive('underline')}
+                data-state={editor.isActive('underline') ? "on" : "off"}
                 onClick={() => editor.chain().focus().toggleUnderline().run()}
                 className="h-8 w-8 p-0"
                 aria-label="Подчеркнутый текст"
@@ -101,7 +100,7 @@ const EnhancedMenuBar: React.FC<EnhancedMenuBarProps> = ({
               <ToggleGroupItem
                 value="strike"
                 size="sm"
-                pressed={editor.isActive('strike')}
+                data-state={editor.isActive('strike') ? "on" : "off"}
                 onClick={() => editor.chain().focus().toggleStrike().run()}
                 className="h-8 w-8 p-0"
                 aria-label="Зачеркнутый текст"
@@ -122,7 +121,7 @@ const EnhancedMenuBar: React.FC<EnhancedMenuBarProps> = ({
               <ToggleGroupItem
                 value="left"
                 size="sm"
-                pressed={editor.isActive({ textAlign: 'left' })}
+                data-state={editor.isActive({ textAlign: 'left' }) ? "on" : "off"}
                 onClick={() => editor.chain().focus().setTextAlign('left').run()}
                 className="h-8 w-8 p-0"
                 aria-label="По левому краю"
@@ -138,7 +137,7 @@ const EnhancedMenuBar: React.FC<EnhancedMenuBarProps> = ({
               <ToggleGroupItem
                 value="center"
                 size="sm"
-                pressed={editor.isActive({ textAlign: 'center' })}
+                data-state={editor.isActive({ textAlign: 'center' }) ? "on" : "off"}
                 onClick={() => editor.chain().focus().setTextAlign('center').run()}
                 className="h-8 w-8 p-0"
                 aria-label="По центру"
@@ -154,7 +153,7 @@ const EnhancedMenuBar: React.FC<EnhancedMenuBarProps> = ({
               <ToggleGroupItem
                 value="right"
                 size="sm"
-                pressed={editor.isActive({ textAlign: 'right' })}
+                data-state={editor.isActive({ textAlign: 'right' }) ? "on" : "off"}
                 onClick={() => editor.chain().focus().setTextAlign('right').run()}
                 className="h-8 w-8 p-0"
                 aria-label="По правому краю"
@@ -170,7 +169,7 @@ const EnhancedMenuBar: React.FC<EnhancedMenuBarProps> = ({
               <ToggleGroupItem
                 value="justify"
                 size="sm"
-                pressed={editor.isActive({ textAlign: 'justify' })}
+                data-state={editor.isActive({ textAlign: 'justify' }) ? "on" : "off"}
                 onClick={() => editor.chain().focus().setTextAlign('justify').run()}
                 className="h-8 w-8 p-0"
                 aria-label="По ширине"
