@@ -67,15 +67,21 @@ const TaskExtractor: React.FC<TaskExtractorProps> = ({ content, noteId }) => {
         };
         
         try {
-          // Не проверяем результат напрямую, а используем переменную
-          const createdTask = await createTask(createTaskInput);
+          // Вызываем createTask и сохраняем результат
+          let taskIdentifier = `task-${taskIndex}`;
           
-          // Проверяем корректно ли вернулся результат
-          const taskKey = createdTask && typeof createdTask === 'object' && 'id' in createdTask 
-            ? createdTask.id 
-            : `task-${taskIndex}`;
+          try {
+            const createdTask = await createTask(createTaskInput);
             
-          newTaskIds.push(taskKey);
+            // Проверяем результат только если он существует и имеет id
+            if (createdTask && typeof createdTask === 'object' && 'id' in createdTask) {
+              taskIdentifier = createdTask.id;
+            }
+          } catch (innerError) {
+            console.error("Error creating task:", innerError);
+          }
+            
+          newTaskIds.push(taskIdentifier);
         } catch (error) {
           console.error("Ошибка при создании задачи:", error);
           // Создаем искусственный идентификатор даже при ошибке, чтобы не пытаться создать её снова
