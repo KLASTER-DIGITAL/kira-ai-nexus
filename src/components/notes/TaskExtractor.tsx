@@ -45,8 +45,14 @@ const TaskExtractor: React.FC<TaskExtractorProps> = ({ content, noteId }) => {
           continue;
         }
         
-        const result = await createTask({
-          title: task.title || "Задача без названия", // Обеспечиваем наличие обязательного поля
+        // Убеждаемся, что обязательное поле title присутствует
+        if (!task.title) {
+          toast.error("Задача без названия не может быть создана");
+          continue;
+        }
+        
+        const createTaskInput = {
+          title: task.title,
           description: `Создано из заметки: ${noteId}`,
           priority: task.priority || 'medium',
           dueDate: task.dueDate,
@@ -58,14 +64,24 @@ const TaskExtractor: React.FC<TaskExtractorProps> = ({ content, noteId }) => {
               id: noteId
             }
           }
-        });
+        };
         
-        // Проверяем корректно ли вернулся результат
-        if (result && typeof result === 'object' && 'id' in result) {
-          newTaskIds.push(result.id as string);
-        } else {
-          // Если id нет, создаем искусственный идентификатор
-          newTaskIds.push(`task-${taskIndex}`);
+        try {
+          const result = await createTask(createTaskInput);
+          
+          // Проверяем корректно ли вернулся результат
+          if (result && typeof result === 'object' && 'id' in result) {
+            newTaskIds.push(result.id);
+          } else {
+            // Если id нет, создаем искусственный идентификатор
+            const taskKey = `task-${taskIndex}`;
+            newTaskIds.push(taskKey);
+          }
+        } catch (error) {
+          console.error("Ошибка при создании задачи:", error);
+          // Создаем искусственный идентификатор даже при ошибке, чтобы не пытаться создать её снова
+          const taskKey = `task-${taskIndex}`;
+          newTaskIds.push(taskKey);
         }
       }
       

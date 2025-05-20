@@ -53,13 +53,19 @@ export const useTaskOperations = () => {
         content: taskData.content || {}
       };
       
-      const result = await createTask(createTaskInput);
-      
-      if (result) {
-        toast.success("Задача создана");
+      try {
+        const result = await createTask(createTaskInput);
+        
+        if (result) {
+          toast.success("Задача создана");
+        }
+        
+        return result;
+      } catch (error) {
+        console.error("Error in createTask operation:", error);
+        toast.error("Ошибка создания задачи");
+        return null;
       }
-      
-      return result;
     } catch (error) {
       console.error("Error creating task:", error);
       toast.error("Не удалось создать задачу");
