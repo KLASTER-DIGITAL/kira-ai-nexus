@@ -37,17 +37,13 @@ export const TaskList = Node.create<TaskListOptions>({
   
   addKeyboardShortcuts() {
     return {
-      'Mod-Shift-8': () => this.editor.commands.toggleList('taskList', 'taskItem'),
+      'Mod-Shift-8': () => this.editor.commands.toggleTaskList(),
     };
   },
   
   addCommands() {
-    // We need to ensure we're returning a proper command format
-    // that matches what TipTap expects for Partial<RawCommands>
     return {
-      // Use TipTap's expected command format for toggleList
-      toggleList: () => ({ commands }) => {
-        // This implementation will run when our specific task list is needed
+      toggleTaskList: () => ({ commands }) => {
         return commands.toggleList('taskList', 'taskItem');
       }
     };

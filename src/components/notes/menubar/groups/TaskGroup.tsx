@@ -18,7 +18,7 @@ export const TaskGroup: React.FC<TaskGroupProps> = ({ editor }) => {
       <Toggle
         size="sm"
         pressed={editor.isActive("taskList")}
-        onPressedChange={() => editor.chain().focus().toggleList('taskList', 'taskItem').run()}
+        onPressedChange={() => editor.chain().focus().toggleTaskList().run()}
         title="Список задач"
       >
         <ListTodo className="h-4 w-4" />
@@ -27,22 +27,23 @@ export const TaskGroup: React.FC<TaskGroupProps> = ({ editor }) => {
         size="sm"
         pressed={false}
         onPressedChange={() => {
+          if (!editor.isActive("taskItem")) {
+            editor.chain().focus().toggleTaskList().run();
+          }
+          
+          // Select the current task item and set priority
           const { state } = editor;
-          const { from, to } = state.selection;
+          const { from } = state.selection;
+          const pos = editor.state.doc.resolve(from);
+          const node = pos.node();
           
-          // Set task priority
-          editor.chain().focus().setTaskItem(false).run();
-          
-          // Set priority to high as example
-          const transaction = editor.state.tr.setNodeMarkup(
-            from - 1, // Position of the task item node
-            undefined,
-            { checked: false, priority: 'high' }
-          );
-          
-          editor.view.dispatch(transaction);
+          if (node && editor.isActive("taskItem")) {
+            editor.chain().focus().updateAttributes("taskItem", { 
+              priority: "high" 
+            }).run();
+          }
         }}
-        title="Добавить приоритет"
+        title="Важная задача"
       >
         <ListChecks className="h-4 w-4" />
       </Toggle>

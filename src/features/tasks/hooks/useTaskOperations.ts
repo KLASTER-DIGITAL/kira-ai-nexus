@@ -1,0 +1,58 @@
+
+import { useCallback } from 'react';
+import { Task } from '@/types/tasks';
+import { useTaskMutations } from '@/hooks/tasks/useTaskMutations';
+import { toast } from 'sonner';
+
+/**
+ * Hook for common task operations with built-in error handling and feedback
+ */
+export const useTaskOperations = () => {
+  const { updateTask, deleteTask, createTask } = useTaskMutations();
+  
+  const toggleCompletion = useCallback(async (task: Task) => {
+    try {
+      await updateTask({
+        id: task.id,
+        completed: !task.completed,
+      });
+      return true;
+    } catch (error) {
+      console.error("Error toggling task completion:", error);
+      toast.error("Не удалось обновить статус задачи");
+      return false;
+    }
+  }, [updateTask]);
+  
+  const removeTask = useCallback(async (taskId: string) => {
+    try {
+      await deleteTask(taskId);
+      toast.success("Задача удалена");
+      return true;
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      toast.error("Не удалось удалить задачу");
+      return false;
+    }
+  }, [deleteTask]);
+  
+  const addTask = useCallback(async (taskData: Partial<Task>) => {
+    try {
+      const result = await createTask(taskData);
+      if (result) {
+        toast.success("Задача создана");
+      }
+      return result;
+    } catch (error) {
+      console.error("Error creating task:", error);
+      toast.error("Не удалось создать задачу");
+      return null;
+    }
+  }, [createTask]);
+  
+  return {
+    toggleCompletion,
+    removeTask,
+    addTask
+  };
+};

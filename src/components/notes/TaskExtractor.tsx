@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { useTaskMutations } from "@/hooks/tasks/useTaskMutations";
+import { toast } from "sonner";
 
 interface TaskExtractorProps {
   content: string;
@@ -15,10 +16,17 @@ interface TaskExtractorProps {
 
 const TaskExtractor: React.FC<TaskExtractorProps> = ({ content, noteId }) => {
   const [isCreating, setIsCreating] = useState(false);
+  const [createdTaskIds, setCreatedTaskIds] = useState<string[]>([]);
   const { createTask } = useTaskMutations();
   
   const extractedTasks = useMemo(() => {
-    return extractTasksFromNote(content);
+    if (!content) return [];
+    try {
+      return extractTasksFromNote(content);
+    } catch (error) {
+      console.error("Ошибка при извлечении задач:", error);
+      return [];
+    }
   }, [content]);
   
   if (extractedTasks.length === 0) {
@@ -27,15 +35,23 @@ const TaskExtractor: React.FC<TaskExtractorProps> = ({ content, noteId }) => {
   
   const handleCreateTasks = async () => {
     setIsCreating(true);
+    const newTaskIds: string[] = [];
     
     try {
       for (const task of extractedTasks) {
-        await createTask({
+        // Skip tasks that have already been created
+        if (createdTaskIds.some(id => 
+          task.title === extractedTasks.find(t => t.id === id)?.title)
+        ) {
+          continue;
+        }
+        
+        const result = await createTask({
           title: task.title,
           description: `Создано из заметки: ${noteId}`,
-          priority: task.priority,
+          priority: task.priority || 'medium',
           dueDate: task.dueDate,
-          completed: task.completed, // Added the required completed property
+          completed: task.completed || false,
           content: {
             tags: task.content?.tags || [],
             source: {
@@ -44,9 +60,22 @@ const TaskExtractor: React.FC<TaskExtractorProps> = ({ content, noteId }) => {
             }
           }
         });
+        
+        if (result?.id) {
+          newTaskIds.push(result.id);
+        }
+      }
+      
+      setCreatedTaskIds(prev => [...prev, ...newTaskIds]);
+      
+      if (newTaskIds.length > 0) {
+        toast.success(`Создано задач: ${newTaskIds.length}`);
+      } else {
+        toast.info("Все задачи уже были созданы");
       }
     } catch (error) {
       console.error("Ошибка при создании задач:", error);
+      toast.error("Не удалось создать задачи");
     } finally {
       setIsCreating(false);
     }
@@ -64,7 +93,9 @@ const TaskExtractor: React.FC<TaskExtractorProps> = ({ content, noteId }) => {
           className="gap-1"
         >
           <SquarePlus className="h-4 w-4" />
-          Создать задачи
+          {createdTaskIds.length === extractedTasks.length 
+            ? "Задачи созданы" 
+            : "Создать задачи"}
         </Button>
       </div>
       
@@ -72,7 +103,13 @@ const TaskExtractor: React.FC<TaskExtractorProps> = ({ content, noteId }) => {
         {extractedTasks.map((task, index) => (
           <div 
             key={`task-${index}`} 
-            className={`flex items-start gap-2 p-2 rounded-sm ${task.completed ? 'bg-muted/20' : 'bg-background'}`}
+            className={`flex items-start gap-2 p-2 rounded-sm ${
+              task.completed ? 'bg-muted/20' : 'bg-background'
+            } ${
+              createdTaskIds.some(id => task.title === extractedTasks.find(t => t.id === id)?.title)
+                ? 'border-l-2 border-primary'
+                : ''
+            }`}
           >
             <div className={`mt-0.5 ${task.completed ? 'text-primary' : 'text-muted-foreground'}`}>
               {task.completed ? <Check className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
@@ -84,8 +121,12 @@ const TaskExtractor: React.FC<TaskExtractorProps> = ({ content, noteId }) => {
               </p>
               
               <div className="flex flex-wrap gap-2 mt-1">
-                <Badge variant={task.priority === 'high' ? 'destructive' : task.priority === 'low' ? 'outline' : 'secondary'} className="text-xs">
-                  {task.priority}
+                <Badge variant={
+                  task.priority === 'high' ? 'destructive' : 
+                  task.priority === 'low' ? 'outline' : 
+                  'secondary'
+                } className="text-xs">
+                  {task.priority || 'medium'}
                 </Badge>
                 
                 {task.dueDate && (

@@ -10,6 +10,7 @@ import {
   resetPassword,
 } from './authActions';
 import { isSuperAdmin as checkIsSuperAdmin } from './utils';
+import { debugAuthState, logAuthEvent } from '@/features/auth/utils/authDebug';
 
 /**
  * Hook that provides authentication functionality to the AuthContext
@@ -18,10 +19,13 @@ export const useAuthProvider = (): AuthContextProps => {
   const authState = useAuthState();
   const navigate = useNavigate();
 
+  // Debug auth state
+  debugAuthState(authState.session, authState.user, authState.profile);
+
   // Helper function to check if user is superadmin
   const isSuperAdmin = () => {
     const isSuperAdminUser = checkIsSuperAdmin(authState.profile);
-    console.log("isSuperAdmin check:", { 
+    logAuthEvent('isSuperAdmin check', { 
       role: authState.profile?.role, 
       isSuperAdmin: isSuperAdminUser,
       profile: authState.profile
@@ -40,7 +44,7 @@ export const useAuthProvider = (): AuthContextProps => {
     // Auth methods
     signUp,
     signIn,
-    signOut, // Now this is properly exported from authActions
+    signOut, 
     requestPasswordReset,
     resetPassword: async (newPassword: string) => {
       const { error } = await resetPassword(newPassword);

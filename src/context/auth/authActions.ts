@@ -1,32 +1,35 @@
 
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { cleanupAuthState } from './utils';
+import { logAuthEvent, logAuthError } from "@/features/auth/utils/authDebug";
 
 /**
  * Signs up a new user with email and password
  */
 export const signUp = async (email: string, password: string) => {
   try {
-    console.log("Starting sign up process");
+    logAuthEvent("Starting sign up process", { email });
     // Clean up existing auth state
     cleanupAuthState();
     
     const { error } = await supabase.auth.signUp({ email, password });
     
     if (!error) {
-      toast({
-        title: "Регистрация успешна",
+      toast.success("Регистрация успешна", {
         description: "Проверьте почту для подтверждения"
       });
-      console.log("Sign up successful");
+      logAuthEvent("Sign up successful", { email });
     } else {
-      console.error("Sign up error:", error);
+      logAuthError("Sign up error", error);
     }
     
     return { error };
   } catch (error) {
-    console.error('Error signing up:', error);
+    logAuthError("Error signing up", error);
+    toast.error("Ошибка регистрации", { 
+      description: (error as Error).message
+    });
     return { error };
   }
 };
@@ -36,20 +39,20 @@ export const signUp = async (email: string, password: string) => {
  */
 export const signIn = async (email: string, password: string) => {
   try {
-    console.log("Starting sign in process");
+    logAuthEvent("Starting sign in process", { email });
     // Clean up existing auth state
     cleanupAuthState();
     
     // Attempt global sign out first
     try {
-      console.log("Performing global sign out before sign in");
+      logAuthEvent("Performing global sign out before sign in");
       await supabase.auth.signOut({ scope: 'global' });
     } catch (err) {
-      console.warn("Global sign out failed, continuing anyway:", err);
+      logAuthError("Global sign out failed, continuing anyway", err);
       // Continue even if this fails
     }
     
-    console.log("Signing in with email and password");
+    logAuthEvent("Signing in with email and password", { email });
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -57,19 +60,26 @@ export const signIn = async (email: string, password: string) => {
     
     if (!error) {
       // Successfully signed in
-      console.log("Sign in successful:", data.user?.email);
-      toast({
-        title: "Вход выполнен",
+      logAuthEvent("Sign in successful", { userId: data.user?.id, email: data.user?.email });
+      toast.success("Вход выполнен", {
         description: "Добро пожаловать в KIRA AI"
       });
       // Перенаправление будет выполнено в onAuthStateChange
     } else {
-      console.error("Sign in error:", error);
+      logAuthError("Sign in error", error);
+      if (error.message.includes('Invalid login credentials')) {
+        toast.error("Неверный email или пароль");
+      } else {
+        toast.error(`Ошибка входа: ${error.message}`);
+      }
     }
     
     return { data, error };
   } catch (error) {
-    console.error('Error signing in:', error);
+    logAuthError("Exception signing in", error);
+    toast.error("Ошибка входа", { 
+      description: (error as Error).message
+    });
     return { data: null, error };
   }
 };
@@ -79,23 +89,27 @@ export const signIn = async (email: string, password: string) => {
  */
 export const signOut = async () => {
   try {
-    console.log("Starting sign out process");
+    logAuthEvent("Starting sign out process");
     // Clean up auth state
     cleanupAuthState();
     
     // Attempt global sign out
-    console.log("Performing global sign out");
+    logAuthEvent("Performing global sign out");
     const { error } = await supabase.auth.signOut({ scope: 'global' });
     
     if (!error) {
-      console.log("Sign out complete, redirecting to auth page");
+      logAuthEvent("Sign out complete, redirecting to auth page");
       // Use a basic redirect instead of navigate
       window.location.href = '/auth';
+    } else {
+      logAuthError("Sign out error", error);
+      toast.error("Ошибка при выходе из системы");
     }
     
     return { error: null };
   } catch (error) {
-    console.error('Error signing out:', error);
+    logAuthError("Exception signing out", error);
+    toast.error("Ошибка при выходе из системы");
     return { error };
   }
 };
@@ -105,20 +119,25 @@ export const signOut = async () => {
  */
 export const requestPasswordReset = async (email: string) => {
   try {
+    logAuthEvent("Requesting password reset", { email });
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     
     if (!error) {
-      toast({
-        title: "Запрос отправлен",
+      toast.success("Запрос отправлен", {
         description: "Проверьте почту для сброса пароля"
       });
+      logAuthEvent("Password reset request sent", { email });
+    } else {
+      logAuthError("Password reset request error", error);
+      toast.error(`Ошибка запроса сброса пароля: ${error.message}`);
     }
     
     return { error };
   } catch (error) {
-    console.error('Error requesting password reset:', error);
+    logAuthError("Exception requesting password reset", error);
+    toast.error("Ошибка запроса сброса пароля");
     return { error };
   }
 };
@@ -128,20 +147,25 @@ export const requestPasswordReset = async (email: string) => {
  */
 export const resetPassword = async (newPassword: string) => {
   try {
+    logAuthEvent("Resetting password");
     const { error } = await supabase.auth.updateUser({
       password: newPassword,
     });
     
     if (!error) {
-      toast({
-        title: "Пароль изменен",
+      toast.success("Пароль изменен", {
         description: "Вы можете использовать новый пароль для входа"
       });
+      logAuthEvent("Password reset successful");
+    } else {
+      logAuthError("Password reset error", error);
+      toast.error(`Ошибка сброса пароля: ${error.message}`);
     }
     
     return { error };
   } catch (error) {
-    console.error('Error resetting password:', error);
+    logAuthError("Exception resetting password", error);
+    toast.error("Ошибка сброса пароля");
     return { error };
   }
 };
