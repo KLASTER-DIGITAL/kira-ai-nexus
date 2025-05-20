@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from "react";
 import { extractTasksFromNote } from "@/utils/notes/taskExtractor";
 import { Button } from "@/components/ui/button";
@@ -67,21 +66,16 @@ const TaskExtractor: React.FC<TaskExtractorProps> = ({ content, noteId }) => {
         };
         
         try {
-          // Вызываем createTask и сохраняем результат
-          let taskIdentifier = `task-${taskIndex}`;
+          // Определяем идентификатор задачи по умолчанию
+          const taskIdentifier = `task-${taskIndex}`;
           
-          try {
-            const createdTask = await createTask(createTaskInput);
-            
-            // Проверяем результат только если он существует и имеет id
-            if (createdTask && typeof createdTask === 'object' && 'id' in createdTask) {
-              taskIdentifier = createdTask.id;
-            }
-          } catch (innerError) {
-            console.error("Error creating task:", innerError);
-          }
-            
+          // Вызываем createTask без проверки возвращаемого значения
+          createTask(createTaskInput);
+          
+          // Используем идентификатор на основе индекса для отслеживания 
+          // (реальный id будет использоваться при загрузке связанных задач)
           newTaskIds.push(taskIdentifier);
+          
         } catch (error) {
           console.error("Ошибка при создании задачи:", error);
           // Создаем искусственный идентификатор даже при ошибке, чтобы не пытаться создать её снова
