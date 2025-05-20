@@ -18,7 +18,7 @@ export const TaskGroup: React.FC<TaskGroupProps> = ({ editor }) => {
       <Toggle
         size="sm"
         pressed={editor.isActive("taskList")}
-        onPressedChange={() => editor.chain().focus().toggleTaskList().run()}
+        onPressedChange={() => editor.chain().focus().toggleList('taskList', 'taskItem').run()}
         title="Список задач"
       >
         <ListTodo className="h-4 w-4" />
@@ -28,7 +28,7 @@ export const TaskGroup: React.FC<TaskGroupProps> = ({ editor }) => {
         pressed={false}
         onPressedChange={() => {
           if (!editor.isActive("taskItem")) {
-            editor.chain().focus().toggleTaskList().run();
+            editor.chain().focus().toggleList('taskList', 'taskItem').run();
           }
           
           // Select the current task item and set priority

@@ -39,15 +39,14 @@ const TaskExtractor: React.FC<TaskExtractorProps> = ({ content, noteId }) => {
     
     try {
       for (const task of extractedTasks) {
-        // Skip tasks that have already been created
-        if (createdTaskIds.some(id => 
-          task.title === extractedTasks.find(t => t.id === id)?.title)
-        ) {
+        // Пропускаем уже созданные задачи используя индекс вместо id
+        const taskIndex = extractedTasks.indexOf(task);
+        if (createdTaskIds.includes(`task-${taskIndex}`)) {
           continue;
         }
         
         const result = await createTask({
-          title: task.title,
+          title: task.title || "Задача без названия", // Обеспечиваем наличие обязательного поля
           description: `Создано из заметки: ${noteId}`,
           priority: task.priority || 'medium',
           dueDate: task.dueDate,
@@ -61,8 +60,12 @@ const TaskExtractor: React.FC<TaskExtractorProps> = ({ content, noteId }) => {
           }
         });
         
-        if (result?.id) {
-          newTaskIds.push(result.id);
+        // Проверяем корректно ли вернулся результат
+        if (result && typeof result === 'object' && 'id' in result) {
+          newTaskIds.push(result.id as string);
+        } else {
+          // Если id нет, создаем искусственный идентификатор
+          newTaskIds.push(`task-${taskIndex}`);
         }
       }
       
@@ -100,51 +103,53 @@ const TaskExtractor: React.FC<TaskExtractorProps> = ({ content, noteId }) => {
       </div>
       
       <div className="space-y-2">
-        {extractedTasks.map((task, index) => (
-          <div 
-            key={`task-${index}`} 
-            className={`flex items-start gap-2 p-2 rounded-sm ${
-              task.completed ? 'bg-muted/20' : 'bg-background'
-            } ${
-              createdTaskIds.some(id => task.title === extractedTasks.find(t => t.id === id)?.title)
-                ? 'border-l-2 border-primary'
-                : ''
-            }`}
-          >
-            <div className={`mt-0.5 ${task.completed ? 'text-primary' : 'text-muted-foreground'}`}>
-              {task.completed ? <Check className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
-            </div>
-            
-            <div className="flex-1">
-              <p className={task.completed ? 'line-through text-muted-foreground' : ''}>
-                {task.title}
-              </p>
+        {extractedTasks.map((task, index) => {
+          // Используем индекс для идентификации задачи вместо id
+          const taskKey = `task-${index}`;
+          const isCreated = createdTaskIds.includes(taskKey);
+          
+          return (
+            <div 
+              key={taskKey} 
+              className={`flex items-start gap-2 p-2 rounded-sm ${
+                task.completed ? 'bg-muted/20' : 'bg-background'
+              } ${isCreated ? 'border-l-2 border-primary' : ''}`}
+            >
+              <div className={`mt-0.5 ${task.completed ? 'text-primary' : 'text-muted-foreground'}`}>
+                {task.completed ? <Check className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
+              </div>
               
-              <div className="flex flex-wrap gap-2 mt-1">
-                <Badge variant={
-                  task.priority === 'high' ? 'destructive' : 
-                  task.priority === 'low' ? 'outline' : 
-                  'secondary'
-                } className="text-xs">
-                  {task.priority || 'medium'}
-                </Badge>
+              <div className="flex-1">
+                <p className={task.completed ? 'line-through text-muted-foreground' : ''}>
+                  {task.title}
+                </p>
                 
-                {task.dueDate && (
-                  <Badge variant="outline" className="text-xs flex items-center gap-1">
-                    <CalendarClock className="h-3 w-3" />
-                    {formatDistanceToNow(new Date(task.dueDate), { addSuffix: true, locale: ru })}
+                <div className="flex flex-wrap gap-2 mt-1">
+                  <Badge variant={
+                    task.priority === 'high' ? 'destructive' : 
+                    task.priority === 'low' ? 'outline' : 
+                    'secondary'
+                  } className="text-xs">
+                    {task.priority || 'medium'}
                   </Badge>
-                )}
-                
-                {task.content?.tags?.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="text-xs">
-                    #{tag}
-                  </Badge>
-                ))}
+                  
+                  {task.dueDate && (
+                    <Badge variant="outline" className="text-xs flex items-center gap-1">
+                      <CalendarClock className="h-3 w-3" />
+                      {formatDistanceToNow(new Date(task.dueDate), { addSuffix: true, locale: ru })}
+                    </Badge>
+                  )}
+                  
+                  {task.content?.tags?.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="text-xs">
+                      #{tag}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

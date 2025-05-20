@@ -38,10 +38,27 @@ export const useTaskOperations = () => {
   
   const addTask = useCallback(async (taskData: Partial<Task>) => {
     try {
-      const result = await createTask(taskData);
+      // Убеждаемся, что обязательное поле title присутствует
+      if (!taskData.title) {
+        toast.error("Название задачи обязательно");
+        return null;
+      }
+      
+      const createTaskInput = {
+        title: taskData.title,
+        description: taskData.description || '',
+        priority: taskData.priority || 'medium',
+        dueDate: taskData.dueDate,
+        completed: taskData.completed || false,
+        content: taskData.content || {}
+      };
+      
+      const result = await createTask(createTaskInput);
+      
       if (result) {
         toast.success("Задача создана");
       }
+      
       return result;
     } catch (error) {
       console.error("Error creating task:", error);
