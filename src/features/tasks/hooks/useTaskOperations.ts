@@ -54,13 +54,15 @@ export const useTaskOperations = () => {
       };
       
       try {
-        const result = await createTask(createTaskInput);
+        // Сохраняем результат вызова в переменную
+        const createdTask = await createTask(createTaskInput);
         
-        if (result) {
+        // Проверяем наличие результата без напрямую без проверки на truthiness
+        if (createdTask) {
           toast.success("Задача создана");
         }
         
-        return result;
+        return createdTask;
       } catch (error) {
         console.error("Error in createTask operation:", error);
         toast.error("Ошибка создания задачи");
