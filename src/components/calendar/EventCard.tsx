@@ -12,6 +12,7 @@ export interface EventCardProps {
   location?: string;
   date: Date;
   type?: "task" | "event" | "reminder";
+  color?: string;
   className?: string;
 }
 
@@ -20,6 +21,7 @@ const EventCard: React.FC<EventCardProps> = ({
   time,
   location,
   type = "event",
+  color,
   className,
 }) => {
   const getTypeColor = () => {
@@ -35,8 +37,13 @@ const EventCard: React.FC<EventCardProps> = ({
     }
   };
 
+  // Используем пользовательский цвет для левой границы, если он указан
+  const cardStyle = color ? {
+    borderLeft: `4px solid ${color}`
+  } : {};
+
   return (
-    <Card className={cn("mb-2 hover:shadow-md transition-shadow", className)}>
+    <Card className={cn("mb-2 hover:shadow-md transition-shadow", className)} style={cardStyle}>
       <CardContent className="p-3">
         <div className="flex flex-col">
           <div className="flex justify-between items-start">

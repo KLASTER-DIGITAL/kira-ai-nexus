@@ -1,77 +1,46 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Calendar as CalendarIcon } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import EventCard, { EventCardProps } from "./EventCard";
+import EventCard from "./EventCard";
 import { CalendarEvent } from "@/types/calendar";
-
-// Заглушка для событий
-const demoEvents: EventCardProps[] = [
-  {
-    id: "1",
-    title: "Брифинг по разработке",
-    date: new Date(2025, 4, 21),
-    time: "10:00",
-    location: "Конференц-зал",
-    type: "event"
-  },
-  {
-    id: "2",
-    title: "Планирование спринта",
-    date: new Date(2025, 4, 22),
-    time: "14:30",
-    location: "Онлайн",
-    type: "event"
-  },
-  {
-    id: "3",
-    title: "Создать отчет по проекту",
-    date: new Date(2025, 4, 23),
-    time: "11:00",
-    type: "task"
-  },
-  {
-    id: "4",
-    title: "Встреча с клиентом",
-    date: new Date(2025, 4, 23),
-    time: "15:00",
-    location: "Офис клиента",
-    type: "event"
-  },
-  {
-    id: "5",
-    title: "Дедлайн по задаче №123",
-    date: new Date(2025, 4, 25),
-    type: "reminder"
-  }
-];
+import { useCalendar } from "@/hooks/useCalendar";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface EventFormData {
   title: string;
   date: Date;
-  time: string;
+  startTime: string;
+  endTime: string;
   location: string;
   description: string;
   type: "task" | "event" | "reminder";
+  color: string;
 }
 
 const CalendarView: React.FC = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [isAddEventOpen, setIsAddEventOpen] = useState(false);
-  const [events, setEvents] = useState<EventCardProps[]>(demoEvents);
   const [eventForm, setEventForm] = useState<Partial<EventFormData>>({
     date: new Date(),
-    type: "event"
+    type: "event",
+    color: "#4f46e5" // Индиго по умолчанию
   });
   const { toast } = useToast();
+
+  // Используем хук useCalendar для получения событий
+  const { events, isLoading, error, createEvent, updateEvent, deleteEvent } = useCalendar({
+    startDate: date ? new Date(date.getFullYear(), date.getMonth(), 1) : undefined,
+    endDate: date ? new Date(date.getFullYear(), date.getMonth() + 1, 0) : undefined
+  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -91,18 +60,65 @@ const CalendarView: React.FC = () => {
       return;
     }
 
-    const newEvent: EventCardProps = {
-      id: `event-${Date.now()}`,
+    if (!date || !eventForm.startTime) {
+      toast({
+        title: "Ошибка",
+        description: "Дата и время начала обязательны",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Формируем дату начала из выбранной даты и времени
+    const eventDate = new Date(date);
+    const [startHours, startMinutes] = eventForm.startTime.split(':').map(Number);
+    const startDate = new Date(
+      eventDate.getFullYear(),
+      eventDate.getMonth(),
+      eventDate.getDate(),
+      startHours,
+      startMinutes
+    );
+
+    // Формируем дату окончания (если указано время окончания)
+    let endDate = null;
+    if (eventForm.endTime) {
+      const [endHours, endMinutes] = eventForm.endTime.split(':').map(Number);
+      endDate = new Date(
+        eventDate.getFullYear(),
+        eventDate.getMonth(),
+        eventDate.getDate(),
+        endHours,
+        endMinutes
+      );
+    }
+
+    // Создаем событие для API
+    const newEvent: Omit<CalendarEvent, 'id'> = {
       title: eventForm.title!,
-      date: eventForm.date || new Date(),
-      time: eventForm.time,
+      description: eventForm.description || '',
+      startDate: startDate.toISOString(),
+      endDate: endDate ? endDate.toISOString() : undefined,
+      allDay: !eventForm.startTime,
       location: eventForm.location,
-      type: eventForm.type || "event"
+      type: eventForm.type as "event" | "task" | "reminder",
+      recurring: false,
+      user_id: "user123", // Будет заменено на реальный ID пользователя при интеграции с авторизацией
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      content: {
+        color: eventForm.color
+      }
     };
 
-    setEvents([...events, newEvent]);
+    // Отправляем запрос на создание события
+    createEvent(newEvent);
     setIsAddEventOpen(false);
-    setEventForm({ date: new Date(), type: "event" });
+    setEventForm({
+      date: new Date(),
+      type: "event",
+      color: "#4f46e5"
+    });
 
     toast({
       title: "Событие добавлено",
@@ -111,17 +127,36 @@ const CalendarView: React.FC = () => {
   };
 
   const getEventsForSelectedDate = () => {
-    if (!date) return [];
-    return events.filter(
-      (event) =>
-        event.date.getFullYear() === date.getFullYear() &&
-        event.date.getMonth() === date.getMonth() &&
-        event.date.getDate() === date.getDate()
-    );
+    if (!date || !events) return [];
+    
+    // Фильтруем события для выбранной даты
+    return events.filter(event => {
+      const eventDate = new Date(event.startDate);
+      return (
+        eventDate.getFullYear() === date.getFullYear() &&
+        eventDate.getMonth() === date.getMonth() &&
+        eventDate.getDate() === date.getDate()
+      );
+    });
   };
 
   const selectedDateEvents = getEventsForSelectedDate();
   const formattedDate = date ? format(date, 'dd MMMM yyyy') : '';
+
+  // Преобразование CalendarEvent в формат EventCardProps
+  const mapEventToCardProps = (event: CalendarEvent) => {
+    const eventDate = new Date(event.startDate);
+    
+    return {
+      id: event.id,
+      title: event.title,
+      date: eventDate,
+      time: event.allDay ? undefined : format(eventDate, 'HH:mm'),
+      location: event.location,
+      type: event.type,
+      color: event.content?.color
+    };
+  };
 
   return (
     <div className="flex flex-col md:flex-row gap-4">
@@ -139,7 +174,7 @@ const CalendarView: React.FC = () => {
           </CardHeader>
           <CardContent className="pb-4 pt-0">
             <p className="text-xs text-muted-foreground mb-2">
-              {events.length} событий на {format(date || new Date(), 'MMMM yyyy')}
+              {isLoading ? 'Загрузка событий...' : `${events?.length || 0} событий на ${format(date || new Date(), 'MMMM yyyy')}`}
             </p>
             <div className="grid grid-cols-3 gap-1">
               <div className="flex items-center gap-1">
@@ -203,12 +238,23 @@ const CalendarView: React.FC = () => {
                   </select>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="time" className="text-right">Время</Label>
+                  <Label htmlFor="startTime" className="text-right">Время начала</Label>
                   <Input
-                    id="time"
-                    name="time"
+                    id="startTime"
+                    name="startTime"
                     type="time"
-                    value={eventForm.time || ''}
+                    value={eventForm.startTime || ''}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="endTime" className="text-right">Время окончания</Label>
+                  <Input
+                    id="endTime"
+                    name="endTime"
+                    type="time"
+                    value={eventForm.endTime || ''}
                     onChange={handleInputChange}
                     className="col-span-3"
                   />
@@ -222,6 +268,20 @@ const CalendarView: React.FC = () => {
                     onChange={handleInputChange}
                     className="col-span-3"
                   />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="color" className="text-right">Цвет</Label>
+                  <div className="col-span-3 flex items-center gap-2">
+                    <Input
+                      id="color"
+                      name="color"
+                      type="color"
+                      value={eventForm.color || '#4f46e5'}
+                      onChange={handleInputChange}
+                      className="w-10 h-10 p-1"
+                    />
+                    <span className="text-sm">{eventForm.color}</span>
+                  </div>
                 </div>
                 <div className="grid grid-cols-4 items-start gap-4">
                   <Label htmlFor="description" className="text-right pt-2">Описание</Label>
@@ -242,10 +302,20 @@ const CalendarView: React.FC = () => {
           </Dialog>
         </div>
 
-        {selectedDateEvents.length > 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-10">
+            <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+          </div>
+        ) : error ? (
+          <Alert variant="destructive">
+            <AlertDescription>
+              Произошла ошибка при загрузке событий. Пожалуйста, попробуйте позже.
+            </AlertDescription>
+          </Alert>
+        ) : selectedDateEvents.length > 0 ? (
           <div className="space-y-2">
             {selectedDateEvents.map((event) => (
-              <EventCard key={event.id} {...event} />
+              <EventCard key={event.id} {...mapEventToCardProps(event)} />
             ))}
           </div>
         ) : (
