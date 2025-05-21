@@ -6,6 +6,7 @@ import EventCard from "./EventCard";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface EventsListProps {
   date: Date | undefined;
@@ -13,6 +14,9 @@ interface EventsListProps {
   error: unknown;
   selectedDateEvents: CalendarEvent[];
   onAddEventClick: () => void;
+  onEditEvent?: (id: string) => void;
+  onDeleteEvent?: (id: string) => void;
+  onEventClick?: (id: string) => void;
 }
 
 const EventsList: React.FC<EventsListProps> = ({
@@ -20,9 +24,13 @@ const EventsList: React.FC<EventsListProps> = ({
   isLoading,
   error,
   selectedDateEvents,
-  onAddEventClick
+  onAddEventClick,
+  onEditEvent,
+  onDeleteEvent,
+  onEventClick
 }) => {
   const formattedDate = date ? format(date, 'dd MMMM yyyy') : '';
+  const { toast } = useToast();
 
   // Преобразование CalendarEvent в формат EventCardProps
   const mapEventToCardProps = (event: CalendarEvent) => {
@@ -35,7 +43,19 @@ const EventsList: React.FC<EventsListProps> = ({
       time: event.allDay ? undefined : format(eventDate, 'HH:mm'),
       location: event.location,
       type: event.type,
-      color: event.content?.color
+      color: event.content?.color,
+      description: event.description,
+      onEdit: onEditEvent,
+      onDelete: (id: string) => {
+        if (onDeleteEvent) {
+          onDeleteEvent(id);
+          toast({
+            title: "Событие удалено",
+            description: "Событие было успешно удалено из календаря"
+          });
+        }
+      },
+      onClick: onEventClick
     };
   };
 
