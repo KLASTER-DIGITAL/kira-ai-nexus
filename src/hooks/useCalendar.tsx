@@ -10,17 +10,33 @@ const mockEvents: CalendarEvent[] = [
     id: "1",
     title: "Запуск MVP",
     description: "Релиз MVP версии KIRA AI",
-    start: "2025-05-24T09:00:00",
-    end: "2025-05-24T10:30:00",
-    color: "#4f46e5",
+    startDate: "2025-05-24T09:00:00",
+    endDate: "2025-05-24T10:30:00",
+    allDay: false,
+    type: "event",
+    recurring: false,
+    user_id: "user123",
+    created_at: "2025-05-10T09:00:00",
+    updated_at: "2025-05-10T09:00:00",
+    content: {
+      color: "#4f46e5"
+    }
   },
   {
     id: "2",
     title: "Встреча с инвесторами",
     description: "Презентация KIRA AI потенциальным инвесторам",
-    start: "2025-05-27T14:00:00",
-    end: "2025-05-27T16:00:00",
-    color: "#10b981",
+    startDate: "2025-05-27T14:00:00",
+    endDate: "2025-05-27T16:00:00",
+    allDay: false,
+    type: "event",
+    recurring: false,
+    user_id: "user123",
+    created_at: "2025-05-10T09:00:00",
+    updated_at: "2025-05-10T09:00:00",
+    content: {
+      color: "#10b981"
+    }
   },
 ];
 
@@ -48,11 +64,11 @@ export const useCalendar = (filter?: CalendarFilter) => {
         let matches = true;
         
         if (filter.startDate) {
-          matches = matches && new Date(event.end) >= filter.startDate;
+          matches = matches && new Date(event.endDate || "") >= filter.startDate;
         }
         
         if (filter.endDate) {
-          matches = matches && new Date(event.start) <= filter.endDate;
+          matches = matches && new Date(event.startDate) <= filter.endDate;
         }
         
         return matches;

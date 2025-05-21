@@ -1,6 +1,9 @@
 
 export * from './notes';
-export * from './tasks';
+// Export all types from tasks except RecurringType to avoid naming conflict
+import { Task, TaskPriority, TaskFilter } from './tasks';
+export { Task, TaskPriority, TaskFilter };
+
 export * from './calendar';
 export * from './auth';
 export * from './chat';
