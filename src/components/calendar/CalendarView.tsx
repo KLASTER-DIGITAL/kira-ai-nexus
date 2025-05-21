@@ -1,19 +1,17 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Plus, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import EventCard from "./EventCard";
-import { CalendarEvent } from "@/types/calendar";
 import { useCalendar } from "@/hooks/useCalendar";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import EventForm from "./EventForm";
+import EventsList from "./EventsList";
+import CalendarMonthInfo from "./CalendarMonthInfo";
+import { CalendarEvent } from "@/types/calendar";
 
 interface EventFormData {
   title: string;
@@ -37,7 +35,7 @@ const CalendarView: React.FC = () => {
   const { toast } = useToast();
 
   // Используем хук useCalendar для получения событий
-  const { events, isLoading, error, createEvent, updateEvent, deleteEvent } = useCalendar({
+  const { events, isLoading, error, createEvent } = useCalendar({
     startDate: date ? new Date(date.getFullYear(), date.getMonth(), 1) : undefined,
     endDate: date ? new Date(date.getFullYear(), date.getMonth() + 1, 0) : undefined
   });
@@ -141,22 +139,6 @@ const CalendarView: React.FC = () => {
   };
 
   const selectedDateEvents = getEventsForSelectedDate();
-  const formattedDate = date ? format(date, 'dd MMMM yyyy') : '';
-
-  // Преобразование CalendarEvent в формат EventCardProps
-  const mapEventToCardProps = (event: CalendarEvent) => {
-    const eventDate = new Date(event.startDate);
-    
-    return {
-      id: event.id,
-      title: event.title,
-      date: eventDate,
-      time: event.allDay ? undefined : format(eventDate, 'HH:mm'),
-      location: event.location,
-      type: event.type,
-      color: event.content?.color
-    };
-  };
 
   return (
     <div className="flex flex-col md:flex-row gap-4">
@@ -168,37 +150,18 @@ const CalendarView: React.FC = () => {
           className="border rounded-md p-3"
         />
 
-        <Card className="mt-4">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">События этого месяца</CardTitle>
-          </CardHeader>
-          <CardContent className="pb-4 pt-0">
-            <p className="text-xs text-muted-foreground mb-2">
-              {isLoading ? 'Загрузка событий...' : `${events?.length || 0} событий на ${format(date || new Date(), 'MMMM yyyy')}`}
-            </p>
-            <div className="grid grid-cols-3 gap-1">
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                <span className="text-xs">События</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                <span className="text-xs">Задачи</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-                <span className="text-xs">Напоминания</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <CalendarMonthInfo 
+          date={date} 
+          eventsCount={events?.length || 0} 
+          isLoading={isLoading} 
+        />
       </div>
 
       <div className="flex-1">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-medium flex items-center">
             <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
-            События на {formattedDate}
+            События на {date ? format(date, 'dd MMMM yyyy') : ''}
           </h3>
 
           <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
@@ -212,124 +175,23 @@ const CalendarView: React.FC = () => {
               <DialogHeader>
                 <DialogTitle>Создать новое событие</DialogTitle>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="title" className="text-right">Название</Label>
-                  <Input
-                    id="title"
-                    name="title"
-                    value={eventForm.title || ''}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="type" className="text-right">Тип</Label>
-                  <select
-                    id="type"
-                    name="type"
-                    value={eventForm.type}
-                    onChange={handleInputChange}
-                    className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="event">Событие</option>
-                    <option value="task">Задача</option>
-                    <option value="reminder">Напоминание</option>
-                  </select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="startTime" className="text-right">Время начала</Label>
-                  <Input
-                    id="startTime"
-                    name="startTime"
-                    type="time"
-                    value={eventForm.startTime || ''}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="endTime" className="text-right">Время окончания</Label>
-                  <Input
-                    id="endTime"
-                    name="endTime"
-                    type="time"
-                    value={eventForm.endTime || ''}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="location" className="text-right">Место</Label>
-                  <Input
-                    id="location"
-                    name="location"
-                    value={eventForm.location || ''}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="color" className="text-right">Цвет</Label>
-                  <div className="col-span-3 flex items-center gap-2">
-                    <Input
-                      id="color"
-                      name="color"
-                      type="color"
-                      value={eventForm.color || '#4f46e5'}
-                      onChange={handleInputChange}
-                      className="w-10 h-10 p-1"
-                    />
-                    <span className="text-sm">{eventForm.color}</span>
-                  </div>
-                </div>
-                <div className="grid grid-cols-4 items-start gap-4">
-                  <Label htmlFor="description" className="text-right pt-2">Описание</Label>
-                  <Textarea
-                    id="description"
-                    name="description"
-                    value={eventForm.description || ''}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                    rows={3}
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Button onClick={handleAddEvent}>Создать событие</Button>
-              </div>
+              <EventForm 
+                eventForm={eventForm}
+                onClose={() => setIsAddEventOpen(false)}
+                onInputChange={handleInputChange}
+                onAddEvent={handleAddEvent}
+              />
             </DialogContent>
           </Dialog>
         </div>
 
-        {isLoading ? (
-          <div className="flex justify-center py-10">
-            <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
-          </div>
-        ) : error ? (
-          <Alert variant="destructive">
-            <AlertDescription>
-              Произошла ошибка при загрузке событий. Пожалуйста, попробуйте позже.
-            </AlertDescription>
-          </Alert>
-        ) : selectedDateEvents.length > 0 ? (
-          <div className="space-y-2">
-            {selectedDateEvents.map((event) => (
-              <EventCard key={event.id} {...mapEventToCardProps(event)} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            <p>Нет событий на выбранную дату</p>
-            <Button 
-              variant="outline" 
-              className="mt-2"
-              onClick={() => setIsAddEventOpen(true)}
-            >
-              Добавить событие
-            </Button>
-          </div>
-        )}
+        <EventsList
+          date={date}
+          isLoading={isLoading}
+          error={error}
+          selectedDateEvents={selectedDateEvents}
+          onAddEventClick={() => setIsAddEventOpen(true)}
+        />
       </div>
     </div>
   );
