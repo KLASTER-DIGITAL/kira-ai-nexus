@@ -1,15 +1,14 @@
 
 import React from "react";
-import { Calendar, Plus } from "lucide-react";
+import { Calendar, CalendarCheck, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { ANIMATIONS } from "@/lib/animations";
+import { Badge } from "@/components/ui/badge";
 
 const CalendarIntegration: React.FC = () => {
   const handleAddGoogleCalendar = () => {
-    // In a real implementation, this would initiate the OAuth flow with Google
-    // For now, we'll just show a toast message
     toast({
       title: "Google Calendar",
       description: "Интеграция с Google Calendar будет доступна в ближайшее время.",
@@ -17,31 +16,87 @@ const CalendarIntegration: React.FC = () => {
   };
 
   return (
-    <div className={`${ANIMATIONS.fadeIn} flex flex-col items-center justify-center h-full`}>
-      <Card className="w-full max-w-md mx-auto bg-background/50 backdrop-blur">
-        <CardContent className="pt-6 flex flex-col items-center">
-          <div className="mb-4">
-            <Calendar size={48} className="text-muted-foreground" />
+    <div className={`${ANIMATIONS.fadeIn} p-4 h-full`}>
+      <CardHeader className="px-0 pt-0">
+        <CardTitle>Интеграции</CardTitle>
+      </CardHeader>
+
+      <CardContent className="px-0 pb-0 flex flex-col gap-4">
+        <div className="flex items-center justify-between rounded-md border p-3 bg-background/50">
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-green-100 p-2 dark:bg-green-900/20">
+              <Calendar className="h-5 w-5 text-green-600 dark:text-green-400" />
+            </div>
+            <div>
+              <h3 className="font-medium">Google Calendar</h3>
+              <p className="text-xs text-muted-foreground">Синхронизация событий</p>
+            </div>
+          </div>
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={handleAddGoogleCalendar}
+          >
+            Подключить
+          </Button>
+        </div>
+        
+        <div className="flex items-center justify-between rounded-md border p-3 bg-background/50">
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-blue-100 p-2 dark:bg-blue-900/20">
+              <CalendarCheck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-medium">Задачи KIRA</h3>
+                <Badge variant="outline" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 text-xs">
+                  Подключено
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">Интеграция с задачами</p>
+            </div>
+          </div>
+          <Button 
+            size="sm" 
+            variant="outline"
+            disabled
+          >
+            Настроить
+          </Button>
+        </div>
+
+        <div className="mt-auto">
+          <h3 className="font-medium text-sm mb-2">Доступные напоминания</h3>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm border-b pb-1">
+              <span>За 30 минут</span>
+              <Badge variant="outline" className="bg-muted">По умолчанию</Badge>
+            </div>
+            <div className="flex items-center justify-between text-sm border-b pb-1">
+              <span>За 1 час</span>
+              <Badge variant="outline" className="bg-muted">Активно</Badge>
+            </div>
+            <div className="flex items-center justify-between text-sm border-b pb-1">
+              <span>За 1 день</span>
+              <Badge variant="outline" className="bg-muted">Активно</Badge>
+            </div>
           </div>
           
-          <h3 className="text-lg font-medium mb-1">Повестка дня</h3>
-          <p className="text-center text-muted-foreground mb-4">
-            События из ваших календарей будут отображаться здесь.
-          </p>
-          
           <Button 
-            onClick={handleAddGoogleCalendar}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white w-full flex items-center justify-center gap-2"
+            className="w-full mt-4"
+            variant="outline"
+            onClick={() => {
+              toast({
+                title: "Настройки напоминаний",
+                description: "Функция будет доступна в следующем обновлении.",
+              });
+            }}
           >
-            <Plus size={16} />
-            Добавить интеграцию календаря
+            <Plus size={16} className="mr-2" />
+            Добавить напоминание
           </Button>
-          
-          <p className="text-center text-sm text-muted-foreground mt-4">
-            <a href="#" className="text-primary hover:underline">Узнать больше</a> о том, как интегрировать календари
-          </p>
-        </CardContent>
-      </Card>
+        </div>
+      </CardContent>
     </div>
   );
 };
