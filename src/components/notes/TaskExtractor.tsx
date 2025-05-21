@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from "react";
 import { extractTasksFromNote } from "@/utils/notes/taskExtractor";
 import { Button } from "@/components/ui/button";
@@ -69,7 +70,7 @@ const TaskExtractor: React.FC<TaskExtractorProps> = ({ content, noteId }) => {
           // Определяем идентификатор задачи по умолчанию
           const taskIdentifier = `task-${taskIndex}`;
           
-          // Вызываем createTask без проверки возвращаемого значения
+          // Вызываем createTask без ожидания результата, т.к. это void функция
           createTask(createTaskInput);
           
           // Используем идентификатор на основе индекса для отслеживания 
@@ -107,7 +108,7 @@ const TaskExtractor: React.FC<TaskExtractorProps> = ({ content, noteId }) => {
           variant="default" 
           size="sm" 
           onClick={handleCreateTasks} 
-          disabled={isCreating}
+          disabled={isCreating || createdTaskIds.length === extractedTasks.length}
           className="gap-1"
         >
           <SquarePlus className="h-4 w-4" />
@@ -162,6 +163,12 @@ const TaskExtractor: React.FC<TaskExtractorProps> = ({ content, noteId }) => {
                   ))}
                 </div>
               </div>
+              
+              {isCreated && (
+                <Badge variant="outline" className="text-xs ml-2">
+                  Создано
+                </Badge>
+              )}
             </div>
           );
         })}
