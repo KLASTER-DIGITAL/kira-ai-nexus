@@ -2,8 +2,9 @@
 import React from "react";
 import { useAuth } from "@/context/auth";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import TaskList from "@/components/features/tasks/TaskList";
+import { BarChart3 } from "lucide-react";
 
 const TasksPage: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -29,6 +30,15 @@ const TasksPage: React.FC = () => {
 
   return (
     <div className="container mx-auto">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Задачи</h1>
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/tasks/dashboard">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Аналитика задач
+          </Link>
+        </Button>
+      </div>
       <div className="max-w-5xl mx-auto">
         <TaskList />
       </div>

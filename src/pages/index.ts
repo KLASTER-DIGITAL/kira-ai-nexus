@@ -13,6 +13,7 @@ export { default as UserDashboardPage } from './UserDashboardPage';
 // Функциональные страницы
 export { default as NotesPage } from './NotesPage';
 export { default as TasksPage } from './TasksPage';
+export { default as TasksDashboardPage } from './TasksDashboardPage';
 export { default as CalendarPage } from './CalendarPage';
 export { default as ChatPage } from './ChatPage';
 export { default as GraphViewPage } from './GraphViewPage';

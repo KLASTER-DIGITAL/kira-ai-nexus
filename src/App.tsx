@@ -14,6 +14,7 @@ import {
   GraphViewPage,
   NotesGraphPage,
   TasksPage,
+  TasksDashboardPage,
   CalendarPage,
   ChatPage,
   AuthPage,
@@ -61,6 +62,7 @@ function App() {
           <Route path="/notes-graph" element={<NotesGraphPage />} />
           <Route path="/graph" element={<GraphViewPage />} />
           <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/tasks/dashboard" element={<TasksDashboardPage />} />
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/help" element={<HelpPage />} />

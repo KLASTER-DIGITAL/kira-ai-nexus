@@ -2,8 +2,9 @@
 import React from "react";
 import { useAuth } from "@/context/auth";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { TasksDashboard } from "@/components/features/tasks/analytics";
+import { CheckSquare } from "lucide-react";
 
 const TasksDashboardPage: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -29,8 +30,16 @@ const TasksDashboardPage: React.FC = () => {
 
   return (
     <div className="container mx-auto">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Аналитика задач</h1>
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/tasks">
+            <CheckSquare className="h-4 w-4 mr-2" />
+            Вернуться к задачам
+          </Link>
+        </Button>
+      </div>
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Аналитика задач</h1>
         <TasksDashboard />
       </div>
     </div>
