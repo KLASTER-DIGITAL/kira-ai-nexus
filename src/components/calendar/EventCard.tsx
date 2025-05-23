@@ -66,12 +66,12 @@ const EventCard: React.FC<EventCardProps> = ({
     if (onClick) onClick(id);
   };
 
-  const handleEdit = (e: React.MouseEvent<Element, MouseEvent> | MouseEvent) => {
+  const handleEdit = (e: Event | React.MouseEvent<Element, MouseEvent>) => {
     e.stopPropagation();
     if (onEdit) onEdit(id);
   };
 
-  const handleDelete = (e: React.MouseEvent<Element, MouseEvent> | MouseEvent) => {
+  const handleDelete = (e: Event | React.MouseEvent<Element, MouseEvent>) => {
     e.stopPropagation();
     if (onDelete) onDelete(id);
   };
@@ -146,11 +146,11 @@ const EventCard: React.FC<EventCardProps> = ({
         </Card>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-44">
-        <ContextMenuItem onSelect={(e) => handleEdit(e)}>
+        <ContextMenuItem onSelect={handleEdit}>
           Редактировать событие
         </ContextMenuItem>
         <ContextMenuItem 
-          onSelect={(e) => handleDelete(e)}
+          onSelect={handleDelete}
           className="text-destructive focus:text-destructive"
         >
           Удалить событие
