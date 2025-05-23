@@ -66,12 +66,12 @@ const EventCard: React.FC<EventCardProps> = ({
     if (onClick) onClick(id);
   };
 
-  const handleEdit = (e: React.MouseEvent | MouseEvent) => {
+  const handleEdit = (e: React.MouseEvent<Element, MouseEvent> | MouseEvent) => {
     e.stopPropagation();
     if (onEdit) onEdit(id);
   };
 
-  const handleDelete = (e: React.MouseEvent | MouseEvent) => {
+  const handleDelete = (e: React.MouseEvent<Element, MouseEvent> | MouseEvent) => {
     e.stopPropagation();
     if (onDelete) onDelete(id);
   };
@@ -106,13 +106,13 @@ const EventCard: React.FC<EventCardProps> = ({
                       <div className="flex flex-col text-sm">
                         <button 
                           className="px-2 py-1.5 text-left hover:bg-muted rounded-sm"
-                          onClick={(e: React.MouseEvent) => handleEdit(e)}
+                          onClick={handleEdit}
                         >
                           Редактировать
                         </button>
                         <button 
                           className="px-2 py-1.5 text-left hover:bg-muted text-destructive rounded-sm"
-                          onClick={(e: React.MouseEvent) => handleDelete(e)}
+                          onClick={handleDelete}
                         >
                           Удалить
                         </button>
@@ -146,11 +146,11 @@ const EventCard: React.FC<EventCardProps> = ({
         </Card>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-44">
-        <ContextMenuItem onSelect={handleEdit}>
+        <ContextMenuItem onSelect={(e) => handleEdit(e)}>
           Редактировать событие
         </ContextMenuItem>
         <ContextMenuItem 
-          onSelect={handleDelete}
+          onSelect={(e) => handleDelete(e)}
           className="text-destructive focus:text-destructive"
         >
           Удалить событие

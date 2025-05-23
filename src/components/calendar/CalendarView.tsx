@@ -2,6 +2,8 @@
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { useCalendar } from "@/hooks/useCalendar";
+import { useCalendarEvents } from "@/hooks/useCalendarEvents";
+import { format } from "date-fns";
 import EventsList from "./EventsList";
 import CalendarMonthInfo from "./CalendarMonthInfo";
 import CalendarHeader from "./CalendarHeader";
@@ -34,6 +36,12 @@ const CalendarView: React.FC = () => {
   const { events, isLoading, error, createEvent, updateEvent, deleteEvent } = useCalendar({
     startDate: date ? new Date(date.getFullYear(), date.getMonth(), 1) : undefined,
     endDate: date ? new Date(date.getFullYear(), date.getMonth() + 1, 0) : undefined
+  });
+
+  // Use our new hook for event filtering
+  const { selectedDateEvents } = useCalendarEvents({
+    events,
+    selectedDate: date
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -80,22 +88,6 @@ const CalendarView: React.FC = () => {
     });
     setCurrentEventId(null);
   };
-
-  const getEventsForSelectedDate = () => {
-    if (!date || !events) return [];
-    
-    // Фильтруем события для выбранной даты
-    return events.filter(event => {
-      const eventDate = new Date(event.startDate);
-      return (
-        eventDate.getFullYear() === date.getFullYear() &&
-        eventDate.getMonth() === date.getMonth() &&
-        eventDate.getDate() === date.getDate()
-      );
-    });
-  };
-
-  const selectedDateEvents = getEventsForSelectedDate();
 
   return (
     <div className="flex flex-col md:flex-row gap-4">

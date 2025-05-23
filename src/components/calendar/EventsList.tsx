@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 
 interface EventsListProps {
   date: Date | undefined;
@@ -31,33 +32,12 @@ const EventsList: React.FC<EventsListProps> = ({
 }) => {
   const formattedDate = date ? format(date, 'dd MMMM yyyy') : '';
   const { toast } = useToast();
-
-  // Преобразование CalendarEvent в формат EventCardProps
-  const mapEventToCardProps = (event: CalendarEvent) => {
-    const eventDate = new Date(event.startDate);
-    
-    return {
-      id: event.id,
-      title: event.title,
-      date: eventDate,
-      time: event.allDay ? undefined : format(eventDate, 'HH:mm'),
-      location: event.location,
-      type: event.type,
-      color: event.content?.color,
-      description: event.description,
-      onEdit: onEditEvent,
-      onDelete: (id: string) => {
-        if (onDeleteEvent) {
-          onDeleteEvent(id);
-          toast({
-            title: "Событие удалено",
-            description: "Событие было успешно удалено из календаря"
-          });
-        }
-      },
-      onClick: onEventClick
-    };
-  };
+  
+  // Use the hook for mapping events
+  const { mapEventToCardProps } = useCalendarEvents({
+    events: selectedDateEvents,
+    selectedDate: date
+  });
 
   if (isLoading) {
     return (
@@ -80,9 +60,26 @@ const EventsList: React.FC<EventsListProps> = ({
   if (selectedDateEvents.length > 0) {
     return (
       <div className="space-y-2">
-        {selectedDateEvents.map((event) => (
-          <EventCard key={event.id} {...mapEventToCardProps(event)} />
-        ))}
+        {selectedDateEvents.map((event) => {
+          const cardProps = mapEventToCardProps(event);
+          return (
+            <EventCard 
+              key={event.id} 
+              {...cardProps} 
+              onEdit={onEditEvent}
+              onDelete={(id: string) => {
+                if (onDeleteEvent) {
+                  onDeleteEvent(id);
+                  toast({
+                    title: "Событие удалено",
+                    description: "Событие было успешно удалено из календаря"
+                  });
+                }
+              }}
+              onClick={onEventClick}
+            />
+          );
+        })}
       </div>
     );
   }
