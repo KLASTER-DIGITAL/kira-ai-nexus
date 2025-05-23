@@ -66,12 +66,12 @@ const EventCard: React.FC<EventCardProps> = ({
     if (onClick) onClick(id);
   };
 
-  const handleEdit = (e: React.MouseEvent) => {
+  const handleEdit = (e: React.MouseEvent | MouseEvent) => {
     e.stopPropagation();
     if (onEdit) onEdit(id);
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = (e: React.MouseEvent | MouseEvent) => {
     e.stopPropagation();
     if (onDelete) onDelete(id);
   };
@@ -96,7 +96,7 @@ const EventCard: React.FC<EventCardProps> = ({
                   <Popover>
                     <PopoverTrigger asChild>
                       <button 
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
                         className="p-1 rounded-full hover:bg-muted"
                       >
                         <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
@@ -106,13 +106,13 @@ const EventCard: React.FC<EventCardProps> = ({
                       <div className="flex flex-col text-sm">
                         <button 
                           className="px-2 py-1.5 text-left hover:bg-muted rounded-sm"
-                          onClick={handleEdit}
+                          onClick={(e: React.MouseEvent) => handleEdit(e)}
                         >
                           Редактировать
                         </button>
                         <button 
                           className="px-2 py-1.5 text-left hover:bg-muted text-destructive rounded-sm"
-                          onClick={handleDelete}
+                          onClick={(e: React.MouseEvent) => handleDelete(e)}
                         >
                           Удалить
                         </button>

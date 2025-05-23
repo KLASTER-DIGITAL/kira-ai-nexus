@@ -1,16 +1,11 @@
 
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
-import { Card } from "@/components/ui/card";
-import { Plus, Calendar as CalendarIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
 import { useCalendar } from "@/hooks/useCalendar";
-import EventForm from "./EventForm";
 import EventsList from "./EventsList";
 import CalendarMonthInfo from "./CalendarMonthInfo";
+import CalendarHeader from "./CalendarHeader";
+import EventDialogs from "./EventDialogs";
 import { CalendarEvent } from "@/types/calendar";
 
 interface EventFormData {
@@ -34,7 +29,6 @@ const CalendarView: React.FC = () => {
     type: "event",
     color: "#4f46e5" // Индиго по умолчанию
   });
-  const { toast } = useToast();
 
   // Используем хук useCalendar для получения событий
   const { events, isLoading, error, createEvent, updateEvent, deleteEvent } = useCalendar({
@@ -47,78 +41,6 @@ const CalendarView: React.FC = () => {
     setEventForm({
       ...eventForm,
       [name]: value
-    });
-  };
-
-  const handleAddEvent = () => {
-    if (!eventForm.title) {
-      toast({
-        title: "Ошибка",
-        description: "Название события обязательно",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!date || !eventForm.startTime) {
-      toast({
-        title: "Ошибка",
-        description: "Дата и время начала обязательны",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Формируем дату начала из выбранной даты и времени
-    const eventDate = new Date(date);
-    const [startHours, startMinutes] = eventForm.startTime.split(':').map(Number);
-    const startDate = new Date(
-      eventDate.getFullYear(),
-      eventDate.getMonth(),
-      eventDate.getDate(),
-      startHours,
-      startMinutes
-    );
-
-    // Формируем дату окончания (если указано время окончания)
-    let endDate = null;
-    if (eventForm.endTime) {
-      const [endHours, endMinutes] = eventForm.endTime.split(':').map(Number);
-      endDate = new Date(
-        eventDate.getFullYear(),
-        eventDate.getMonth(),
-        eventDate.getDate(),
-        endHours,
-        endMinutes
-      );
-    }
-
-    // Создаем событие для API
-    const newEvent: Omit<CalendarEvent, 'id'> = {
-      title: eventForm.title!,
-      description: eventForm.description || '',
-      startDate: startDate.toISOString(),
-      endDate: endDate ? endDate.toISOString() : undefined,
-      allDay: !eventForm.startTime,
-      location: eventForm.location,
-      type: eventForm.type as "event" | "task" | "reminder",
-      recurring: false,
-      user_id: "user123", // Будет заменено на реальный ID пользователя при интеграции с авторизацией
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      content: {
-        color: eventForm.color
-      }
-    };
-
-    // Отправляем запрос на создание события
-    createEvent(newEvent);
-    setIsAddEventOpen(false);
-    resetEventForm();
-
-    toast({
-      title: "Событие добавлено",
-      description: `Событие "${newEvent.title}" успешно добавлено в календарь`
     });
   };
 
@@ -148,14 +70,6 @@ const CalendarView: React.FC = () => {
 
     setCurrentEventId(id);
     setIsEditEventOpen(true);
-  };
-
-  const handleDeleteEvent = (id: string) => {
-    deleteEvent(id);
-  };
-
-  const handleEventClick = (id: string) => {
-    handleEditEvent(id);
   };
 
   const resetEventForm = () => {
@@ -201,32 +115,10 @@ const CalendarView: React.FC = () => {
       </div>
 
       <div className="flex-1">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-medium flex items-center">
-            <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
-            События на {date ? format(date, 'dd MMMM yyyy') : ''}
-          </h3>
-
-          <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="flex items-center gap-1">
-                <Plus size={14} />
-                <span>Добавить событие</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>Создать новое событие</DialogTitle>
-              </DialogHeader>
-              <EventForm 
-                eventForm={eventForm}
-                onClose={() => setIsAddEventOpen(false)}
-                onInputChange={handleInputChange}
-                onAddEvent={handleAddEvent}
-              />
-            </DialogContent>
-          </Dialog>
-        </div>
+        <CalendarHeader 
+          date={date} 
+          setIsAddEventOpen={setIsAddEventOpen} 
+        />
 
         <EventsList
           date={date}
@@ -235,78 +127,24 @@ const CalendarView: React.FC = () => {
           selectedDateEvents={selectedDateEvents}
           onAddEventClick={() => setIsAddEventOpen(true)}
           onEditEvent={handleEditEvent}
-          onDeleteEvent={handleDeleteEvent}
-          onEventClick={handleEventClick}
+          onDeleteEvent={deleteEvent}
+          onEventClick={handleEditEvent}
         />
       </div>
 
-      <Dialog open={isEditEventOpen} onOpenChange={setIsEditEventOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Редактировать событие</DialogTitle>
-          </DialogHeader>
-          <EventForm 
-            eventForm={eventForm}
-            onClose={() => {
-              setIsEditEventOpen(false);
-              resetEventForm();
-            }}
-            onInputChange={handleInputChange}
-            onAddEvent={() => {
-              if (!currentEventId) return;
-              
-              const eventDate = new Date(date!);
-              const [startHours, startMinutes] = (eventForm.startTime || '00:00').split(':').map(Number);
-              const startDate = new Date(
-                eventDate.getFullYear(),
-                eventDate.getMonth(),
-                eventDate.getDate(),
-                startHours,
-                startMinutes
-              );
-
-              let endDate = null;
-              if (eventForm.endTime) {
-                const [endHours, endMinutes] = eventForm.endTime.split(':').map(Number);
-                endDate = new Date(
-                  eventDate.getFullYear(),
-                  eventDate.getMonth(),
-                  eventDate.getDate(),
-                  endHours,
-                  endMinutes
-                );
-              }
-
-              const updatedEvent: CalendarEvent = {
-                id: currentEventId,
-                title: eventForm.title!,
-                description: eventForm.description || '',
-                startDate: startDate.toISOString(),
-                endDate: endDate ? endDate.toISOString() : undefined,
-                allDay: !eventForm.startTime,
-                location: eventForm.location,
-                type: eventForm.type as "event" | "task" | "reminder",
-                recurring: false,
-                user_id: "user123",
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-                content: {
-                  color: eventForm.color
-                }
-              };
-
-              updateEvent(updatedEvent);
-              setIsEditEventOpen(false);
-              resetEventForm();
-
-              toast({
-                title: "Событие обновлено",
-                description: `Событие "${updatedEvent.title}" успешно обновлено`
-              });
-            }}
-          />
-        </DialogContent>
-      </Dialog>
+      <EventDialogs 
+        date={date}
+        isAddEventOpen={isAddEventOpen}
+        setIsAddEventOpen={setIsAddEventOpen}
+        isEditEventOpen={isEditEventOpen}
+        setIsEditEventOpen={setIsEditEventOpen}
+        eventForm={eventForm}
+        handleInputChange={handleInputChange}
+        resetEventForm={resetEventForm}
+        currentEventId={currentEventId}
+        createEvent={createEvent}
+        updateEvent={updateEvent}
+      />
     </div>
   );
 };
