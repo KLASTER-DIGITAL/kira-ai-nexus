@@ -3,6 +3,7 @@ import { UserProfile } from './auth';
 
 export type EventType = 'event' | 'task' | 'reminder';
 export type RecurringType = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly' | 'none';
+export type CalendarViewType = 'month' | 'week' | 'day';
 
 export interface CalendarEvent {
   id: string;

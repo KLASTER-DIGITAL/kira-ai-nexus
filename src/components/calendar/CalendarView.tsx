@@ -1,14 +1,17 @@
+
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { useCalendar } from "@/hooks/useCalendar";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import { useCalendarRealtime } from "@/hooks/useCalendarRealtime";
-import { format } from "date-fns";
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import EventsList from "./EventsList";
 import CalendarMonthInfo from "./CalendarMonthInfo";
 import CalendarHeader from "./CalendarHeader";
 import EventDialogs from "./EventDialogs";
-import { CalendarEvent } from "@/types/calendar";
+import WeekView from "./WeekView";
+import DayView from "./DayView";
+import { CalendarEvent, CalendarViewType } from "@/types/calendar";
 import { useAuth } from "@/context/auth";
 
 interface EventFormData {
@@ -25,25 +28,52 @@ interface EventFormData {
 const CalendarView: React.FC = () => {
   const { user } = useAuth();
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [currentView, setCurrentView] = useState<CalendarViewType>('month');
   const [isAddEventOpen, setIsAddEventOpen] = useState(false);
   const [isEditEventOpen, setIsEditEventOpen] = useState(false);
   const [currentEventId, setCurrentEventId] = useState<string | null>(null);
   const [eventForm, setEventForm] = useState<Partial<EventFormData>>({
     date: new Date(),
     type: "event",
-    color: "#4f46e5" // Индиго по умолчанию
+    color: "#4f46e5"
   });
 
   // Set up real-time subscriptions
   useCalendarRealtime();
 
+  // Calculate date range based on current view
+  const getDateRange = () => {
+    if (!date) return { startDate: undefined, endDate: undefined };
+
+    switch (currentView) {
+      case 'day':
+        return {
+          startDate: new Date(date.getFullYear(), date.getMonth(), date.getDate()),
+          endDate: new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1)
+        };
+      case 'week':
+        return {
+          startDate: startOfWeek(date, { weekStartsOn: 1 }),
+          endDate: endOfWeek(date, { weekStartsOn: 1 })
+        };
+      case 'month':
+      default:
+        return {
+          startDate: startOfMonth(date),
+          endDate: endOfMonth(date)
+        };
+    }
+  };
+
+  const { startDate, endDate } = getDateRange();
+
   // Используем хук useCalendar для получения событий
   const { events, isLoading, error, createEvent, updateEvent, deleteEvent } = useCalendar({
-    startDate: date ? new Date(date.getFullYear(), date.getMonth(), 1) : undefined,
-    endDate: date ? new Date(date.getFullYear(), date.getMonth() + 1, 0) : undefined
+    startDate,
+    endDate
   });
 
-  // Use our new hook for event filtering
+  // Use our hook for event filtering
   const { selectedDateEvents } = useCalendarEvents({
     events,
     selectedDate: date
@@ -106,40 +136,76 @@ const CalendarView: React.FC = () => {
     );
   }
 
+  const renderCalendarContent = () => {
+    switch (currentView) {
+      case 'week':
+        return (
+          <WeekView
+            currentDate={date || new Date()}
+            onDateChange={setDate}
+            events={events || []}
+            onEditEvent={handleEditEvent}
+            onDeleteEvent={deleteEvent}
+            onEventClick={handleEditEvent}
+          />
+        );
+      case 'day':
+        return (
+          <DayView
+            currentDate={date || new Date()}
+            onDateChange={setDate}
+            events={events || []}
+            onEditEvent={handleEditEvent}
+            onDeleteEvent={deleteEvent}
+            onEventClick={handleEditEvent}
+          />
+        );
+      case 'month':
+      default:
+        return (
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="md:w-[350px]">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                className="border rounded-md p-3"
+              />
+
+              <CalendarMonthInfo 
+                date={date} 
+                eventsCount={events?.length || 0} 
+                isLoading={isLoading} 
+              />
+            </div>
+
+            <div className="flex-1">
+              <EventsList
+                date={date}
+                isLoading={isLoading}
+                error={error}
+                selectedDateEvents={selectedDateEvents}
+                onAddEventClick={() => setIsAddEventOpen(true)}
+                onEditEvent={handleEditEvent}
+                onDeleteEvent={deleteEvent}
+                onEventClick={handleEditEvent}
+              />
+            </div>
+          </div>
+        );
+    }
+  };
+
   return (
-    <div className="flex flex-col md:flex-row gap-4">
-      <div className="md:w-[350px]">
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={setDate}
-          className="border rounded-md p-3"
-        />
+    <div className="w-full">
+      <CalendarHeader 
+        date={date} 
+        setIsAddEventOpen={setIsAddEventOpen}
+        currentView={currentView}
+        onViewChange={setCurrentView}
+      />
 
-        <CalendarMonthInfo 
-          date={date} 
-          eventsCount={events?.length || 0} 
-          isLoading={isLoading} 
-        />
-      </div>
-
-      <div className="flex-1">
-        <CalendarHeader 
-          date={date} 
-          setIsAddEventOpen={setIsAddEventOpen} 
-        />
-
-        <EventsList
-          date={date}
-          isLoading={isLoading}
-          error={error}
-          selectedDateEvents={selectedDateEvents}
-          onAddEventClick={() => setIsAddEventOpen(true)}
-          onEditEvent={handleEditEvent}
-          onDeleteEvent={deleteEvent}
-          onEventClick={handleEditEvent}
-        />
-      </div>
+      {renderCalendarContent()}
 
       <EventDialogs 
         date={date}
