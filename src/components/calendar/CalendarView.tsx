@@ -1,14 +1,15 @@
-
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { useCalendar } from "@/hooks/useCalendar";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
+import { useCalendarRealtime } from "@/hooks/useCalendarRealtime";
 import { format } from "date-fns";
 import EventsList from "./EventsList";
 import CalendarMonthInfo from "./CalendarMonthInfo";
 import CalendarHeader from "./CalendarHeader";
 import EventDialogs from "./EventDialogs";
 import { CalendarEvent } from "@/types/calendar";
+import { useAuth } from "@/context/auth";
 
 interface EventFormData {
   title: string;
@@ -22,6 +23,7 @@ interface EventFormData {
 }
 
 const CalendarView: React.FC = () => {
+  const { user } = useAuth();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [isAddEventOpen, setIsAddEventOpen] = useState(false);
   const [isEditEventOpen, setIsEditEventOpen] = useState(false);
@@ -31,6 +33,9 @@ const CalendarView: React.FC = () => {
     type: "event",
     color: "#4f46e5" // Индиго по умолчанию
   });
+
+  // Set up real-time subscriptions
+  useCalendarRealtime();
 
   // Используем хук useCalendar для получения событий
   const { events, isLoading, error, createEvent, updateEvent, deleteEvent } = useCalendar({
@@ -88,6 +93,18 @@ const CalendarView: React.FC = () => {
     });
     setCurrentEventId(null);
   };
+
+  // Show login prompt if user is not authenticated
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10">
+        <h3 className="text-lg font-medium mb-2">Необходима авторизация</h3>
+        <p className="text-muted-foreground mb-4">
+          Для использования календаря необходимо войти в систему
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row gap-4">

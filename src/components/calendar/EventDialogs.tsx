@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import EventForm from "./EventForm";
 import { CalendarEvent } from "@/types/calendar";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/auth";
 
 interface EventFormData {
   title: string;
@@ -44,6 +45,7 @@ const EventDialogs: React.FC<EventDialogsProps> = ({
   updateEvent
 }) => {
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleAddEvent = () => {
     if (!eventForm.title) {
@@ -55,10 +57,10 @@ const EventDialogs: React.FC<EventDialogsProps> = ({
       return;
     }
 
-    if (!date || !eventForm.startTime) {
+    if (!date || !user) {
       toast({
         title: "Ошибка",
-        description: "Дата и время начала обязательны",
+        description: "Дата и авторизация обязательны",
         variant: "destructive"
       });
       return;
@@ -66,26 +68,39 @@ const EventDialogs: React.FC<EventDialogsProps> = ({
 
     // Формируем дату начала из выбранной даты и времени
     const eventDate = new Date(date);
-    const [startHours, startMinutes] = eventForm.startTime.split(':').map(Number);
-    const startDate = new Date(
-      eventDate.getFullYear(),
-      eventDate.getMonth(),
-      eventDate.getDate(),
-      startHours,
-      startMinutes
-    );
+    let startDate: Date;
+    
+    if (eventForm.startTime) {
+      const [startHours, startMinutes] = eventForm.startTime.split(':').map(Number);
+      startDate = new Date(
+        eventDate.getFullYear(),
+        eventDate.getMonth(),
+        eventDate.getDate(),
+        startHours,
+        startMinutes
+      );
+    } else {
+      // Если время не указано, создаем событие на весь день
+      startDate = new Date(
+        eventDate.getFullYear(),
+        eventDate.getMonth(),
+        eventDate.getDate(),
+        0, 0, 0
+      );
+    }
 
     // Формируем дату окончания (если указано время окончания)
-    let endDate = null;
+    let endDate: string | undefined = undefined;
     if (eventForm.endTime) {
       const [endHours, endMinutes] = eventForm.endTime.split(':').map(Number);
-      endDate = new Date(
+      const endDateTime = new Date(
         eventDate.getFullYear(),
         eventDate.getMonth(),
         eventDate.getDate(),
         endHours,
         endMinutes
       );
+      endDate = endDateTime.toISOString();
     }
 
     // Создаем событие для API
@@ -93,12 +108,12 @@ const EventDialogs: React.FC<EventDialogsProps> = ({
       title: eventForm.title!,
       description: eventForm.description || '',
       startDate: startDate.toISOString(),
-      endDate: endDate ? endDate.toISOString() : undefined,
+      endDate,
       allDay: !eventForm.startTime,
       location: eventForm.location,
       type: eventForm.type as "event" | "task" | "reminder",
       recurring: false,
-      user_id: "user123", // Будет заменено на реальный ID пользователя при интеграции с авторизацией
+      user_id: user.id,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       content: {
@@ -118,28 +133,40 @@ const EventDialogs: React.FC<EventDialogsProps> = ({
   };
 
   const handleUpdateEvent = () => {
-    if (!currentEventId) return;
+    if (!currentEventId || !user) return;
     
     const eventDate = new Date(date!);
-    const [startHours, startMinutes] = (eventForm.startTime || '00:00').split(':').map(Number);
-    const startDate = new Date(
-      eventDate.getFullYear(),
-      eventDate.getMonth(),
-      eventDate.getDate(),
-      startHours,
-      startMinutes
-    );
+    let startDate: Date;
+    
+    if (eventForm.startTime) {
+      const [startHours, startMinutes] = eventForm.startTime.split(':').map(Number);
+      startDate = new Date(
+        eventDate.getFullYear(),
+        eventDate.getMonth(),
+        eventDate.getDate(),
+        startHours,
+        startMinutes
+      );
+    } else {
+      startDate = new Date(
+        eventDate.getFullYear(),
+        eventDate.getMonth(),
+        eventDate.getDate(),
+        0, 0, 0
+      );
+    }
 
-    let endDate = null;
+    let endDate: string | undefined = undefined;
     if (eventForm.endTime) {
       const [endHours, endMinutes] = eventForm.endTime.split(':').map(Number);
-      endDate = new Date(
+      const endDateTime = new Date(
         eventDate.getFullYear(),
         eventDate.getMonth(),
         eventDate.getDate(),
         endHours,
         endMinutes
       );
+      endDate = endDateTime.toISOString();
     }
 
     const updatedEvent: CalendarEvent = {
@@ -147,12 +174,12 @@ const EventDialogs: React.FC<EventDialogsProps> = ({
       title: eventForm.title!,
       description: eventForm.description || '',
       startDate: startDate.toISOString(),
-      endDate: endDate ? endDate.toISOString() : undefined,
+      endDate,
       allDay: !eventForm.startTime,
       location: eventForm.location,
       type: eventForm.type as "event" | "task" | "reminder",
       recurring: false,
-      user_id: "user123",
+      user_id: user.id,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       content: {
