@@ -4,10 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/auth';
 import { PushSubscription } from '@/types/notifications';
 import { toast } from 'sonner';
-import { checkPushSupport } from '@/utils/notifications/vapidKeys';
-
-// Константы для VAPID ключей
-const VAPID_PUBLIC_KEY = 'BBE-N-cSeCJBqj1BWJEX36M0rGnJrRB57lJBKjr6CqkrGHzZa7gC9Vz8lZKl_WkzWkzWkz';
+import { 
+  checkPushSupport, 
+  VAPID_PUBLIC_KEY, 
+  urlBase64ToUint8Array, 
+  arrayBufferToBase64 
+} from '@/utils/notifications/vapidKeys';
 
 export const usePushNotifications = () => {
   const { user } = useAuth();
@@ -71,40 +73,48 @@ export const usePushNotifications = () => {
       await navigator.serviceWorker.ready;
       console.log('Service worker готов');
       
-      console.log('Создаем push-подписку...');
+      console.log('Создаем push-подписку с VAPID ключом:', VAPID_PUBLIC_KEY);
       
-      // Создаем подписку
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-      });
+      try {
+        // Создаем подписку с правильным VAPID ключом
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
 
-      console.log('Push-подписка создана:', subscription);
+        console.log('Push-подписка успешно создана:', subscription);
 
-      // Сохраняем подписку в базе данных
-      const subscriptionData = {
-        user_id: user.id,
-        endpoint: subscription.endpoint,
-        p256dh_key: arrayBufferToBase64(subscription.getKey('p256dh')),
-        auth_key: arrayBufferToBase64(subscription.getKey('auth')),
-        user_agent: navigator.userAgent,
-      };
+        // Сохраняем подписку в базе данных
+        const subscriptionData = {
+          user_id: user.id,
+          endpoint: subscription.endpoint,
+          p256dh_key: arrayBufferToBase64(subscription.getKey('p256dh')),
+          auth_key: arrayBufferToBase64(subscription.getKey('auth')),
+          user_agent: navigator.userAgent,
+        };
 
-      console.log('Сохраняем подписку в БД:', subscriptionData);
+        console.log('Сохраняем подписку в БД:', subscriptionData);
 
-      const { data, error } = await supabase
-        .from('push_subscriptions')
-        .insert(subscriptionData)
-        .select()
-        .single();
+        const { data, error } = await supabase
+          .from('push_subscriptions')
+          .insert(subscriptionData)
+          .select()
+          .single();
 
-      if (error) {
-        console.error('Ошибка сохранения подписки:', error);
-        throw error;
+        if (error) {
+          console.error('Ошибка сохранения подписки:', error);
+          throw error;
+        }
+
+        console.log('Подписка успешно сохранена:', data);
+        return data;
+      } catch (subscriptionError) {
+        console.error('Ошибка создания push-подписки:', subscriptionError);
+        if (subscriptionError.name === 'InvalidStateError') {
+          throw new Error('VAPID ключ недействителен. Проверьте конфигурацию сервера.');
+        }
+        throw new Error(`Не удалось создать подписку: ${subscriptionError.message}`);
       }
-
-      console.log('Подписка успешно сохранена:', data);
-      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['push-subscriptions'] });
@@ -150,25 +160,3 @@ export const usePushNotifications = () => {
     isUnsubscribing: unsubscribeFromPush.isPending,
   };
 };
-
-// Утилиты для конвертации ключей
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
-}
-
-function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
-  if (!buffer) return '';
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return window.btoa(binary);
-}

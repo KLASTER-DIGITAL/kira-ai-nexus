@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Bell, Settings, Smartphone, AlertTriangle, CheckCircle } from "lucide-react";
 import { useNotificationSettings } from "@/hooks/notifications/useNotificationSettings";
 import { usePushNotifications } from "@/hooks/notifications/usePushNotifications";
+import TestNotificationButton from "./TestNotificationButton";
 
 interface NotificationSettingsDialogProps {
   children: React.ReactNode;
@@ -93,25 +94,30 @@ const NotificationSettingsDialog: React.FC<NotificationSettingsDialogProps> = ({
                     }
                   </p>
                 </div>
-                {isPushSupported && (
-                  hasPushSubscription ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => subscriptions[0] && unsubscribeFromPush(subscriptions[0].id)}
-                    >
-                      Отключить
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      onClick={() => subscribeToPush()}
-                      disabled={isSubscribing}
-                    >
-                      {isSubscribing ? 'Включение...' : 'Включить'}
-                    </Button>
-                  )
-                )}
+                <div className="flex items-center gap-2">
+                  {isPushSupported && (
+                    hasPushSubscription ? (
+                      <>
+                        <TestNotificationButton />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => subscriptions[0] && unsubscribeFromPush(subscriptions[0].id)}
+                        >
+                          Отключить
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={() => subscribeToPush()}
+                        disabled={isSubscribing}
+                      >
+                        {isSubscribing ? 'Включение...' : 'Включить'}
+                      </Button>
+                    )
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
