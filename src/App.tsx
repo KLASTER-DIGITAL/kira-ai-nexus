@@ -28,6 +28,7 @@ import {
   LandingPage
 } from './pages';
 
+import NotificationSettingsPage from './pages/NotificationSettingsPage';
 import { ProtectedRoute } from '@/components/features/auth';
 import { Settings } from "lucide-react";
 
@@ -72,10 +73,11 @@ function App() {
             </ProtectedRoute>
           } />
           
-          {/* Добавим маршруты для новых страниц */}
+          {/* Страницы настроек */}
           <Route path="/activity" element={<UnderConstructionPage title="Активность" />} />
-          <Route path="/notifications" element={<UnderConstructionPage title="Уведомления" />} />
-          <Route path="/settings" element={<UnderConstructionPage title="Настройки" />} />
+          <Route path="/notifications" element={<NotificationSettingsPage />} />
+          <Route path="/settings" element={<NotificationSettingsPage />} />
+          <Route path="/settings/notifications" element={<NotificationSettingsPage />} />
           <Route path="/profile" element={<UnderConstructionPage title="Профиль" />} />
         </Route>
         

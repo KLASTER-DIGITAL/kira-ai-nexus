@@ -26,3 +26,6 @@ export { default as ResetPasswordPage } from './ResetPasswordPage';
 
 // Служебные страницы
 export { default as HelpPage } from './HelpPage';
+
+// Страницы настроек
+export { default as NotificationSettingsPage } from './NotificationSettingsPage';

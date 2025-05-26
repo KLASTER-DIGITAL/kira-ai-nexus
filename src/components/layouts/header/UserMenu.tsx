@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -22,10 +23,7 @@ import {
   FileText, 
   CheckSquare, 
   Calendar, 
-  Bell,
-  FileText as FileIcon, 
-  CheckSquare as TaskIcon, 
-  Calendar as CalendarIcon 
+  Bell
 } from "lucide-react";
 
 export function UserMenu() {
@@ -78,7 +76,7 @@ export function UserMenu() {
           <DropdownMenuItem asChild>
             <Link to="/notifications">
               <Bell className="mr-2 h-4 w-4" />
-              <span>Уведомления</span>
+              <span>Настройки уведомлений</span>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
@@ -87,7 +85,7 @@ export function UserMenu() {
           <Link to="/settings">
             <Settings className="mr-2 h-4 w-4" />
             <span>Настройки</span>
-          </Link>
+          </DropdownMenuItem>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/help">
@@ -105,6 +103,3 @@ export function UserMenu() {
     </DropdownMenu>
   );
 }
-
-// Не забываем импортировать Button
-import { Button } from "@/components/ui/button";

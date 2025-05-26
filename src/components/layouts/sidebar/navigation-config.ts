@@ -32,11 +32,11 @@ export const navigationConfig: NavigationSection[] = [
         role: "all"
       },
       {
-        title: "Уведомления",
+        title: "Настройки уведомлений",
         href: "/notifications",
         icon: Bell,
         role: "all",
-        badge: null, // Будет обновлено динамически
+        badge: null,
         badgeQueryKey: 'notifications-count'
       }
     ]
@@ -55,7 +55,7 @@ export const navigationConfig: NavigationSection[] = [
         href: "/tasks",
         icon: CheckSquare,
         role: "all",
-        badge: null, // Будет обновлено динамически
+        badge: null,
         badgeQueryKey: 'tasks-count'
       },
       {
