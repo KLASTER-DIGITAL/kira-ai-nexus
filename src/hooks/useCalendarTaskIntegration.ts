@@ -61,7 +61,7 @@ export const useCalendarTaskIntegration = () => {
 
       // Обновляем статус завершения
       const updatedContent = {
-        ...(currentTask.content || {}),
+        ...(typeof currentTask.content === 'object' && currentTask.content !== null ? currentTask.content : {}),
         completed: completed.toString(),
         updated_at: new Date().toISOString()
       };
