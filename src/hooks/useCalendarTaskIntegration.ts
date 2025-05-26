@@ -61,7 +61,7 @@ export const useCalendarTaskIntegration = () => {
 
       // Обновляем статус завершения
       const updatedContent = {
-        ...currentTask.content,
+        ...(currentTask.content || {}),
         completed: completed.toString(),
         updated_at: new Date().toISOString()
       };
@@ -88,9 +88,13 @@ export const useCalendarTaskIntegration = () => {
     }
   });
 
+  const handleToggleTask = useCallback((taskId: string, completed: boolean) => {
+    toggleTaskFromCalendar.mutate({ taskId, completed });
+  }, [toggleTaskFromCalendar]);
+
   return {
     moveTaskToDate: moveTaskToDate.mutate,
-    toggleTaskFromCalendar: toggleTaskFromCalendar.mutate,
+    toggleTaskFromCalendar: handleToggleTask,
     isMovingTask: moveTaskToDate.isPending,
     isTogglingTask: toggleTaskFromCalendar.isPending
   };

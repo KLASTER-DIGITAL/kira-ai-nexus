@@ -74,8 +74,6 @@ const EventCard: React.FC<EventCardProps> = ({
 
   const getTypeIcon = () => {
     switch (type) {
-      case "task":
-        return "📋";
       case "reminder":
         return "🔔";
       default:
@@ -85,8 +83,6 @@ const EventCard: React.FC<EventCardProps> = ({
 
   const getTypeBadgeClass = () => {
     switch (type) {
-      case "task":
-        return "bg-blue-100 text-blue-800 border-blue-200";
       case "reminder":
         return "bg-orange-100 text-orange-800 border-orange-200";
       default:
@@ -109,7 +105,7 @@ const EventCard: React.FC<EventCardProps> = ({
 
           <div className="flex items-center gap-2 mb-2">
             <Badge variant="outline" className={`text-xs ${getTypeBadgeClass()}`}>
-              {type === "task" ? "Задача" : type === "reminder" ? "Напоминание" : "Событие"}
+              {type === "reminder" ? "Напоминание" : "Событие"}
             </Badge>
             {time && (
               <div className="flex items-center text-xs text-muted-foreground">
