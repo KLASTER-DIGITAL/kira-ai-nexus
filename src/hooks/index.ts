@@ -1,3 +1,4 @@
+
 // Re-export all hooks by feature
 export * from './use-toast';
 export * from './use-mobile';
@@ -11,3 +12,4 @@ export * from './chat';
 export * from './useCalendar';
 export * from './useWebhookSettings';
 export * from './useCalendarTaskIntegration';
+export * from './notifications';

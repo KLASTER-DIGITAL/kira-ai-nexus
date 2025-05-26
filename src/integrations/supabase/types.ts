@@ -229,6 +229,48 @@ export type Database = {
           },
         ]
       }
+      notification_settings: {
+        Row: {
+          calendar_notifications: boolean
+          created_at: string
+          daily_digest: boolean
+          email_notifications: boolean
+          id: string
+          notification_time: string | null
+          push_notifications: boolean
+          reminder_notifications: boolean
+          task_notifications: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calendar_notifications?: boolean
+          created_at?: string
+          daily_digest?: boolean
+          email_notifications?: boolean
+          id?: string
+          notification_time?: string | null
+          push_notifications?: boolean
+          reminder_notifications?: boolean
+          task_notifications?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calendar_notifications?: boolean
+          created_at?: string
+          daily_digest?: boolean
+          email_notifications?: boolean
+          id?: string
+          notification_time?: string | null
+          push_notifications?: boolean
+          reminder_notifications?: boolean
+          task_notifications?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -295,6 +337,39 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth_key: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh_key: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth_key: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh_key: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth_key?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh_key?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           avatar_url: string | null
@@ -340,6 +415,16 @@ export type Database = {
     }
     Functions: {
       create_notification: {
+        Args: {
+          p_user_id: string
+          p_title: string
+          p_description: string
+          p_type: string
+          p_entity_id?: string
+        }
+        Returns: string
+      }
+      create_notification_with_settings: {
         Args: {
           p_user_id: string
           p_title: string

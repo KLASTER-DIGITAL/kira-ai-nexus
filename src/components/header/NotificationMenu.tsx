@@ -1,22 +1,20 @@
 
-import React, { useEffect } from "react";
-import { BellIcon } from "lucide-react";
+import React from "react";
+import { BellIcon, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-  DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useNotificationsCount } from "@/hooks/notifications/useNotificationsCount";
 import { useNotifications } from "@/hooks/notifications/useNotifications";
-import { useNotificationsRealtime } from "@/hooks/notifications/useNotificationsRealtime";
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import NotificationSettingsDialog from "@/components/notifications/NotificationSettingsDialog";
 
 const NotificationMenu = () => {
   const { data: notificationsCount = 0 } = useNotificationsCount();
@@ -25,10 +23,7 @@ const NotificationMenu = () => {
     isLoading, 
     markAsRead, 
     markAllAsRead 
-  } = useNotifications(5); // Получаем последние 5 уведомлений
-  
-  // Подключаем обработку уведомлений в реальном времени
-  useNotificationsRealtime();
+  } = useNotifications(5);
   
   const handleMarkAllAsRead = () => {
     markAllAsRead.mutate();
@@ -50,45 +45,39 @@ const NotificationMenu = () => {
   };
   
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <BellIcon className="h-5 w-5" />
-          {notificationsCount > 0 && (
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
-            >
-              {notificationsCount}
-            </Badge>
-          )}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-80" align="end">
-        <DropdownMenuLabel className="flex justify-between">
-          <span>Уведомления</span>
+    <div className="w-full">
+      <DropdownMenuLabel className="flex justify-between items-center">
+        <span>Уведомления</span>
+        <div className="flex items-center gap-2">
+          <NotificationSettingsDialog>
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+              <Settings className="h-3 w-3" />
+            </Button>
+          </NotificationSettingsDialog>
           <Button 
             variant="link" 
             size="sm" 
-            className="h-auto p-0"
+            className="h-auto p-0 text-xs"
             onClick={handleMarkAllAsRead}
             disabled={notificationsCount === 0 || markAllAsRead.isPending}
           >
-            Отметить все как прочитанные
+            Отметить все
           </Button>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        
-        {isLoading ? (
-          <div className="py-4 text-center text-muted-foreground">
-            Загрузка уведомлений...
-          </div>
-        ) : notifications.length === 0 ? (
-          <div className="py-4 text-center text-muted-foreground">
-            Нет уведомлений
-          </div>
-        ) : (
-          notifications.map((notification) => (
+        </div>
+      </DropdownMenuLabel>
+      <DropdownMenuSeparator />
+      
+      {isLoading ? (
+        <div className="py-4 text-center text-muted-foreground">
+          Загрузка уведомлений...
+        </div>
+      ) : notifications.length === 0 ? (
+        <div className="py-4 text-center text-muted-foreground">
+          Нет уведомлений
+        </div>
+      ) : (
+        <div className="max-h-80 overflow-y-auto">
+          {notifications.map((notification) => (
             <DropdownMenuItem 
               key={notification.id} 
               className="cursor-pointer p-0"
@@ -101,13 +90,13 @@ const NotificationMenu = () => {
                 )}
               >
                 <div className="flex items-start justify-between">
-                  <span className="font-semibold">{notification.title}</span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="font-semibold text-sm">{notification.title}</span>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
                     {formatTimeAgo(notification.created_at)}
                   </span>
                 </div>
                 {notification.description && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground line-clamp-2">
                     {notification.description}
                   </span>
                 )}
@@ -118,15 +107,15 @@ const NotificationMenu = () => {
                 )}
               </div>
             </DropdownMenuItem>
-          ))
-        )}
-        
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="cursor-pointer justify-center font-medium">
-          Просмотреть все уведомления
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          ))}
+        </div>
+      )}
+      
+      <DropdownMenuSeparator />
+      <DropdownMenuItem className="cursor-pointer justify-center font-medium">
+        Просмотреть все уведомления
+      </DropdownMenuItem>
+    </div>
   );
 };
 
