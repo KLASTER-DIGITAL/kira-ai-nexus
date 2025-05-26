@@ -1,34 +1,28 @@
 
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { CalendarEvent } from "@/types/calendar";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MapPin, Calendar, MoreHorizontal } from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Edit, Trash2, MoreVertical, MapPin, Clock } from "lucide-react";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
+import TaskEventCard from "./TaskEventCard";
+import { useCalendarTaskIntegration } from "@/hooks/useCalendarTaskIntegration";
 
-export interface EventCardProps {
+interface EventCardProps {
   id: string;
   title: string;
   time?: string;
   location?: string;
   date: Date;
-  type?: "task" | "event" | "reminder";
+  type: "event" | "task" | "reminder";
   color?: string;
   description?: string;
-  className?: string;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
   onClick?: (id: string) => void;
+  className?: string;
 }
 
 const EventCard: React.FC<EventCardProps> = ({
@@ -36,127 +30,141 @@ const EventCard: React.FC<EventCardProps> = ({
   title,
   time,
   location,
-  type = "event",
+  date,
+  type,
   color,
   description,
-  className,
   onEdit,
   onDelete,
   onClick,
+  className
 }) => {
-  const getTypeColor = () => {
+  const { toggleTaskFromCalendar } = useCalendarTaskIntegration();
+
+  // Если это задача, используем специальный компонент
+  if (type === "task") {
+    // Создаем объект события для TaskEventCard
+    const taskEvent: CalendarEvent = {
+      id,
+      title,
+      description,
+      startDate: date.toISOString(),
+      allDay: true,
+      type: "task",
+      recurring: false,
+      user_id: "",
+      created_at: "",
+      updated_at: "",
+      content: {
+        taskId: id,
+        priority: 'medium', // TODO: получать из реальных данных
+        completed: 'false'  // TODO: получать из реальных данных
+      }
+    };
+
+    return (
+      <TaskEventCard
+        event={taskEvent}
+        onToggleComplete={toggleTaskFromCalendar}
+        onClick={() => onClick?.(id)}
+        className={className}
+      />
+    );
+  }
+
+  const getTypeIcon = () => {
     switch (type) {
       case "task":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
-      case "event":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300";
+        return "📋";
       case "reminder":
-        return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300";
+        return "🔔";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
+        return "📅";
     }
   };
 
-  // Используем пользовательский цвет для левой границы, если он указан
-  const cardStyle = color ? {
-    borderLeft: `4px solid ${color}`
-  } : {};
-  
-  const handleCardClick = () => {
-    if (onClick) onClick(id);
-  };
-
-  const handleEdit = (e: Event | React.MouseEvent<Element, MouseEvent>) => {
-    e.stopPropagation();
-    if (onEdit) onEdit(id);
-  };
-
-  const handleDelete = (e: Event | React.MouseEvent<Element, MouseEvent>) => {
-    e.stopPropagation();
-    if (onDelete) onDelete(id);
+  const getTypeBadgeClass = () => {
+    switch (type) {
+      case "task":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "reminder":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      default:
+        return "bg-green-100 text-green-800 border-green-200";
+    }
   };
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger>
-        <Card 
-          className={cn("mb-2 hover:shadow-md transition-shadow cursor-pointer", className)} 
-          style={cardStyle}
-          onClick={handleCardClick}
-        >
-          <CardContent className="p-3">
-            <div className="flex flex-col">
-              <div className="flex justify-between items-start">
-                <h4 className="font-medium line-clamp-2">{title}</h4>
-                <div className="flex items-center gap-1">
-                  <Badge variant="outline" className={cn("px-2 py-0 text-xs", getTypeColor())}>
-                    {type}
-                  </Badge>
-                  
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button 
-                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                        className="p-1 rounded-full hover:bg-muted"
-                      >
-                        <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-40 p-1" align="end">
-                      <div className="flex flex-col text-sm">
-                        <button 
-                          className="px-2 py-1.5 text-left hover:bg-muted rounded-sm"
-                          onClick={handleEdit}
-                        >
-                          Редактировать
-                        </button>
-                        <button 
-                          className="px-2 py-1.5 text-left hover:bg-muted text-destructive rounded-sm"
-                          onClick={handleDelete}
-                        >
-                          Удалить
-                        </button>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
+    <div
+      className={`p-3 rounded-md border bg-card hover:shadow-sm hover:border-primary/30 transition-all cursor-pointer ${className}`}
+      style={color ? { borderLeftColor: color, borderLeftWidth: '4px' } : {}}
+      onClick={() => onClick?.(id)}
+    >
+      <div className="flex items-start justify-between">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-sm">{getTypeIcon()}</span>
+            <h4 className="font-medium text-sm truncate">{title}</h4>
+          </div>
+
+          <div className="flex items-center gap-2 mb-2">
+            <Badge variant="outline" className={`text-xs ${getTypeBadgeClass()}`}>
+              {type === "task" ? "Задача" : type === "reminder" ? "Напоминание" : "Событие"}
+            </Badge>
+            {time && (
+              <div className="flex items-center text-xs text-muted-foreground">
+                <Clock className="h-3 w-3 mr-1" />
+                {time}
               </div>
-              
-              {time && (
-                <div className="flex items-center text-sm text-muted-foreground mt-2">
-                  <Clock className="mr-1 h-3.5 w-3.5" />
-                  <span>{time}</span>
-                </div>
-              )}
-              
-              {location && (
-                <div className="flex items-center text-sm text-muted-foreground mt-1">
-                  <MapPin className="mr-1 h-3.5 w-3.5" />
-                  <span className="truncate">{location}</span>
-                </div>
-              )}
-              
-              {description && (
-                <div className="mt-2 text-sm text-muted-foreground line-clamp-2">
-                  {description}
-                </div>
-              )}
+            )}
+          </div>
+
+          {location && (
+            <div className="flex items-center text-xs text-muted-foreground mb-2">
+              <MapPin className="h-3 w-3 mr-1" />
+              <span className="truncate">{location}</span>
             </div>
-          </CardContent>
-        </Card>
-      </ContextMenuTrigger>
-      <ContextMenuContent className="w-44">
-        <ContextMenuItem onSelect={handleEdit}>
-          Редактировать событие
-        </ContextMenuItem>
-        <ContextMenuItem 
-          onSelect={handleDelete}
-          className="text-destructive focus:text-destructive"
-        >
-          Удалить событие
-        </ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
+          )}
+
+          {description && (
+            <p className="text-xs text-muted-foreground line-clamp-2">
+              {description}
+            </p>
+          )}
+        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {onEdit && (
+              <DropdownMenuItem onClick={(e) => {
+                e.stopPropagation();
+                onEdit(id);
+              }}>
+                <Edit className="h-4 w-4 mr-2" />
+                Редактировать
+              </DropdownMenuItem>
+            )}
+            {onDelete && (
+              <DropdownMenuItem 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(id);
+                }}
+                className="text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Удалить
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
   );
 };
 

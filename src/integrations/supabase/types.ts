@@ -12,6 +12,7 @@ export type Database = {
       calendar_events: {
         Row: {
           all_day: boolean
+          auto_generated: boolean | null
           content: Json | null
           created_at: string
           description: string | null
@@ -20,6 +21,7 @@ export type Database = {
           location: string | null
           recurring: boolean
           recurring_type: string | null
+          source_task_id: string | null
           start_date: string
           title: string
           type: string
@@ -28,6 +30,7 @@ export type Database = {
         }
         Insert: {
           all_day?: boolean
+          auto_generated?: boolean | null
           content?: Json | null
           created_at?: string
           description?: string | null
@@ -36,6 +39,7 @@ export type Database = {
           location?: string | null
           recurring?: boolean
           recurring_type?: string | null
+          source_task_id?: string | null
           start_date: string
           title: string
           type?: string
@@ -44,6 +48,7 @@ export type Database = {
         }
         Update: {
           all_day?: boolean
+          auto_generated?: boolean | null
           content?: Json | null
           created_at?: string
           description?: string | null
@@ -52,13 +57,22 @@ export type Database = {
           location?: string | null
           recurring?: boolean
           recurring_type?: string | null
+          source_task_id?: string | null
           start_date?: string
           title?: string
           type?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_source_task_id_fkey"
+            columns: ["source_task_id"]
+            isOneToOne: false
+            referencedRelation: "nodes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dashboard_layouts: {
         Row: {

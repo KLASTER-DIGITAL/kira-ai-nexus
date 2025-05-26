@@ -10,3 +10,4 @@ export { default as EventDialogs } from './EventDialogs';
 export { default as CalendarViewSwitcher } from './CalendarViewSwitcher';
 export { default as WeekView } from './WeekView';
 export { default as DayView } from './DayView';
+export { default as TaskEventCard } from './TaskEventCard';

@@ -7,7 +7,8 @@ import CalendarView from "@/components/calendar/CalendarView";
 import CalendarIntegration from "@/components/calendar/CalendarIntegration";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarDays, ListTodo } from "lucide-react";
+import { CalendarDays, ListTodo, Link } from "lucide-react";
+import TaskList from "@/components/tasks/TaskList";
 
 const CalendarPage: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -51,7 +52,11 @@ const CalendarPage: React.FC = () => {
                 </TabsTrigger>
                 <TabsTrigger value="tasks" className="flex items-center gap-2">
                   <ListTodo className="h-4 w-4" />
-                  Задачи в календаре
+                  Задачи
+                </TabsTrigger>
+                <TabsTrigger value="integration" className="flex items-center gap-2">
+                  <Link className="h-4 w-4" />
+                  Интеграция
                 </TabsTrigger>
               </TabsList>
               
@@ -60,10 +65,56 @@ const CalendarPage: React.FC = () => {
               </TabsContent>
               
               <TabsContent value="tasks" className="mt-0">
-                <div className="p-4 text-center">
-                  <p className="text-muted-foreground">
-                    Интеграция задач с календарем будет доступна в ближайшее время
-                  </p>
+                <div className="space-y-4">
+                  <div className="p-4 border rounded-md bg-muted/20">
+                    <h3 className="font-medium mb-2">Задачи в календаре</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Все задачи с установленными датами выполнения автоматически отображаются в календаре как события.
+                    </p>
+                  </div>
+                  <TaskList />
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="integration" className="mt-0">
+                <div className="space-y-4">
+                  <div className="p-4 border rounded-md bg-muted/20">
+                    <h3 className="font-medium mb-2 flex items-center gap-2">
+                      <Link className="h-4 w-4" />
+                      Интеграция задач и календаря
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Задачи автоматически синхронизируются с календарем:
+                    </p>
+                    <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                      <li>Задачи с датой выполнения отображаются как события в календаре</li>
+                      <li>Изменение статуса задачи обновляет событие в календаре</li>
+                      <li>Перемещение даты задачи автоматически обновляет календарь</li>
+                      <li>Завершенные задачи скрываются из календаря</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="p-4 border rounded-md">
+                    <h4 className="font-medium mb-2">Возможности интеграции:</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <h5 className="font-medium text-green-600 mb-1">✅ Реализовано:</h5>
+                        <ul className="space-y-1 text-muted-foreground">
+                          <li>• Автоматическое создание событий из задач</li>
+                          <li>• Синхронизация статусов</li>
+                          <li>• Отображение приоритетов</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h5 className="font-medium text-blue-600 mb-1">🔄 В разработке:</h5>
+                        <ul className="space-y-1 text-muted-foreground">
+                          <li>• Drag & Drop задач в календаре</li>
+                          <li>• Уведомления о приближающихся дедлайнах</li>
+                          <li>• Повторяющиеся задачи</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </TabsContent>
             </Tabs>
