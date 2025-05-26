@@ -4,13 +4,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/auth';
 import { PushSubscription } from '@/types/notifications';
 import { toast } from 'sonner';
+import { checkPushSupport } from '@/utils/notifications/vapidKeys';
+
+// Константы для VAPID ключей
+const VAPID_PUBLIC_KEY = 'BBE-N-cSeCJBqj1BWJEX36M0rGnJrRB57lJBKjr6CqkrGHzZa7gC9Vz8lZKl_WkzWkzWkz';
 
 export const usePushNotifications = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   // Проверяем поддержку push-уведомлений
-  const isPushSupported = 'serviceWorker' in navigator && 'PushManager' in window;
+  const supportCheck = checkPushSupport();
+  const isPushSupported = supportCheck.isSupported;
 
   // Получение push-подписок
   const {
@@ -40,46 +45,74 @@ export const usePushNotifications = () => {
   const subscribeToPush = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Пользователь не авторизован');
-      if (!isPushSupported) throw new Error('Push-уведомления не поддерживаются');
-
-      // Запрашиваем разрешение на уведомления
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        throw new Error('Разрешение на уведомления не предоставлено');
+      
+      if (!isPushSupported) {
+        const errorMessage = `Push-уведомления не поддерживаются: ${supportCheck.issues.join(', ')}`;
+        throw new Error(errorMessage);
       }
 
+      console.log('Запрашиваем разрешение на уведомления...');
+      
+      // Запрашиваем разрешение на уведомления
+      const permission = await Notification.requestPermission();
+      console.log('Разрешение на уведомления:', permission);
+      
+      if (permission !== 'granted') {
+        throw new Error(`Разрешение на уведомления: ${permission}. Проверьте настройки браузера.`);
+      }
+
+      console.log('Регистрируем service worker...');
+      
       // Регистрируем service worker
       const registration = await navigator.serviceWorker.register('/sw.js');
+      console.log('Service worker зарегистрирован:', registration);
+      
+      // Ждем, пока service worker станет активным
+      await navigator.serviceWorker.ready;
+      console.log('Service worker готов');
+      
+      console.log('Создаем push-подписку...');
       
       // Создаем подписку
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: process.env.VAPID_PUBLIC_KEY || 'BMqEQs5y9p4ZJAJ1-cSbOXhwMFQ7E8WgzP6cOJZnB_4GGKH7-O5I8XjHKfNT8vKqL5QK7W1IOMJL9PBKJ1V_s', // VAPID ключ
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       });
 
+      console.log('Push-подписка создана:', subscription);
+
       // Сохраняем подписку в базе данных
+      const subscriptionData = {
+        user_id: user.id,
+        endpoint: subscription.endpoint,
+        p256dh_key: arrayBufferToBase64(subscription.getKey('p256dh')),
+        auth_key: arrayBufferToBase64(subscription.getKey('auth')),
+        user_agent: navigator.userAgent,
+      };
+
+      console.log('Сохраняем подписку в БД:', subscriptionData);
+
       const { data, error } = await supabase
         .from('push_subscriptions')
-        .insert({
-          user_id: user.id,
-          endpoint: subscription.endpoint,
-          p256dh_key: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('p256dh') || new ArrayBuffer(0)))),
-          auth_key: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth') || new ArrayBuffer(0)))),
-          user_agent: navigator.userAgent,
-        })
+        .insert(subscriptionData)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Ошибка сохранения подписки:', error);
+        throw error;
+      }
+
+      console.log('Подписка успешно сохранена:', data);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['push-subscriptions'] });
-      toast.success('Push-уведомления включены');
+      toast.success('Push-уведомления успешно включены');
     },
     onError: (error) => {
       console.error('Ошибка подписки на push-уведомления:', error);
-      toast.error('Не удалось включить push-уведомления');
+      toast.error(`Ошибка: ${error.message}`);
     },
   });
 
@@ -110,9 +143,32 @@ export const usePushNotifications = () => {
     subscriptions,
     isLoading,
     isPushSupported,
+    supportIssues: supportCheck.issues,
     subscribeToPush: subscribeToPush.mutate,
     unsubscribeFromPush: unsubscribeFromPush.mutate,
     isSubscribing: subscribeToPush.isPending,
     isUnsubscribing: unsubscribeFromPush.isPending,
   };
 };
+
+// Утилиты для конвертации ключей
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
+  if (!buffer) return '';
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return window.btoa(binary);
+}

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useAuth } from "@/context/auth";
 import { useNavigate } from "react-router-dom";
@@ -7,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Bell, Settings, Smartphone, ArrowLeft } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Bell, Settings, Smartphone, ArrowLeft, AlertTriangle, CheckCircle } from "lucide-react";
 import { useNotificationSettings } from "@/hooks/notifications/useNotificationSettings";
 import { usePushNotifications } from "@/hooks/notifications/usePushNotifications";
 
@@ -18,6 +18,7 @@ const NotificationSettingsPage: React.FC = () => {
   const { 
     subscriptions, 
     isPushSupported, 
+    supportIssues,
     subscribeToPush, 
     unsubscribeFromPush,
     isSubscribing 
@@ -85,23 +86,42 @@ const NotificationSettingsPage: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {!isPushSupported ? (
-                <p className="text-sm text-muted-foreground">
-                  Ваш браузер не поддерживает push-уведомления
-                </p>
-              ) : (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="push-notifications">
-                      {hasPushSubscription ? 'Push-уведомления включены' : 'Включить push-уведомления'}
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      {hasPushSubscription 
-                        ? 'Вы будете получать уведомления в браузере'
-                        : 'Нажмите для включения уведомлений в браузере'
-                      }
-                    </p>
-                  </div>
-                  {hasPushSubscription ? (
+                <Alert>
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    <div className="space-y-1">
+                      <p className="font-medium">Push-уведомления недоступны:</p>
+                      <ul className="list-disc list-inside text-sm">
+                        {supportIssues.map((issue, index) => (
+                          <li key={index}>{issue}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              ) : hasPushSubscription ? (
+                <Alert>
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Push-уведомления успешно настроены и активны
+                  </AlertDescription>
+                </Alert>
+              ) : null}
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="push-notifications">
+                    {hasPushSubscription ? 'Push-уведомления включены' : 'Включить push-уведомления'}
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {hasPushSubscription 
+                      ? 'Вы будете получать уведомления в браузере'
+                      : 'Нажмите для включения уведомлений в браузере'
+                    }
+                  </p>
+                </div>
+                {isPushSupported && (
+                  hasPushSubscription ? (
                     <Button
                       variant="outline"
                       onClick={() => subscriptions[0] && unsubscribeFromPush(subscriptions[0].id)}
@@ -115,9 +135,9 @@ const NotificationSettingsPage: React.FC = () => {
                     >
                       {isSubscribing ? 'Включение...' : 'Включить'}
                     </Button>
-                  )}
-                </div>
-              )}
+                  )
+                )}
+              </div>
             </CardContent>
           </Card>
 
