@@ -85,7 +85,7 @@ export function UserMenu() {
           <Link to="/settings">
             <Settings className="mr-2 h-4 w-4" />
             <span>Настройки</span>
-          </DropdownMenuItem>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/help">
