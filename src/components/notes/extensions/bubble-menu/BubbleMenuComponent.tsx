@@ -9,7 +9,7 @@ import {
   Underline, 
   Code, 
   Link, 
-  Highlight,
+  Highlighter,
   Quote,
   List,
   ListOrdered
