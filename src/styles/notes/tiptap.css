@@ -1,4 +1,7 @@
 
+/* Import Notion-like styles */
+@import './notion-like.css';
+
 /* TipTap Editor Styles */
 .tiptap-editor {
   min-height: 200px;

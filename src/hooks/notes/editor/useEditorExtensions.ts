@@ -16,6 +16,9 @@ import TextStyle from '@tiptap/extension-text-style';
 import { WikiLink } from '@/components/notes/extensions/WikiLink';
 import TaskList from '@/components/notes/extensions/task-list/TaskList';
 import TaskItem from '@/components/notes/extensions/task-item/TaskItem';
+import { SlashCommands } from '@/components/notes/extensions/slash-commands/SlashCommands';
+import { Callout } from '@/components/notes/extensions/callout/Callout';
+import { createSlashCommandsSuggestion } from '@/components/notes/extensions/slash-commands/slashCommandsSuggestion';
 
 /**
  * Hook for configuring TipTap editor extensions
@@ -70,6 +73,11 @@ export const useEditorExtensions = (
       // Task management extensions
       TaskList,
       TaskItem,
+      // Новые расширения в стиле Notion
+      Callout,
+      SlashCommands.configure({
+        suggestion: createSlashCommandsSuggestion(),
+      }),
     ];
   }, [placeholder, validateWikiLink]);
 
