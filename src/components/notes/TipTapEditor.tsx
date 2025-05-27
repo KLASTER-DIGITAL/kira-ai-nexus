@@ -1,10 +1,12 @@
 
 import React, { useEffect, useRef } from "react";
-import { useEditor, EditorContent, Editor } from "@tiptap/react";
+import { useEditor, EditorContent, Editor, BubbleMenu, FloatingMenu } from "@tiptap/react";
 import { useEditorConfig } from "@/hooks/notes/editor/useEditorConfig";
 import { useWikiLinks } from "@/hooks/notes/links/useWikiLinks";
 import { addWikiLinkClickHandlers } from "./extensions/wiki-link/WikiLinkClickHandler";
 import EnhancedMenuBar from "./menubar/EnhancedMenuBar";
+import BubbleMenuComponent from "./extensions/bubble-menu/BubbleMenuComponent";
+import FloatingMenuComponent from "./extensions/floating-menu/FloatingMenuComponent";
 import "@/styles/notes/tiptap.css";
 import "@/styles/notes/task-list.css";
 
@@ -83,7 +85,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
   };
 
   return (
-    <div className="tiptap-editor border rounded-md bg-background">
+    <div className="tiptap-editor border rounded-md bg-background relative">
       {editor && editable && (
         <EnhancedMenuBar 
           editor={editor} 
@@ -91,6 +93,21 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
           onColorSelect={handleColorSelect} 
         />
       )}
+      
+      {/* Bubble Menu для выделенного текста */}
+      {editor && editable && (
+        <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
+          <BubbleMenuComponent editor={editor} />
+        </BubbleMenu>
+      )}
+      
+      {/* Floating Menu для пустых строк */}
+      {editor && editable && (
+        <FloatingMenu editor={editor} tippyOptions={{ duration: 100 }}>
+          <FloatingMenuComponent editor={editor} />
+        </FloatingMenu>
+      )}
+      
       <EditorContent
         editor={editor}
         className="prose prose-sm dark:prose-invert max-w-none p-4"

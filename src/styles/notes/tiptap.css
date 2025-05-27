@@ -7,6 +7,7 @@
   min-height: 200px;
   border-radius: 0.5rem;
   overflow: hidden;
+  position: relative;
 }
 
 .tiptap-editor .ProseMirror {
@@ -227,4 +228,14 @@
 .ProseMirror .has-color {
   display: inline-block;
   position: relative;
+}
+
+/* Enhanced interactivity */
+.tiptap-editor:hover {
+  border-color: #e2e8f0;
+}
+
+.tiptap-editor:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }

@@ -18,6 +18,8 @@ import TaskList from '@/components/notes/extensions/task-list/TaskList';
 import TaskItem from '@/components/notes/extensions/task-item/TaskItem';
 import { SlashCommands } from '@/components/notes/extensions/slash-commands/SlashCommands';
 import { Callout } from '@/components/notes/extensions/callout/Callout';
+import { CustomBubbleMenu } from '@/components/notes/extensions/bubble-menu/BubbleMenu';
+import { CustomFloatingMenu } from '@/components/notes/extensions/floating-menu/FloatingMenu';
 import { createSlashCommandsSuggestion } from '@/components/notes/extensions/slash-commands/slashCommandsSuggestion';
 
 /**
@@ -78,6 +80,9 @@ export const useEditorExtensions = (
       SlashCommands.configure({
         suggestion: createSlashCommandsSuggestion(),
       }),
+      // Интерактивные меню
+      CustomBubbleMenu,
+      CustomFloatingMenu,
     ];
   }, [placeholder, validateWikiLink]);
 
