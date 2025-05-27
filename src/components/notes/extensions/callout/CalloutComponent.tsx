@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { NodeViewWrapper, NodeViewContent } from '@tiptap/react';
+import { NodeViewWrapper, NodeViewContent, NodeViewProps } from '@tiptap/react';
 import { AlertTriangle, Info, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 const calloutTypes = {
@@ -36,20 +36,9 @@ const calloutTypes = {
   }
 };
 
-interface CalloutComponentProps {
-  node: {
-    attrs: {
-      type: keyof typeof calloutTypes;
-      emoji?: string;
-    };
-  };
-  updateAttributes: (attrs: any) => void;
-  selected: boolean;
-}
-
-const CalloutComponent: React.FC<CalloutComponentProps> = ({ node, updateAttributes, selected }) => {
+const CalloutComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected }) => {
   const type = node.attrs.type || 'info';
-  const calloutConfig = calloutTypes[type] || calloutTypes.info;
+  const calloutConfig = calloutTypes[type as keyof typeof calloutTypes] || calloutTypes.info;
   const emoji = node.attrs.emoji || calloutConfig.emoji;
 
   return (

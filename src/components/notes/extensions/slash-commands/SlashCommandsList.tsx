@@ -1,28 +1,17 @@
 
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { SlashCommandItem } from './SlashCommands';
-import { 
-  Type, 
-  Heading1, 
-  Heading2, 
-  Heading3, 
-  List, 
-  ListOrdered, 
-  Quote, 
-  Code, 
-  Image,
-  AlertTriangle,
-  Info,
-  CheckSquare,
-  Calendar
-} from 'lucide-react';
 
 interface SlashCommandsListProps {
   items: SlashCommandItem[];
   command: (item: SlashCommandItem) => void;
 }
 
-export const SlashCommandsList = forwardRef<any, SlashCommandsListProps>((props, ref) => {
+interface SlashCommandsListRef {
+  onKeyDown: (props: { event: KeyboardEvent }) => boolean;
+}
+
+export const SlashCommandsList = forwardRef<SlashCommandsListRef, SlashCommandsListProps>((props, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const selectItem = (index: number) => {

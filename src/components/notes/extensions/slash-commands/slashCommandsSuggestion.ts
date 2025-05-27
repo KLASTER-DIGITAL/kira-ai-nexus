@@ -4,6 +4,10 @@ import tippy, { Instance } from 'tippy.js';
 import { SlashCommandsList } from './SlashCommandsList';
 import { createSlashCommands } from './commandsConfig';
 
+interface SlashCommandsListRef {
+  onKeyDown: (props: { event: KeyboardEvent }) => boolean;
+}
+
 export const createSlashCommandsSuggestion = () => ({
   items: ({ query, editor }: { query: string; editor: any }) => {
     const commands = createSlashCommands(editor);
@@ -63,7 +67,8 @@ export const createSlashCommandsSuggestion = () => ({
           return true;
         }
 
-        return component.ref?.onKeyDown(props);
+        const listComponent = component.ref as SlashCommandsListRef;
+        return listComponent?.onKeyDown?.(props) || false;
       },
 
       onExit() {
