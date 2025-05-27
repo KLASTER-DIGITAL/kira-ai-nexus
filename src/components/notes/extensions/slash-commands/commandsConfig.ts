@@ -53,7 +53,7 @@ export const createSlashCommands = (editor: Editor): SlashCommandItem[] => [
     description: 'Создать список с чекбоксами',
     icon: '☑️',
     command: ({ editor, range }: { editor: Editor; range: any }) => {
-      editor.chain().focus().deleteRange(range).toggleTaskList().run();
+      editor.chain().focus().deleteRange(range).toggleList('taskList', 'taskItem').run();
     },
     aliases: ['todo', 'checklist', 'tasks'],
   },
